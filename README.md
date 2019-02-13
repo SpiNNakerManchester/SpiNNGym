@@ -1,2 +1,2 @@
 # SpiNNGym
-Playground for Learning and Memory
+Playground for SNN Learning and Memory on SpiNNaker
