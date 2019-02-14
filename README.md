@@ -1,2 +1,2 @@
 # SpiNNGym
-Playground for SNN Learning and Memory on SpiNNaker
+SpiNNaker test environments SNN Learning and Memory on 
