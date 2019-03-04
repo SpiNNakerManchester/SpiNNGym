@@ -15,18 +15,20 @@ from spinn_front_end_common.utilities import helpful_functions, constants
 # ----------------------------------------------------------------------------
 # BanditMachineVertex
 # ----------------------------------------------------------------------------
-class InvertedPendulumMachineVertex(MachineVertex):
-    _INVERTED_PENDULUM_REGIONS = Enum(
-        value="_BANDIT_REGIONS",
+class PendulumMachineVertex(MachineVertex):
+    _PENDULUM_REGIONS = Enum(
+        value="_PENDULUM_REGIONS",
         names=[('SYSTEM', 0),
-               ('BANDIT', 1),
+               ('PENDULUM', 1),
                ('RECORDING', 2),
-               ('ARMS', 3)])
+               ('DATA', 3)])
 
     def __init__(self, resources_required, constraints=None, label=None):
         # Superclasses
         MachineVertex.__init__(self, label,
                                constraints=constraints)
+        # ProvidesProvenanceDataFromMachineImpl.__init__(
+        #     self, self._BREAKOUT_REGIONS.PROVENANCE.value, 0)
         self._resource_required = resources_required
 
     @property
@@ -35,4 +37,4 @@ class InvertedPendulumMachineVertex(MachineVertex):
 
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._INVERTED_PENDULUM_REGIONS.RECORDING.value, txrx)
+            placement, self._PENDULUM_REGIONS.RECORDING.value, txrx)

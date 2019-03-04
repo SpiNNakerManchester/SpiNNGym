@@ -1,10 +1,3 @@
-//
-//  bkout.c
-//  BreakOut
-//
-//  Created by Steve Furber on 26/08/2016.
-//  Copyright © 2016 Steve Furber. All rights reserved.
-//
 // Standard includes
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,15 +14,11 @@
 #include <data_specification.h>
 #include <simulation.h>
 #include "random.h"
+#include <stdfix.h>
+#include <math.h>
+#include <common/maths-util.h>
 
 #include <recording.h>
-
-//----------------------------------------------------------------------------
-// Macros
-//----------------------------------------------------------------------------
-
-// Frame delay (ms)
-//#define reward_delay 200 //14//20
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -37,29 +26,30 @@
 typedef enum
 {
   REGION_SYSTEM,
-  REGION_BANDIT,
+  REGION_PENDULUM,
   REGION_RECORDING,
-  REGION_ARMS,
+  REGION_DATA,
 } region_t;
 
 typedef enum
 {
-  SPECIAL_EVENT_REWARD,
-  SPECIAL_EVENT_NO_REWARD,
-  SPECIAL_EVENT_MAX,
+  SPECIAL_EVENT_ANGLE,
+  SPECIAL_EVENT_CART,
+  SPECIAL_EVENT_ANGLE_V,
+  SPECIAL_EVENT_CART_V,
 } special_event_t;
 
-typedef enum
+typedef enum // forward will be considered positive motion
 {
-  KEY_ARM_0  = 0x0,
-  KEY_ARM_1  = 0x1,
-  KEY_ARM_2  = 0x2,
-  KEY_ARM_3  = 0x3,
-  KEY_ARM_4  = 0x4,
-  KEY_ARM_5  = 0x5,
-  KEY_ARM_6  = 0x6,
-  KEY_ARM_7  = 0x7,
+  BACKWARD_MOTOR  = 0x0,
+  FORWARD_MOTOR  = 0x1,
 } arm_key_t;
+
+typedef union{
+   uint32_t u;
+   float f;
+   accum a;
+} uint_float_union;
 
 //----------------------------------------------------------------------------
 // Globals
@@ -70,25 +60,59 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-const int max_number_of_arms = 8;
-
-uint32_t *arm_probabilities;
-
 mars_kiss64_seed_t kiss_seed;
 
-int number_of_arms;
-
-int rand_seed;
-
-int arm_choices[8] = {0};
-
 int32_t current_score = 0;
-int32_t best_arm = -1;
-bool chose_well = false;
 int32_t reward_based = 1;
-int32_t correct_pulls = 0;
 
-uint32_t reward_delay;
+// experimental constraints and variables
+float current_time = 0;
+float max_motor_force = 10; // N
+float min_motor_force = -10; // N
+float motor_force = 0;
+float force_increment = 100;
+float track_length = 4.8; // m
+float cart_position = 0; // m
+float cart_velocity = 0;  // m/s
+float cart_acceleration = 0;  // m/s^2
+float highend_cart_v = 5; // used to calculate firing rate and bins
+float max_pole_angle = (36.0f / 180.f) * M_PI;
+float min_pole_angle = -(36.0f / 180.f) * M_PI;
+float max_pole_angle_bin = (36.0f / 180.f) * M_PI;
+float min_pole_angle_bin = -(36.0f / 180.f) * M_PI;
+uint_float_union pole_angle_accum;
+float pole_angle;
+float pole_velocity = 0; // angular/s
+float pole_acceleration = 0; // angular/s^2
+float highend_pole_v = 5; // used to calculate firing rate and bins
+
+#define max_bins 10
+float pole_angle_spike_time[max_bins] = {0.f};
+float pole_velocity_spike_time[max_bins] = {0.f};
+float cart_position_spike_time[max_bins] = {0.f};
+float cart_velocity_spike_time[max_bins] = {0.f};
+
+int max_firing_rate = 20;
+float max_firing_prob = 0;
+int encoding_scheme = 0; // 0: rate, 1: time, 2: rank (replace with type def
+int number_of_bins = 20;
+float bin_width;
+float bin_overlap = 2.5;
+float tau_force;
+uint_float_union temp_accum;
+
+int central = 1; // if it's central that mean perfectly central on the track and angle is the lowest rate, else half
+
+// experimental parameters
+uint_float_union half_pole_length_accum; // m
+float half_pole_length; // m
+
+float max_balance_time = 0;
+
+float current_state[2];
+bool in_bounds = true;
+
+uint32_t time_increment;
 
 //! How many ticks until next frame
 static uint32_t tick_in_frame = 0;
@@ -103,32 +127,61 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void add_reward()
+static inline void spike_angle(int bin)
 {
-  spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "Got a reward\n");
-  current_score++;
+    uint32_t mask;
+    if (encoding_scheme != 0){
+        mask = (SPECIAL_EVENT_ANGLE * number_of_bins) + bin;
+    }
+    else{
+        mask = SPECIAL_EVENT_ANGLE;
+    }
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_angle \t%d - \t%u\n", bin, mask);
 }
 
-static inline void add_no_reward()
+static inline void spike_angle_v(int bin)
 {
-  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "No reward\n");
-//  current_score--;
+    uint32_t mask;
+    if (encoding_scheme != 0){
+        mask = (SPECIAL_EVENT_ANGLE_V * number_of_bins) + bin;
+    }
+    else{
+        mask = SPECIAL_EVENT_ANGLE_V;
+    }
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_angle_v \t%d - \t%u\n", bin, mask);
+}
+
+static inline void spike_cart(int bin)
+{
+    uint32_t mask;
+    if (encoding_scheme != 0){
+        mask = (SPECIAL_EVENT_CART * number_of_bins) + bin;
+    }
+    else{
+        mask = SPECIAL_EVENT_CART;
+    }
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_cart \t%d - \t%u\n", bin, mask);
+}
+
+static inline void spike_cart_v(int bin)
+{
+    uint32_t mask;
+    if (encoding_scheme != 0){
+        mask = (SPECIAL_EVENT_CART_V * number_of_bins) + bin;
+    }
+    else{
+        mask = SPECIAL_EVENT_CART_V;
+    }
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_cart_v \t%d - \t%u\n", bin, mask);
 }
 
 void resume_callback() {
     recording_reset();
 }
-
-//void add_event(int i, int j, colour_t col, bool bricked)
-//{
-//  const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-//  const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
-//
-//  spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "%d, %d, %u, %08x\n", i, j, col, spike_key);
-//}
 
 static bool initialize(uint32_t *timer_period)
 {
@@ -160,7 +213,7 @@ static bool initialize(uint32_t *timer_period)
 
 
     // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_BANDIT, address);
+    address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
     key = breakout_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
@@ -176,160 +229,290 @@ static bool initialize(uint32_t *timer_period)
        return false;
     }
 
-    address_t arms_region = data_specification_get_region(REGION_ARMS, address);
-    reward_delay = arms_region[0];
-    number_of_arms = arms_region[1];
-//    rand_seed = arms_region[2];
-    kiss_seed[0] = arms_region[2];
-    kiss_seed[1] = arms_region[3];
-    kiss_seed[2] = arms_region[4];
-    kiss_seed[3] = arms_region[5];
-    reward_based = arms_region[6];
-    arm_probabilities = (uint32_t *)&arms_region[7];
-//    double arm_probabilities[10] = {0}
-//    for (int i=1, i<number_of_arms, i=i+1){
-//        io_printf(IO_BUF, "converting arm prob %d, stage \n", temp_arm_probabilities[i] i)
-//        arm_probabilities[i] = (double)temp_arm_probabilities[i] / 1000.0
-//        io_printf(IO_BUF, "probs after = %d\n", arm_probabilities)
-//    }
-    validate_mars_kiss64_seed(kiss_seed);
-//    srand(rand_seed);
-    //TODO check this prints right, ybug read the address
-    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)arms_region[0]);
-    io_printf(IO_BUF, "r2 %d\n", (uint32_t *)arms_region[1]);
-    io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)arms_region[2]);
-    io_printf(IO_BUF, "rand3 0x%x\n", (uint32_t *)arms_region[3]);
-    io_printf(IO_BUF, "r4 0x%x\n", arms_region[3]);
-    io_printf(IO_BUF, "r5 0x%x\n", arm_probabilities);
-    io_printf(IO_BUF, "r6 %u\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r6d %d\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r7 %u\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "r7d %d\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "re %d\n", reward_based);
-//    io_printf(IO_BUF, "r6 0x%x\n", *arm_probabilities);
-//    io_printf(IO_BUF, "r6 0x%x\n", &arm_probabilities);
+    cart_position = track_length / 2;
 
-    int highest_prob = 0;
-    for(int i=0; i<number_of_arms; i=i+1){
-        if(arm_probabilities[i] > highest_prob){
-            best_arm = i;
-            highest_prob = arm_probabilities[i];
-        }
-    }
+    address_t pend_region = data_specification_get_region(REGION_DATA, address);
+//    encoding_scheme = pend_region[0]; // 0 rate
+    encoding_scheme = pend_region[0];
+    time_increment = pend_region[1];
+    half_pole_length_accum.u = pend_region[2];
+    half_pole_length = half_pole_length_accum.a / 2.0f;
+    pole_angle_accum.u = pend_region[3];
+    pole_angle = pole_angle_accum.a;
+    pole_angle = (pole_angle / 180.0f) * M_PI;
+    reward_based = pend_region[4];
+    force_increment = pend_region[5];
+    max_firing_rate = pend_region[6];
+    number_of_bins = pend_region[7];
+    central = pend_region[8];
+
+    bin_width = 1.f / ((float)number_of_bins - 1.f);
+    max_firing_prob = max_firing_rate / 1000.f;
+    // pass in random seeds
+    kiss_seed[0] = pend_region[9];
+    kiss_seed[1] = pend_region[10];
+    kiss_seed[2] = pend_region[11];
+    kiss_seed[3] = pend_region[12];
+    validate_mars_kiss64_seed(kiss_seed);
+
+    temp_accum.u = pend_region[13];
+    bin_overlap = temp_accum.a;
+    temp_accum.u = pend_region[14];
+    tau_force = temp_accum.a;
+
+    force_increment = (float)((max_motor_force - min_motor_force) / (float)force_increment);
+
+    //Print variable for inspection if needed
+//    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)pend_region[0]);
+//    io_printf(IO_BUF, "r2 %d\n", (uint32_t *)pend_region[1]);
+//    io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)pend_region[2]);
+//    io_printf(IO_BUF, "rand3 0x%x\n", (uint32_t *)pend_region[3]);
+//    io_printf(IO_BUF, "r4 0x%x\n", pend_region[3]);
+//    io_printf(IO_BUF, "r5 0x%x\n", pend_region);
+//    io_printf(IO_BUF, "encode %u\n", pend_region[0]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[0]);
+//    io_printf(IO_BUF, "increm %u\n", pend_region[1]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[1]);
+//    io_printf(IO_BUF, "halfp %f\n", pend_region[2]);
+//    io_printf(IO_BUF, "d %f\n", pend_region[2]);
+//    io_printf(IO_BUF, "half %k\n", (accum)half_pole_length);
+//    io_printf(IO_BUF, "d %f\n", (float)half_pole_length);
+//    io_printf(IO_BUF, "half accum %k\n", half_pole_length_accum.a);
+//    io_printf(IO_BUF, "d %f\n", (float)half_pole_length_accum.a);
+//    io_printf(IO_BUF, "anglep %f\n", pend_region[3]);
+//    io_printf(IO_BUF, "d %f\n", pend_region[3]);
+//    io_printf(IO_BUF, "angle accum %k\n", pole_angle_accum.a);
+//    io_printf(IO_BUF, "f %f\n", (float)pole_angle_accum.a);
+//    io_printf(IO_BUF, "angle %k\n", (accum)pole_angle);
+//    io_printf(IO_BUF, "f %k\n", (float)pole_angle);
+//    io_printf(IO_BUF, "reward %u\n", pend_region[4]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[4]);
+//    io_printf(IO_BUF, "force %u\n", pend_region[5]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[5]);
+//    io_printf(IO_BUF, "max %u\n", pend_region[6]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[6]);
+//    io_printf(IO_BUF, "bins %u\n", pend_region[7]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[7]);
+//    io_printf(IO_BUF, "central %u\n", pend_region[8]);
+//    io_printf(IO_BUF, "d %d\n", pend_region[8]);
+//    io_printf(IO_BUF, "re %d\n", reward_based);
+//    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
+//    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);
+
+    io_printf(IO_BUF, "starting state (d,v,a):(%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n", (accum)pole_angle, (accum)pole_velocity,
+                        (accum)pole_acceleration, (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
-    io_printf(IO_BUF, "best arm = %d with prob %d\n", best_arm, highest_prob);
 
+//    auto start = chrono::steady_clock::now();
     return true;
 }
 
-bool was_there_a_reward(){
-    int choice = -1; //mars_kiss64_seed(kiss_seed) % number_of_arms;
-//    int choice = rand() % number_of_arms;
-    int highest_value = 0;
-    int min_spikes = 100000000;
-    for(int i=0; i<number_of_arms; i=i+1){
-        if(arm_choices[i] < min_spikes){
-            min_spikes = arm_choices[i];
-        }
-    }
-    for(int i=0; i<number_of_arms; i=i+1){
-        arm_choices[i] = arm_choices[i] - min_spikes;
-    }
-    if(arm_choices[0] > highest_value){
-        choice = 0;
-        highest_value = arm_choices[0];
-    }
-//    io_printf(IO_BUF, "0 was spiked %d times, prob = %u\n", arm_choices[0], arm_probabilities[0]);
-    arm_choices[0] = 0;
-    for(int i=1; i<number_of_arms; i=i+1){
-        if (arm_choices[i] >= highest_value && arm_choices[i] != 0){
-            if(arm_choices[i] == highest_value){
-                if (mars_kiss64_seed(kiss_seed) % 2 == 0){
-//                if (rand() % 2 == 0){
-                    choice = i;
-                    highest_value = arm_choices[i];
-                }
-            }
-            else{
-                choice = i;
-                highest_value = arm_choices[i];
-            }
-        }
-//        io_printf(IO_BUF, "%d was spiked %d times, prob = %u\n", i, arm_choices[i], arm_probabilities[i]);
-        arm_choices[i] = 0;
-    }
-//    io_printf(IO_BUF, "choice was %d and best arm was %d, score is %d, highest value: %d", choice, best_arm, current_score, highest_value);
-    if(choice == best_arm){
-        correct_pulls++;
+// updates the current state of the pendulum
+bool update_state(float time_step){
+    float gravity = -9.8; // m/s^2
+    float mass_cart = 1; // kg
+    float mass_pole = 0.1; // kg
+    float friction_cart_on_track = 0.0005; // coefficient of friction
+    float friction_pole_hinge = 0.000002; // coefficient of friction
+
+    float effective_force_pole_on_cart = 0;
+    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * sin(pole_angle));
+    float angle_scalar = ((3.0f / 4.0f) * mass_pole * cos(pole_angle));
+    float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length)) +
+                        (gravity * sin(pole_angle)));
+    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) * cos(pole_angle) * cos(pole_angle)));
+
+    effective_force_pole_on_cart = pole_angle_force + (angle_scalar * friction_and_gravity);
+    if (cart_velocity > 0){
+        cart_acceleration = (motor_force - friction_cart_on_track + effective_force_pole_on_cart) /
+                                (mass_cart + effective_pole_mass);
     }
     else{
-//        correct_pulls--;
+        cart_acceleration = (motor_force + friction_cart_on_track + effective_force_pole_on_cart) /
+                                (mass_cart + effective_pole_mass);
     }
-    if(highest_value == 0){
+
+    float length_scalar = -3.0f / (4.0f * half_pole_length);
+    float cart_acceleration_effect = cart_acceleration * cos(pole_angle);
+    float gravity_effect = gravity * sin(pole_angle);
+    float friction_effect = (friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length);
+    pole_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
+
+    cart_velocity = (cart_acceleration * time_step) + cart_velocity;
+    cart_position = (cart_velocity * time_step) + cart_position;
+
+    pole_velocity = (pole_acceleration * time_step) + pole_velocity;
+    pole_angle = (pole_velocity * time_step) + pole_angle;
+
+    if (tau_force){
+        motor_force = motor_force * exp(time_step / tau_force);
+    }
+    else{
+        motor_force = 0;
+    }
+
+    if (cart_position > track_length || cart_position < 0  || pole_angle > max_pole_angle  || pole_angle < min_pole_angle) {
+        io_printf(IO_BUF, "failed out\n");
         return false;
     }
     else{
-        uint32_t probability_roll;
-    //    double max = RAND_MAX;
-//        io_printf(IO_BUF, "rand = %d, max = %d\n", rand_no, RAND_MAX);
-        probability_roll = mars_kiss64_seed(kiss_seed);
-    //    probability_roll = rand();
-//        io_printf(IO_BUF, "prob_roll = %u\n", probability_roll);
-//        io_printf(IO_BUF, "roll was %u and prob was %u, max = %u %d\n", probability_roll, arm_probabilities[choice], RAND_MAX, RAND_MAX);
-        if(probability_roll < arm_probabilities[choice]){
-    //        io_printf(IO_BUF, "reward given\n");
-            return true;
-        }
-        else if(probability_roll > arm_probabilities[choice]){
-    //        io_printf(IO_BUF, "no cigar\n");
-            return false;
-        }
-        else{
-    //        io_printf(IO_BUF, "shit broke\n");
-        }
+        return true;
     }
 }
 
 void mc_packet_received_callback(uint keyx, uint payload)
 {
     uint32_t compare;
-    int max_number_of_bits = 8;
-    compare = keyx & (max_number_of_bits - 1);
-    while (compare > number_of_arms){
-        max_number_of_bits = max_number_of_bits / 2;
-        compare = keyx & (max_number_of_bits - 1);
-    }
+    compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
-//    io_printf(IO_BUF, "key = %x\n", key);
-//    io_printf(IO_BUF, "payload = %x\n", payload);
     use(payload);
-    if(compare == KEY_ARM_0){
-        arm_choices[0]++;
+    if(compare == BACKWARD_MOTOR){
+        motor_force = motor_force - force_increment;
+        if (motor_force < min_motor_force){
+            motor_force = min_motor_force;
+        }
     }
-    else if(compare == KEY_ARM_1){
-        arm_choices[1]++;
+    else if(compare == FORWARD_MOTOR){
+        motor_force = motor_force + force_increment;
+        if (motor_force > max_motor_force){
+            motor_force = max_motor_force;
+        }
     }
-    else if(compare == KEY_ARM_2){
-        arm_choices[2]++;
+}
+
+float rand021(){
+    return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
+}
+
+float norm_dist(float mean, float stdev){
+    accum norm_dist;
+    norm_dist = gaussian_dist_variate(mars_kiss64_simp, NULL);
+    norm_dist = (norm_dist * stdev) + mean;
+    return (float)norm_dist;
+}
+
+bool firing_prob(float relative_value, int bin){
+    float norm_value = norm_dist(0, bin_width / bin_overlap);
+    float separation = relative_value - (bin_width * (float)bin);
+    if (separation < 0){
+        separation = -separation;
     }
-    else if(compare == KEY_ARM_3){
-        arm_choices[3]++;
+//    io_printf(IO_BUF, "norm = %k, separation = %k, realtive = %k, bin = %d\n", (accum)norm_value, (accum)separation, (accum)relative_value, bin);
+    if (norm_value < 0){
+        norm_value = -norm_value;
     }
-    else if(compare == KEY_ARM_4){
-        arm_choices[4]++;
+    if (norm_value > separation){
+        if (rand021() < max_firing_prob){
+            return true;
+        }
+        else{
+            return false;
+        }
     }
-    else if(compare == KEY_ARM_5){
-        arm_choices[5]++;
+    else{
+        return false;
     }
-    else if(compare == KEY_ARM_6){
-        arm_choices[6]++;
+}
+
+void send_status(){
+    if (encoding_scheme == 0){ // rate encoding
+        float relative_cart = 0;
+        float relative_angle = 0;
+        float relative_cart_velocity = 0;
+        float relative_angular_velocity = 0;
+        if (central){
+            if (pole_angle > 0){
+                relative_angle = pole_angle / max_pole_angle_bin;
+            }
+            else{
+                relative_angle = -pole_angle / max_pole_angle_bin;
+            }
+            if (pole_velocity > 0){
+                relative_angular_velocity = pole_velocity / highend_pole_v;
+            }
+            else{
+                relative_angular_velocity = -pole_velocity / highend_pole_v;
+            }
+            if (cart_position - (track_length / 2.0f) > 0){
+                relative_cart = (cart_position - (track_length / 2.0f)) / (track_length / 2.0f);
+            }
+            else{
+                relative_cart = -(cart_position - (track_length / 2.0f)) / (track_length / 2.0f);
+            }
+            if (cart_velocity > 0){
+                relative_cart_velocity = cart_velocity / (highend_cart_v);
+            }
+            else{
+                relative_cart_velocity = -cart_velocity / (highend_cart_v);
+            }
+        }
+        else{
+            relative_angle = (pole_angle - min_pole_angle_bin) / (max_pole_angle_bin - min_pole_angle_bin);
+            relative_angular_velocity = (pole_velocity + highend_pole_v) / (highend_pole_v * 2.f);
+            relative_cart = cart_position / track_length;
+            relative_cart_velocity = (cart_velocity + highend_cart_v) / (highend_cart_v * 2.f);
+        }
+//        io_printf(IO_BUF, "relative (angle, v) (%k, %k) and (cart, v) (%k, %k)\n", (accum)relative_angle,
+//                            (accum)relative_angular_velocity, (accum)relative_cart, (accum)relative_cart_velocity);
+        float angle_roll = 0;
+        float angle_roll_v = 0;
+        float cart_roll = 0;
+        float cart_roll_v = 0;
+        angle_roll = rand021();
+        angle_roll_v = rand021();
+        cart_roll = rand021();
+        cart_roll_v = rand021();
+//        io_printf(IO_BUF, "roll (angle, v) (%k, %k) and (cart, v) %k, %k wth max = %k\n", (accum)angle_roll,
+//                                                                        (accum)angle_roll_v, (accum)cart_roll,
+//                                                                        (accum)cart_roll_v, (accum)max_firing_prob);
+        angle_roll = angle_roll / relative_angle;
+        angle_roll_v = angle_roll_v / relative_angular_velocity;
+        cart_roll = cart_roll / relative_cart_velocity;
+        cart_roll_v = cart_roll_v / relative_cart_velocity;
+//        io_printf(IO_BUF, "relative roll (angle, v) (%k, %k) and (cart, v) %k, %k wth max = %k\n", (accum)angle_roll,
+//                                                                        (accum)angle_roll_v, (accum)cart_roll,
+//                                                                        (accum)cart_roll_v, (accum)max_firing_prob);
+        if (angle_roll < max_firing_prob){
+            spike_angle(0);
+        }
+        if (angle_roll_v < max_firing_prob){
+            spike_angle_v(0);
+        }
+        if (cart_roll < max_firing_prob){
+            spike_cart(0);
+        }
+        if (cart_roll_v < max_firing_prob){
+            spike_cart_v(0);
+        }
     }
-    else if(compare == KEY_ARM_7){
-        arm_choices[7]++;
-    }
-    else {
-//        io_printf(IO_BUF, "it broke arm selection %d\n", key);
+    else if (encoding_scheme == 1){ // rate encoding with bins
+        float relative_cart;
+        float relative_angle;
+        float relative_cart_velocity;
+        float relative_angular_velocity;
+        relative_angle = (pole_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
+    //    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
+        relative_angular_velocity = (pole_velocity + highend_pole_v) / (2.f * highend_pole_v);
+    //    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
+        relative_cart = cart_position / track_length;
+    //    io_printf(IO_BUF, "rela = %k, cart = %k, max = %k\n", (accum)relative_cart, (accum)cart_position, (accum)track_length);
+        relative_cart_velocity = (cart_velocity + highend_cart_v) / (2.f * highend_cart_v);
+    //    io_printf(IO_BUF, "rela = %k, cartv = %k, maxv = %k\n", (accum)relative_cart_velocity, (accum)cart_velocity, (accum)highend_cart_v);
+        for (int i = 0; i < number_of_bins; i = i + 1){
+            if (firing_prob(relative_angle, i)){
+                spike_angle(i);
+            }
+            if (firing_prob(relative_angular_velocity, i)){
+                spike_angle_v(i);
+            }
+            if (firing_prob(relative_cart, i)){
+                spike_cart(i);
+            }
+            if (firing_prob(relative_cart_velocity, i)){
+                spike_cart_v(i);
+            }
+        }
     }
 }
 
@@ -364,29 +547,36 @@ void timer_callback(uint unused, uint dummy)
     // Otherwise
     else
     {
+        if (_time == 0){
+            update_state(0);
+        }
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
-        if(tick_in_frame == reward_delay)
+        if(tick_in_frame == time_increment)
         {
-            if (was_there_a_reward()){
-                add_reward();
-            }
-            else{
-                add_no_reward();
+            if (in_bounds){
+                max_balance_time = (float)_time;
+//                max_balance_time = max_balance_time + 1;
+                in_bounds = update_state((float)time_increment / 1000.f);
             }
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
-            // Update recorded score every 1s
-            if(score_change_count>=1000){
+            // Update recorded score every 0.1s
+            if(score_change_count >= 100){
+                current_state[0] = cart_position;
+                current_state[1] = pole_angle;
                 if(reward_based == 0){
-                    recording_record(0, &correct_pulls, 4);
+                    recording_record(0, &current_state, 8);
                 }
                 else{
-                    recording_record(0, &current_score, 4);
+                    recording_record(0, &max_balance_time, 4);
                 }
                 score_change_count=0;
             }
+        }
+        if (in_bounds){
+            send_status();
         }
     }
 //    io_printf(IO_BUF, "time %u\n", ticks);
@@ -421,6 +611,7 @@ void c_main(void)
   spin1_set_timer_tick(timer_period);
 
   io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+  io_printf(IO_BUF, "timer tick %d, %k\n",TIMER_TICK, (accum)TIMER_TICK);
 
   // Register callback
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
