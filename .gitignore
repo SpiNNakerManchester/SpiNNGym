@@ -107,3 +107,4 @@ venv.bak/
 
 # SpiNNGym ignores
 /c_code/src/modified_src
+/spinn_gym/model_binaries
