@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 # Layout of pixels
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-from spinn_breakout.visualiser.visualiser import Visualiser
+# from spinn_breakout.visualiser.visualiser import Visualiser
 
 
 def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
@@ -122,11 +122,17 @@ y_factor2 = 16
 # Create breakout population and activate live output for it
 # breakout_pop = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor1), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor1), label="breakout1"))
 # breakout_pop2 = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor2), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor2), label="breakout2"))
-b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=0)
-breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+
+breakout_pop = p.Population(b1.neurons(),
+                            gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=0),
+                            label="breakout1")
 # b2 = b_out(x_factor=x_factor2, y_factor=y_factor2, bricking=0)
 # breakout_pop2 = p.Population(b2.neurons(), b2, label="breakout2")
+
+
 ex.activate_live_output_for(breakout_pop, host="0.0.0.0", port=UDP_PORT1)
+
+
 # ex.activate_live_output_for(breakout_pop2, host="0.0.0.0", port=UDP_PORT2)
 
 
@@ -184,11 +190,11 @@ print key_input_connection
 #         x_bits=xb, y_bits=yb)
 
 
-visualiser = Visualiser(UDP_PORT1, key_input_connection,
-                        X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
-                        np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-                        np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))
-                        )
+# visualiser = Visualiser(UDP_PORT1, key_input_connection,
+#                         X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
+#                         np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
+#                         np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))
+#                         )
 
 
 # t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
@@ -209,7 +215,7 @@ visualiser = Visualiser(UDP_PORT1, key_input_connection,
 # result2 = r.apply_async(thread_visualiser, [UDP_PORT2])
 # t.daemon = True
 # Run simulation (non-blocking)
-visualiser.show()
+# visualiser.show()
 print "reached here 1"
 # t.start()
 # r.start()

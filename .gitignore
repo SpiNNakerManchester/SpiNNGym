@@ -104,3 +104,6 @@ venv.bak/
 .mypy_cache/
 /.project
 /.pydevproject
+
+# SpiNNGym ignores
+/c_code/src/modified_src
