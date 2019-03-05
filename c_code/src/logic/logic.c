@@ -29,7 +29,7 @@
 //----------------------------------------------------------------------------
 
 // Frame delay (ms)
-//#define reward_delay 200 //14//20
+//#define score_delay 200 //14//20
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -37,7 +37,7 @@
 typedef enum
 {
   REGION_SYSTEM,
-  REGION_BANDIT,
+  REGION_LOGIC,
   REGION_RECORDING,
   REGION_ARMS,
 } region_t;
@@ -51,14 +51,14 @@ typedef enum
 
 typedef enum
 {
-  KEY_ARM_0  = 0x0,
-  KEY_ARM_1  = 0x1,
-  KEY_ARM_2  = 0x2,
-  KEY_ARM_3  = 0x3,
-  KEY_ARM_4  = 0x4,
-  KEY_ARM_5  = 0x5,
-  KEY_ARM_6  = 0x6,
-  KEY_ARM_7  = 0x7,
+  KEY_CHOICE_0  = 0x0,
+  KEY_CHOICE_1  = 0x1,
+//  KEY_CHOICE_2  = 0x2,
+//  KEY_CHOICE_3  = 0x3,
+//  KEY_CHOICE_4  = 0x4,
+//  KEY_CHOICE_5  = 0x5,
+//  KEY_CHOICE_6  = 0x6,
+//  KEY_CHOICE_7  = 0x7,
 } arm_key_t;
 
 //----------------------------------------------------------------------------
@@ -70,25 +70,27 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-const int max_number_of_arms = 8;
+const int max_number_of_inputs = 8;
 
-uint32_t *arm_probabilities;
+uint32_t *input_sequence;
+
+uint32_t *truth_table;
 
 mars_kiss64_seed_t kiss_seed;
 
-int number_of_arms;
+int number_of_inputs;
 
 int rand_seed;
 
-int arm_choices[8] = {0};
-
 int32_t current_score = 0;
-int32_t best_arm = -1;
-bool chose_well = false;
-int32_t reward_based = 1;
-int32_t correct_pulls = 0;
+int32_t stochastic = 1;
+int32_t rate_on = 20;
+int32_t rate_off = 5;
 
-uint32_t reward_delay;
+int32_t correct_output = -1;
+int32_t output_choice[2] = {0};
+
+uint32_t score_delay;
 
 //! How many ticks until next frame
 static uint32_t tick_in_frame = 0;
@@ -103,19 +105,19 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void add_reward()
-{
-  spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "Got a reward\n");
-  current_score++;
-}
-
-static inline void add_no_reward()
-{
-  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "No reward\n");
-//  current_score--;
-}
+//static inline void add_reward()
+//{
+//  spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
+//  io_printf(IO_BUF, "Got a reward\n");
+//  current_score++;
+//}
+//
+//static inline void add_no_reward()
+//{
+//  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
+//  io_printf(IO_BUF, "No reward\n");
+////  current_score--;
+//}
 
 void resume_callback() {
     recording_reset();
@@ -132,7 +134,7 @@ void resume_callback() {
 
 static bool initialize(uint32_t *timer_period)
 {
-    io_printf(IO_BUF, "Initialise bandit: started\n");
+    io_printf(IO_BUF, "Initialise logic: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     address_t address = data_specification_get_data_address();
@@ -160,7 +162,7 @@ static bool initialize(uint32_t *timer_period)
 
 
     // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_BANDIT, address);
+    address_t breakout_region = data_specification_get_region(REGION_LOGIC, address);
     key = breakout_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
@@ -177,22 +179,32 @@ static bool initialize(uint32_t *timer_period)
     }
 
     address_t arms_region = data_specification_get_region(REGION_ARMS, address);
-    reward_delay = arms_region[0];
-    number_of_arms = arms_region[1];
+    score_delay = arms_region[0];
+    number_of_inputs = arms_region[1];
 //    rand_seed = arms_region[2];
     kiss_seed[0] = arms_region[2];
     kiss_seed[1] = arms_region[3];
     kiss_seed[2] = arms_region[4];
     kiss_seed[3] = arms_region[5];
-    reward_based = arms_region[6];
-    arm_probabilities = (uint32_t *)&arms_region[7];
+    rate_on = arms_region[6];
+    rate_off = arms_region[7];
+    stochastic = arms_region[8];
+    input_sequence = (uint32_t *)&arms_region[9];
+    truth_table = (uint32_t *)&arms_region[9 + number_of_inputs];
 //    double arm_probabilities[10] = {0}
-//    for (int i=1, i<number_of_arms, i=i+1){
+//    for (int i=1, i<number_of_inputs, i=i+1){
 //        io_printf(IO_BUF, "converting arm prob %d, stage \n", temp_arm_probabilities[i] i)
 //        arm_probabilities[i] = (double)temp_arm_probabilities[i] / 1000.0
 //        io_printf(IO_BUF, "probs after = %d\n", arm_probabilities)
 //    }
     validate_mars_kiss64_seed(kiss_seed);
+
+    int truth_table_index = 0;
+    for(int i=0; i<number_of_inputs; i=i+1){
+        truth_table_index = truth_table + (input_sequence[i] * pow(2, i));
+    }
+    correct_output = truth_table[truth_table_index];
+
 //    srand(rand_seed);
     //TODO check this prints right, ybug read the address
     io_printf(IO_BUF, "r1 %d\n", (uint32_t *)arms_region[0]);
@@ -200,136 +212,70 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)arms_region[2]);
     io_printf(IO_BUF, "rand3 0x%x\n", (uint32_t *)arms_region[3]);
     io_printf(IO_BUF, "r4 0x%x\n", arms_region[3]);
-    io_printf(IO_BUF, "r5 0x%x\n", arm_probabilities);
-    io_printf(IO_BUF, "r6 %u\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r6d %d\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r7 %u\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "r7d %d\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "re %d\n", reward_based);
-//    io_printf(IO_BUF, "r6 0x%x\n", *arm_probabilities);
-//    io_printf(IO_BUF, "r6 0x%x\n", &arm_probabilities);
-
-    int highest_prob = 0;
-    for(int i=0; i<number_of_arms; i=i+1){
-        if(arm_probabilities[i] > highest_prob){
-            best_arm = i;
-            highest_prob = arm_probabilities[i];
-        }
-    }
+    io_printf(IO_BUF, "r5 0x%x\n", arms_region[6]);
+    io_printf(IO_BUF, "r6 %u\n", arms_region[7]);
+    io_printf(IO_BUF, "r6d %d\n", arms_region[8]);
+    io_printf(IO_BUF, "r7 %u\n", arms_region[9]);
+    io_printf(IO_BUF, "t %d\n", arms_region[9 + number_of_inputs]);
+    io_printf(IO_BUF, "t+1 %d\n", arms_region[9 + number_of_inputs + 1]);
+    io_printf(IO_BUF, "t-1 %d\n", arms_region[9 + number_of_inputs - 1]);
+    io_printf(IO_BUF, "correct out %d\n", correct_output);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
-    io_printf(IO_BUF, "best arm = %d with prob %d\n", best_arm, highest_prob);
 
     return true;
 }
 
-bool was_there_a_reward(){
-    int choice = -1; //mars_kiss64_seed(kiss_seed) % number_of_arms;
-//    int choice = rand() % number_of_arms;
-    int highest_value = 0;
-    int min_spikes = 100000000;
-    for(int i=0; i<number_of_arms; i=i+1){
-        if(arm_choices[i] < min_spikes){
-            min_spikes = arm_choices[i];
-        }
-    }
-    for(int i=0; i<number_of_arms; i=i+1){
-        arm_choices[i] = arm_choices[i] - min_spikes;
-    }
-    if(arm_choices[0] > highest_value){
+bool was_it_correct(){
+    int choice = -1;
+    if (output_choice[0] > output_choice[1]){
         choice = 0;
-        highest_value = arm_choices[0];
     }
-//    io_printf(IO_BUF, "0 was spiked %d times, prob = %u\n", arm_choices[0], arm_probabilities[0]);
-    arm_choices[0] = 0;
-    for(int i=1; i<number_of_arms; i=i+1){
-        if (arm_choices[i] >= highest_value && arm_choices[i] != 0){
-            if(arm_choices[i] == highest_value){
-                if (mars_kiss64_seed(kiss_seed) % 2 == 0){
-//                if (rand() % 2 == 0){
-                    choice = i;
-                    highest_value = arm_choices[i];
-                }
-            }
-            else{
-                choice = i;
-                highest_value = arm_choices[i];
-            }
-        }
-//        io_printf(IO_BUF, "%d was spiked %d times, prob = %u\n", i, arm_choices[i], arm_probabilities[i]);
-        arm_choices[i] = 0;
+    else if (output_choice[1] > output_choice[0]){
+        choice = 1;
     }
-//    io_printf(IO_BUF, "choice was %d and best arm was %d, score is %d, highest value: %d", choice, best_arm, current_score, highest_value);
-    if(choice == best_arm){
-        correct_pulls++;
+    if (choice == correct_output){
+        current_score = current_score + 1;
     }
-    else{
-//        correct_pulls--;
-    }
-    if(highest_value == 0){
-        return false;
-    }
-    else{
-        uint32_t probability_roll;
-    //    double max = RAND_MAX;
-//        io_printf(IO_BUF, "rand = %d, max = %d\n", rand_no, RAND_MAX);
-        probability_roll = mars_kiss64_seed(kiss_seed);
-    //    probability_roll = rand();
-//        io_printf(IO_BUF, "prob_roll = %u\n", probability_roll);
-//        io_printf(IO_BUF, "roll was %u and prob was %u, max = %u %d\n", probability_roll, arm_probabilities[choice], RAND_MAX, RAND_MAX);
-        if(probability_roll < arm_probabilities[choice]){
-    //        io_printf(IO_BUF, "reward given\n");
-            return true;
-        }
-        else if(probability_roll > arm_probabilities[choice]){
-    //        io_printf(IO_BUF, "no cigar\n");
-            return false;
-        }
-        else{
-    //        io_printf(IO_BUF, "shit broke\n");
-        }
-    }
+    output_choice[0] = 0;
+    output_choice[1] = 0;
 }
 
 void mc_packet_received_callback(uint keyx, uint payload)
 {
     uint32_t compare;
-    int max_number_of_bits = 8;
-    compare = keyx & (max_number_of_bits - 1);
-    while (compare > number_of_arms){
-        max_number_of_bits = max_number_of_bits / 2;
-        compare = keyx & (max_number_of_bits - 1);
-    }
+//    int max_number_of_bits = 8;
+    compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
 //    io_printf(IO_BUF, "key = %x\n", key);
 //    io_printf(IO_BUF, "payload = %x\n", payload);
     use(payload);
-    if(compare == KEY_ARM_0){
-        arm_choices[0]++;
+    if(compare == KEY_CHOICE_0){
+        output_choice[0]++;
     }
-    else if(compare == KEY_ARM_1){
-        arm_choices[1]++;
+    else if(compare == KEY_CHOICE_1){
+        output_choice[1]++;
     }
-    else if(compare == KEY_ARM_2){
-        arm_choices[2]++;
-    }
-    else if(compare == KEY_ARM_3){
-        arm_choices[3]++;
-    }
-    else if(compare == KEY_ARM_4){
-        arm_choices[4]++;
-    }
-    else if(compare == KEY_ARM_5){
-        arm_choices[5]++;
-    }
-    else if(compare == KEY_ARM_6){
-        arm_choices[6]++;
-    }
-    else if(compare == KEY_ARM_7){
-        arm_choices[7]++;
-    }
+//    else if(compare == KEY_CHOICE_2){
+//        output_choice[2]++;
+//    }
+//    else if(compare == KEY_CHOICE_3){
+//        output_choice[3]++;
+//    }
+//    else if(compare == KEY_CHOICE_4){
+//        output_choice[4]++;
+//    }
+//    else if(compare == KEY_CHOICE_5){
+//        output_choice[5]++;
+//    }
+//    else if(compare == KEY_CHOICE_6){
+//        output_choice[6]++;
+//    }
+//    else if(compare == KEY_CHOICE_7){
+//        output_choice[7]++;
+//    }
     else {
-//        io_printf(IO_BUF, "it broke arm selection %d\n", key);
+        io_printf(IO_BUF, "it broke key selection %d\n", key);
     }
 }
 
@@ -366,26 +312,16 @@ void timer_callback(uint unused, uint dummy)
     {
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
-        if(tick_in_frame == reward_delay)
+        if(tick_in_frame == score_delay)
         {
-            if (was_there_a_reward()){
-                add_reward();
-            }
-            else{
-                add_no_reward();
-            }
+            was_it_correct();
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 1s
-            if(score_change_count>=1000){
-                if(reward_based == 0){
-                    recording_record(0, &correct_pulls, 4);
-                }
-                else{
-                    recording_record(0, &current_score, 4);
-                }
-                score_change_count=0;
+            if(score_change_count >= 1000){
+                recording_record(0, &current_score, 4);
+                score_change_count = 0;
             }
         }
     }
