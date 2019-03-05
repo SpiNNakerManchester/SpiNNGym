@@ -73,6 +73,13 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 #         return 0
 
 
+class Bad_Table(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 # ----------------------------------------------------------------------------
 # Logic
 # ----------------------------------------------------------------------------
@@ -128,6 +135,7 @@ class Logic(ApplicationVertex,
         'constraints': None,
         'rate_on': 20.0,
         'rate_off': 5.0,
+        'input_sequence': [0, 1],
         'stochastic': 1,
         'label': "Logic",
         'incoming_spike_buffer_size': None,
@@ -140,6 +148,7 @@ class Logic(ApplicationVertex,
     # synapse_type = LogicSynapseType()
 
     def __init__(self, truth_table=default_parameters['truth_table'],
+                 input_sequence=default_parameters['input_sequence'],
                  rate_on=default_parameters['rate_on'],
                  rate_off=default_parameters['rate_off'],
                  reward_delay=default_parameters['reward_delay'],
@@ -160,9 +169,15 @@ class Logic(ApplicationVertex,
         self._rate_on = rate_on
         self._rate_off = rate_off
         self._stochastic = stochastic
-
-        self._inputs = numpy.log2(truth_table)
-        self._n_neurons = self._inputs
+        self._input_sequence = input_sequence
+        self._no_no_inputs = len(input_sequence)
+        if self._no_inputs != numpy.log2(self._truth_table):
+            try:
+                raise Bad_Table('table and input sequence are not compatible')
+            except Bad_Table as e:
+                print "ERROR: ", e
+                
+        self._n_neurons = self._no_inputs
         self._rand_seed = rand_seed
 
         self._reward_delay = reward_delay
@@ -294,7 +309,7 @@ class Logic(ApplicationVertex,
             LogicMachineVertex._LOGIC_REGIONS.DATA.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_value(self._reward_delay, data_type=DataType.UINT32)
-        spec.write_value(self._inputs, data_type=DataType.UINT32)
+        spec.write_value(self._no_inputs, data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
@@ -302,6 +317,8 @@ class Logic(ApplicationVertex,
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         # Write the data - Arrays must be 32-bit values, so convert
+        data = numpy.array(self._input_sequence, dtype=numpy.uint32)
+        spec.write_array(data.view(numpy.uint32))
         data = numpy.array(self._truth_table, dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))
 
