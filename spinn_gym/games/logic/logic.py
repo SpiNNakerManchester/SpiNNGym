@@ -147,8 +147,7 @@ class Logic(ApplicationVertex,
     # **HACK** for Projection to connect a synapse type is required
     # synapse_type = LogicSynapseType()
 
-    def __init__(self, truth_table=default_parameters['truth_table'],
-                 input_sequence=default_parameters['input_sequence'],
+    def __init__(self, truth_table, input_sequence,
                  rate_on=default_parameters['rate_on'],
                  rate_off=default_parameters['rate_off'],
                  score_delay=default_parameters['score_delay'],
@@ -171,7 +170,7 @@ class Logic(ApplicationVertex,
         self._stochastic = stochastic
         self._input_sequence = input_sequence
         self._no_inputs = len(input_sequence)
-        if self._no_inputs != numpy.log2(self._truth_table):
+        if self._no_inputs != numpy.log2(len(self._truth_table)):
             try:
                 raise Bad_Table('table and input sequence are not compatible')
             except Bad_Table as e:

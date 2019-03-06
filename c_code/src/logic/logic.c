@@ -44,9 +44,14 @@ typedef enum
 
 typedef enum
 {
-  SPECIAL_EVENT_REWARD,
-  SPECIAL_EVENT_NO_REWARD,
-  SPECIAL_EVENT_MAX,
+  SPECIAL_EVENT_INPUT_1,
+  SPECIAL_EVENT_INPUT_2,
+  SPECIAL_EVENT_INPUT_3,
+  SPECIAL_EVENT_INPUT_4,
+  SPECIAL_EVENT_INPUT_5,
+  SPECIAL_EVENT_INPUT_6,
+  SPECIAL_EVENT_INPUT_7,
+  SPECIAL_EVENT_INPUT_8,
 } special_event_t;
 
 typedef enum
@@ -85,7 +90,9 @@ int rand_seed;
 int32_t current_score = 0;
 int32_t stochastic = 1;
 int32_t rate_on = 20;
+float max_fire_prob_on;
 int32_t rate_off = 5;
+float max_fire_prob_off;
 
 int32_t correct_output = -1;
 int32_t output_choice[2] = {0};
@@ -105,13 +112,13 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-//static inline void add_reward()
-//{
-//  spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "Got a reward\n");
+static inline void send_spike(int input)
+{
+  spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
+//  io_printf(IO_BUF, "sending spike to input %d\n", input);
 //  current_score++;
-//}
-//
+}
+
 //static inline void add_no_reward()
 //{
 //  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
@@ -188,6 +195,8 @@ static bool initialize(uint32_t *timer_period)
     kiss_seed[3] = arms_region[5];
     rate_on = arms_region[6];
     rate_off = arms_region[7];
+    max_fire_prob_on = (float)rate_on / 1000.f;
+    max_fire_prob_off = (float)rate_off / 1000.f;
     stochastic = arms_region[8];
     input_sequence = (uint32_t *)&arms_region[9];
     truth_table = (uint32_t *)&arms_region[9 + number_of_inputs];
@@ -239,6 +248,40 @@ bool was_it_correct(){
     }
     output_choice[0] = 0;
     output_choice[1] = 0;
+}
+
+float rand021(){
+    return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
+}
+
+void did_it_fire(uint32_t time){
+//    io_printf(IO_BUF, "time = %u\n", time);
+//    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
+//    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
+    if(stochastic){
+        for(int i=0; i<number_of_inputs; i=i+1){
+            if(input_sequence[i] == 0){
+                if(rand021() < max_fire_prob_off){
+                    send_spike(i);
+                }
+            }
+            else{
+                if(rand021() < max_fire_prob_on){
+                    send_spike(i);
+                }
+            }
+        }
+    }
+    else{
+        for(int i=0; i<number_of_inputs; i=i+1){
+            if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0){
+                send_spike(i);
+            }
+            else if(input_sequence[i] == 1 && time % (1000 / rate_on) == 0){
+                send_spike(i);
+            }
+        }
+    }
 }
 
 void mc_packet_received_callback(uint keyx, uint payload)
@@ -312,6 +355,7 @@ void timer_callback(uint unused, uint dummy)
     {
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
+        did_it_fire(score_change_count);
         if(tick_in_frame == score_delay)
         {
             was_it_correct();

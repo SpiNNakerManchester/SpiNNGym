@@ -1,6 +1,7 @@
 from games.breakout.breakout import Breakout
 from games.multi_arm_bandit.bandit import Bandit
 from games.inverted_pendulum.inverted_pendulum import Pendulum
+from games.logic.logic import Logic
 import os
 
 # Put model_binaries directory on path
