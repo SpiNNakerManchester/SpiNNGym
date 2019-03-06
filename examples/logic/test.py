@@ -22,10 +22,15 @@ def get_scores(logic_pop,simulator):
 p.setup(timestep=1.0)
 
 truth_table = [0, 1, 1, 0]
-input_sequence = [0, 1]
+input_sequence = [1, 1]
 
-input_size = int(np.log2(len(truth_table)))
-input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=5))
+#index 0 = off
+#index 1 = on
+model_input = [0, 1]
+
+input_size = len(input_sequence)
+rate = 20
+input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=[rate*model_input[0], rate*model_input[1]]))
 
 output_pop1 = p.Population(2, p.IF_cond_exp())
 output_pop2 = p.Population(2, p.IF_cond_exp())
@@ -47,9 +52,7 @@ output_pop2.record('spikes')
 
 i2a = p.Projection(input_pop, logic_pop, p.AllToAllConnector())
 
-#neuron ID 0 = on
-#neuron ID 1 = off
-test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
+# test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
 i2o1 = p.Projection(logic_pop, output_pop1, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
 i2o2 = p.Projection(logic_pop, output_pop2, p.OneToOneConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
 

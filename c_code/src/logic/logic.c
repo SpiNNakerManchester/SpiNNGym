@@ -39,7 +39,7 @@ typedef enum
   REGION_SYSTEM,
   REGION_LOGIC,
   REGION_RECORDING,
-  REGION_ARMS,
+  REGION_DATA,
 } region_t;
 
 typedef enum
@@ -185,21 +185,21 @@ static bool initialize(uint32_t *timer_period)
        return false;
     }
 
-    address_t arms_region = data_specification_get_region(REGION_ARMS, address);
-    score_delay = arms_region[0];
-    number_of_inputs = arms_region[1];
-//    rand_seed = arms_region[2];
-    kiss_seed[0] = arms_region[2];
-    kiss_seed[1] = arms_region[3];
-    kiss_seed[2] = arms_region[4];
-    kiss_seed[3] = arms_region[5];
-    rate_on = arms_region[6];
-    rate_off = arms_region[7];
+    address_t logic_region = data_specification_get_region(REGION_DATA, address);
+    score_delay = logic_region[0];
+    number_of_inputs = logic_region[1];
+//    rand_seed = logic_region[2];
+    kiss_seed[0] = logic_region[2];
+    kiss_seed[1] = logic_region[3];
+    kiss_seed[2] = logic_region[4];
+    kiss_seed[3] = logic_region[5];
+    rate_on = logic_region[6];
+    rate_off = logic_region[7];
     max_fire_prob_on = (float)rate_on / 1000.f;
     max_fire_prob_off = (float)rate_off / 1000.f;
-    stochastic = arms_region[8];
-    input_sequence = (uint32_t *)&arms_region[9];
-    truth_table = (uint32_t *)&arms_region[9 + number_of_inputs];
+    stochastic = logic_region[8];
+    input_sequence = (uint32_t *)&logic_region[9];
+    truth_table = (uint32_t *)&logic_region[9 + number_of_inputs];
 //    double arm_probabilities[10] = {0}
 //    for (int i=1, i<number_of_inputs, i=i+1){
 //        io_printf(IO_BUF, "converting arm prob %d, stage \n", temp_arm_probabilities[i] i)
@@ -210,24 +210,28 @@ static bool initialize(uint32_t *timer_period)
 
     int truth_table_index = 0;
     for(int i=0; i<number_of_inputs; i=i+1){
-        truth_table_index = truth_table + (input_sequence[i] * pow(2, i));
+        truth_table_index = truth_table_index + (input_sequence[i] * (1 << i));
+        io_printf(IO_BUF, "%d: input %u, index %u, 2 %u\n", i, input_sequence[i], truth_table_index, 1 << i);
+    }
+    for(int i=0; i<(1 << number_of_inputs); i=i+1){
+        io_printf(IO_BUF, "t%d: %u\n", i, truth_table[i]);
     }
     correct_output = truth_table[truth_table_index];
 
 //    srand(rand_seed);
     //TODO check this prints right, ybug read the address
-    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)arms_region[0]);
-    io_printf(IO_BUF, "r2 %d\n", (uint32_t *)arms_region[1]);
-    io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)arms_region[2]);
-    io_printf(IO_BUF, "rand3 0x%x\n", (uint32_t *)arms_region[3]);
-    io_printf(IO_BUF, "r4 0x%x\n", arms_region[3]);
-    io_printf(IO_BUF, "r5 0x%x\n", arms_region[6]);
-    io_printf(IO_BUF, "r6 %u\n", arms_region[7]);
-    io_printf(IO_BUF, "r6d %d\n", arms_region[8]);
-    io_printf(IO_BUF, "r7 %u\n", arms_region[9]);
-    io_printf(IO_BUF, "t %d\n", arms_region[9 + number_of_inputs]);
-    io_printf(IO_BUF, "t+1 %d\n", arms_region[9 + number_of_inputs + 1]);
-    io_printf(IO_BUF, "t-1 %d\n", arms_region[9 + number_of_inputs - 1]);
+    io_printf(IO_BUF, "score delay %d\n", (uint32_t *)logic_region[0]);
+    io_printf(IO_BUF, "no inputs %d\n", (uint32_t *)logic_region[1]);
+    io_printf(IO_BUF, "kiss seed. %d\n", (uint32_t *)logic_region[2]);
+    io_printf(IO_BUF, "seed 0x%x\n", (uint32_t *)logic_region[3]);
+    io_printf(IO_BUF, "seed %u\n", logic_region[3]);
+    io_printf(IO_BUF, "rate on %u\n", logic_region[6]);
+    io_printf(IO_BUF, "rate off %u\n", logic_region[7]);
+    io_printf(IO_BUF, "stochastic %d\n", logic_region[8]);
+    io_printf(IO_BUF, "input seq %u\n", logic_region[9]);
+    io_printf(IO_BUF, "tt %d\n", logic_region[9 + number_of_inputs]);
+    io_printf(IO_BUF, "tt+1 %d\n", logic_region[9 + number_of_inputs + 1]);
+    io_printf(IO_BUF, "tt-1 %d\n", logic_region[9 + number_of_inputs - 1]);
     io_printf(IO_BUF, "correct out %d\n", correct_output);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
@@ -243,9 +247,11 @@ bool was_it_correct(){
     else if (output_choice[1] > output_choice[0]){
         choice = 1;
     }
+//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
     if (choice == correct_output){
         current_score = current_score + 1;
     }
+//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
     output_choice[0] = 0;
     output_choice[1] = 0;
 }
