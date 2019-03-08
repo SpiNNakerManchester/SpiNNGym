@@ -125,9 +125,9 @@ class Logic(ApplicationVertex,
     def get_synapse_id_by_target(self, target):
         return 0
 
-    LOGIC_REGION_BYTES = 24
-    DATA_REGION_BYTES = 80
-    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7 # 1 week
+    LOGIC_REGION_BYTES = 200
+    DATA_REGION_BYTES = 200
+    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 # 1 day
 
     # parameters expected by PyNN
     default_parameters = {
