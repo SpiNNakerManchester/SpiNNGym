@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 # Layout of pixels
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-# from spinn_breakout.visualiser.visualiser import Visualiser
+from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 
 def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
@@ -123,9 +123,9 @@ y_factor2 = 16
 # breakout_pop = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor1), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor1), label="breakout1"))
 # breakout_pop2 = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor2), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor2), label="breakout2"))
 
-breakout_pop = p.Population(b1.neurons(),
-                            gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=0),
-                            label="breakout1")
+b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=0)
+
+breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 # b2 = b_out(x_factor=x_factor2, y_factor=y_factor2, bricking=0)
 # breakout_pop2 = p.Population(b2.neurons(), b2, label="breakout2")
 
@@ -197,10 +197,10 @@ print key_input_connection
 #                         )
 
 
-# t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
-#                                                      np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-#                                                      np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
-#                                                      key_input_connection])
+t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
+                                                     np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
+                                                     np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
+                                                     key_input_connection])
 # t = threading.Thread(target=thread_visualiser, args=[UDP_PORT2, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
 #                                                      np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1)))-1,
 #                                                      np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))-1])
@@ -217,7 +217,7 @@ print key_input_connection
 # Run simulation (non-blocking)
 # visualiser.show()
 print "reached here 1"
-# t.start()
+t.start()
 # r.start()
 runtime = 100000
 

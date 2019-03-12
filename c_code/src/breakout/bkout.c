@@ -26,7 +26,6 @@
 //----------------------------------------------------------------------------
 // Macros
 //----------------------------------------------------------------------------
-// **TODO** many of these magic numbers should be passed from Python
 // Game dimension constants
 #define GAME_WIDTH_MAX  160
 #define GAME_HEIGHT_MAX 128

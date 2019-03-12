@@ -56,11 +56,11 @@ null_pop.record(['spikes', 'v', 'gsyn_exc'])
 #     p.Projection(pendulum, null_pops[i], p.FromListConnector([[i, 0, weight, 1]]))
 
 arm_collection = []
-input_spikes = []
-rates = [0, 0]
-# rates = [0, 20]
-# rates = [0, 10]
-print 'rates = ', rates
+# input_spikes = []
+rate = 5
+print 'rate = ', rate
+input_spikes = p.Population(force_increments, p.SpikeSourcePoisson(rate=rate))
+p.Projection(input_spikes, pendulum, p.AllToAllConnector(), p.StaticSynapse())
 weight = 0.1
 label = '64 0.55'
 from_list_conn_left = [[0, 0, weight, 1], [6, 0, weight, 1], [3, 0, weight, 1], [11, 0, weight, 1]]
@@ -112,7 +112,7 @@ if reward_based:
     print scores
 else:
     i = 0
-    print "cart  |  angle"
+    print "cart  \t\t|\t\t  angle"
     while i < len(scores[0]):
         print "{:8}\t{:8}".format(scores[0][i], scores[0][i+1])
         i += 2
@@ -138,5 +138,5 @@ Figure(
 )
 plt.show()
 
-print 'rates = ', rates
+print 'rate = ', rate
 p.end()

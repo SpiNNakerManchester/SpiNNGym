@@ -122,7 +122,7 @@ static uint32_t key;
 
 //! the number of timer ticks that this model should run for before exiting.
 uint32_t simulation_ticks = 0;
-uint32_t score_change_count=0;
+uint32_t score_change_count = 0;
 
 //----------------------------------------------------------------------------
 // Inline functions
@@ -183,53 +183,58 @@ void resume_callback() {
     recording_reset();
 }
 
-static bool initialize(uint32_t *timer_period)
+static bool initialize(uint32_t *timer_period, bool first)
 {
-    io_printf(IO_BUF, "Initialise bandit: started\n");
+    io_printf(IO_BUF, "Setting bandit: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     address_t address = data_specification_get_data_address();
 
-    // Read the header
-    if (!data_specification_read_header(address))
-    {
-      return false;
-    }
-    /*
-    simulation_initialise(
-        address_t address, uint32_t expected_app_magic_number,
-        uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
-        uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
-        int dma_transfer_done_callback_priority)
-    */
-    // Get the timing details and set up thse simulation interface
-    if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
-    APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, 1, NULL))
-    {
-      return false;
-    }
-    io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
+    if (first){
 
+        // Read the header
+        if (!data_specification_read_header(address))
+        {
+          return false;
+        }
+        /*
+        simulation_initialise(
+            address_t address, uint32_t expected_app_magic_number,
+            uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
+            uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
+            int dma_transfer_done_callback_priority)
+        */
+        // Get the timing details and set up thse simulation interface
+        if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
+        APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+        &infinite_run, 1, NULL))
+        {
+          return false;
+        }
+        io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
+        // Read breakout region
+        address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
+        key = breakout_region[0];
+        io_printf(IO_BUF, "\tKey=%08x\n", key);
+        io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
-    // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
-    key = breakout_region[0];
-    io_printf(IO_BUF, "\tKey=%08x\n", key);
-    io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
-
-    //get recording region
-    address_t recording_address = data_specification_get_region(
-                                       REGION_RECORDING,address);
-    // Setup recording
-    uint32_t recording_flags = 0;
-    if (!recording_initialize(recording_address, &recording_flags))
-    {
-       rt_error(RTE_SWERR);
-       return false;
+        //get recording region
+        address_t recording_address = data_specification_get_region(
+                                           REGION_RECORDING,address);
+        // Setup recording
+        uint32_t recording_flags = 0;
+        if (!recording_initialize(recording_address, &recording_flags))
+        {
+           rt_error(RTE_SWERR);
+           return false;
+        }
     }
 
     cart_position = track_length / 2;
+    cart_velocity = 0;  // m/s
+    cart_acceleration = 0;  // m/s^2
+    pole_velocity = 0; // angular/s
+    pole_acceleration = 0; // angular/s^2
 
     address_t pend_region = data_specification_get_region(REGION_DATA, address);
 //    encoding_scheme = pend_region[0]; // 0 rate
@@ -353,6 +358,8 @@ bool update_state(float time_step){
     }
 
     if (cart_position > track_length || cart_position < 0  || pole_angle > max_pole_angle  || pole_angle < min_pole_angle) {
+//        io_printf(IO_BUF, "failed state (d,v,a):(%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n", (accum)pole_angle, (accum)pole_velocity,
+//                            (accum)pole_acceleration, (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
         io_printf(IO_BUF, "failed out\n");
         return false;
     }
@@ -521,6 +528,7 @@ void timer_callback(uint unused, uint dummy)
     use(unused);
     use(dummy);
 
+    current_time = current_time + 1;
     _time++;
     score_change_count++;
 
@@ -533,11 +541,11 @@ void timer_callback(uint unused, uint dummy)
         //    spin1_callback_off(MC_PACKET_RECEIVED);
 
         io_printf(IO_BUF, "infinite_run %d; time %d\n",infinite_run, _time);
-        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+//        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
 
-        io_printf(IO_BUF, "Exiting on timer.\n");
+//        io_printf(IO_BUF, "Exiting on timer.\n");
 //        simulation_handle_pause_resume(NULL);
         simulation_ready_to_read();
 
@@ -554,19 +562,32 @@ void timer_callback(uint unused, uint dummy)
         tick_in_frame++;
         if(tick_in_frame == time_increment)
         {
+//            io_printf(IO_BUF, "time inc %u, time %k, score_change %u resetting to initial conditions\n", time_increment, (accum)current_time, score_change_count);
+            send_status();
             if (in_bounds){
-                max_balance_time = (float)_time;
+                if (current_time > max_balance_time){
+                    max_balance_time = current_time;
+                }
+//                max_balance_time = (float)_time;
 //                max_balance_time = max_balance_time + 1;
                 in_bounds = update_state((float)time_increment / 1000.f);
+            }
+            else{
+                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum)current_time);
+                current_time = 0;
+                uint32_t timer_period;
+                initialize(&timer_period, false);
+//                in_bounds = update_state((float)time_increment / 1000.f);
+                in_bounds = true;
             }
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 0.1s
             if(score_change_count >= 100){
-                current_state[0] = cart_position;
-                current_state[1] = pole_angle;
                 if(reward_based == 0){
+                    current_state[0] = cart_position;
+                    current_state[1] = pole_angle;
                     recording_record(0, &current_state, 8);
                 }
                 else{
@@ -575,9 +596,9 @@ void timer_callback(uint unused, uint dummy)
                 score_change_count=0;
             }
         }
-        if (in_bounds){
-            send_status();
-        }
+//        if (in_bounds){
+//            send_status();
+//        }
     }
 //    io_printf(IO_BUF, "time %u\n", ticks);
 //    io_printf(IO_BUF, "time %u\n", _time);
@@ -596,7 +617,7 @@ void c_main(void)
 {
   // Load DTCM data
   uint32_t timer_period;
-  if (!initialize(&timer_period))
+  if (!initialize(&timer_period, true))
   {
     io_printf(IO_BUF,"Error in initialisation - exiting!\n");
     rt_error(RTE_SWERR);
