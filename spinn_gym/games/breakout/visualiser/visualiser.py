@@ -51,15 +51,12 @@ class Visualiser(object):
     colour_bits = 2
 
     def __init__(self, udp_port, key_input_connection=None, scale=4,
-                 x_res=160, y_res=128, x_bits=8, y_bits=8, fps=60):
+                 x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
         # Reset input state
         self.input_state = InputState.idle
 
         # Zero score
         self.score = 0
-
-        self.BRICK_WIDTH = x_res / 5
-        self.BRICK_HEIGHT = y_res / 8
 
         # Cache reference to key input connection
         self.key_input_connection = key_input_connection
@@ -83,12 +80,18 @@ class Visualiser(object):
 
         # assert self.value_mask == 0x3FFFF, self.value_mask
 
-        self.y_res = y_res
-        self.x_res = x_res
-        self.bat_width = 16 / (160 / self.x_res)
+        self.y_res = 128 / y_factor
+        self.x_res = 160 / x_factor
+        self.BRICK_WIDTH = self.x_res / (32 / x_factor)
+        self.BRICK_HEIGHT = 32 / y_factor
+        self.x_factor = x_factor
+        self.y_factor = y_factor
+        self.bat_width = 32 / x_factor
         self.fps = fps
         self.scale = scale
 
+        print "x_factor", self.x_factor
+        print "y_factor", self.y_factor
         print "x_res", self.x_res
         print "y_res", self.y_res
         print "x_bits", x_bits
@@ -112,7 +115,7 @@ class Visualiser(object):
         self.fig = plt.figure("BreakOut", figsize=(8, 6))
         self.axis = plt.subplot(1, 1, 1)
         # self.ion = plt.ion()
-        self.image_data = np.zeros((y_res, x_res))
+        self.image_data = np.zeros((self.y_res, self.x_res))
         self.image = self.axis.imshow(self.image_data, interpolation="nearest",
                                       cmap=cmap, vmin=0.0, vmax=5.0)
 

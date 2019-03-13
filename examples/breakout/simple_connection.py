@@ -34,7 +34,7 @@ def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
     Figure
     visualiser = Visualiser(
         UDP_PORT, key_conn,# id,
-        x_res=xr, y_res=yr,
+        x_factor=xr, y_factor=yr,
         x_bits=xb, y_bits=yb)
     print "threadin2 ", running, id
     visualiser.show()
@@ -99,9 +99,6 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y, weigh
     return connection_list_on, connection_list_off
 
 
-X_BITS = 8
-Y_BITS = 8
-
 # Game resolution
 X_RESOLUTION = 160
 Y_RESOLUTION = 128
@@ -116,14 +113,13 @@ p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
 
 x_factor1 = 8
 y_factor1 = 8
-x_factor2 = 16
-y_factor2 = 16
+bricking = 1
 
 # Create breakout population and activate live output for it
 # breakout_pop = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor1), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor1), label="breakout1"))
 # breakout_pop2 = p.Population(1, p.Breakout(WIDTH_PIXELS=(X_RESOLUTION/x_factor2), HEIGHT_PIXELS=(Y_RESOLUTION/y_factor2), label="breakout2"))
 
-b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=0)
+b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
 
 breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 # b2 = b_out(x_factor=x_factor2, y_factor=y_factor2, bricking=0)
@@ -155,16 +151,16 @@ p.Projection(key_input, breakout_pop, p.AllToAllConnector(), p.StaticSynapse(wei
 
 weight = 0.1
 [Connections_on, Connections_off]=subsample_connection(X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1, 1, 1, weight, row_col_to_input_breakout)
-receive_pop_size1 = (160/x_factor1)*(128/y_factor1)
+# receive_pop_size1 = (160/x_factor1)*(128/y_factor1)
 # receive_pop_size2 = (160/x_factor2)*(128/y_factor2)
-receive_pop_1 = p.Population(receive_pop_size1, p.IF_cond_exp(), label="receive_pop")
+# receive_pop_1 = p.Population(receive_pop_size1, p.IF_cond_exp(), label="receive_pop")
 # receive_pop_2 = p.Population(receive_pop_size2, p.IF_cond_exp(), label="receive_pop")
-p.Projection(breakout_pop,receive_pop_1,p.FromListConnector(Connections_on))#, p.StaticSynapse(weight=weight))
+# p.Projection(breakout_pop,receive_pop_1,p.FromListConnector(Connections_on))#, p.StaticSynapse(weight=weight))
 # p.Projection(breakout_pop2,receive_pop_2,p.OneToOneConnector(), p.StaticSynapse(weight=weight))
-receive_pop_1.record('spikes')#["spikes"])
+# receive_pop_1.record('spikes')#["spikes"])
 # receive_pop_2.record('spikes')#["spikes"])
 
-test_pop = p.Population(b1.neurons(), p.IF_cond_exp(), label="test_pop")
+test_pop = p.Population(1, p.IF_cond_exp(), label="test_pop")
 p.Projection(breakout_pop, test_pop, p.OneToOneConnector(), p.StaticSynapse(weight=weight))
 # test_pop.record('spikes')
 
@@ -197,7 +193,7 @@ print key_input_connection
 #                         )
 
 
-t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
+t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_factor1,
                                                      np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
                                                      np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
                                                      key_input_connection])
@@ -219,7 +215,7 @@ t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, X_RESOLUTION/x_f
 print "reached here 1"
 t.start()
 # r.start()
-runtime = 100000
+runtime = 1000 * 100
 
 simulator = get_simulator()
 
@@ -237,13 +233,13 @@ running = False
 # visualiser.show()
 
 # for j in range(receive_pop_size):
-spikes_1 = receive_pop_1.get_data('spikes').segments[0].spiketrains
+# spikes_1 = receive_pop_1.get_data('spikes').segments[0].spiketrains
 
-counter = 0
-for neuron in spikes_1:
-    for spike in neuron:
-        print spike
-        counter += 1
+# counter = 0
+# for neuron in spikes_1:
+#     for spike in neuron:
+#         print spike
+#         counter += 1
 # spikes_2 = receive_pop_2.get_data('spikes').segments[0].spiketrains
 # spikes_t = test_pop.get_data('spikes').segments[0].spiketrains
 # Figure(
