@@ -215,7 +215,7 @@ t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_fac
 print "reached here 1"
 t.start()
 # r.start()
-runtime = 1000 * 100
+runtime = 1000 * 30
 
 simulator = get_simulator()
 

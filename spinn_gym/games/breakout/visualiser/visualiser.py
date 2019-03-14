@@ -63,7 +63,7 @@ class Visualiser(object):
 
         # Build masks
         self.x_mask = (1 << x_bits) - 1
-        self.x_shift = self.colour_bits + y_bits + 1
+        self.x_shift = self.colour_bits + y_bits
         # assert self.x_shift == 10, self.x_shift
 
         self.y_mask = (1 << y_bits) - 1
@@ -83,7 +83,7 @@ class Visualiser(object):
         self.y_res = 128 / y_factor
         self.x_res = 160 / x_factor
         self.BRICK_WIDTH = self.x_res / (32 / x_factor)
-        self.BRICK_HEIGHT = 32 / y_factor
+        self.BRICK_HEIGHT = 16 / y_factor
         self.x_factor = x_factor
         self.y_factor = y_factor
         self.bat_width = 32 / x_factor

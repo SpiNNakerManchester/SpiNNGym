@@ -150,12 +150,12 @@ int v = -MAX_BALL_SPEED;// * FACT;
 int x_bat = 32;
 
 // bat length in pixels
-int bat_len = 32;
+int bat_len = 48;
 
 int BRICK_WIDTH = 10;
 int BRICK_HEIGHT = 6;
 
-int BRICK_LAYER_OFFSET = 32;
+int BRICK_LAYER_OFFSET = 16;
 int BRICK_LAYER_HEIGHT = 12;
 
 mars_kiss64_seed_t kiss_seed;
@@ -257,13 +257,18 @@ static inline void set_pixel_col (int i, int j, colour_t col, bool bricked)
 //    }
 }
 
-static inline bool is_a_brick(int x, int y) // x - width, y- height?
+static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
 {
+
+//    io_printf(IO_BUF, "%d %d %d %d\n", x, y, pos_x, pos_y);
+    if (the_x < 0 || the_y < 0 || the_x >= GAME_WIDTH - 1 || the_y >= GAME_HEIGHT - 1){
+        return false;
+    }
     int pos_x=0, pos_y=0;
 
-    if ( y >= BRICK_LAYER_OFFSET && y < BRICK_LAYER_OFFSET + BRICK_LAYER_HEIGHT) {
-        pos_x = x / BRICK_WIDTH;
-        pos_y = (y - BRICK_LAYER_OFFSET) / BRICK_HEIGHT;
+    if ( the_y >= BRICK_LAYER_OFFSET && the_y < BRICK_LAYER_OFFSET + BRICK_LAYER_HEIGHT) {
+        pos_x = the_x / BRICK_WIDTH;
+        pos_y = (the_y - BRICK_LAYER_OFFSET) / BRICK_HEIGHT;
         bool val = bricks[pos_y][pos_x];
         bricks[pos_y][pos_x] = false;
         if (val) {
@@ -276,7 +281,7 @@ static inline bool is_a_brick(int x, int y) // x - width, y- height?
             brick_corner_y = -1;
         }
 
-//        io_printf(IO_BUF, "%d %d %d %d\n", x, y, pos_x, pos_y);
+        io_printf(IO_BUF, "x:%d y:%d px:%d py:%d, v:%d\n", the_x, the_y, pos_x, pos_y, val);
         return val;
     }
     brick_corner_x = -1;
@@ -417,25 +422,65 @@ static void update_frame (uint32_t time)
     //        io_printf(IO_BUF, "about to is a brick x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
             //detect collision
             // if we hit something hard! -- paddle or brick
-            bool bricked = is_a_brick(x, y);
-
+//            bool bricked = is_a_brick(x, y);
+//            bool bricked = is_a_brick(x+(u/2), y+(v/2));
+            bool bricked1 = false;
+            bool bricked2 = false;
+            bricked1 = is_a_brick(x+(u/2), y+(v/2));
+            if (!bricked1){
+                bricked2 = is_a_brick(x, y);
+            }
+            bool bricked = bricked1 | bricked2;
             if (bricked) {
                 int brick_x = brick_corner_x * BRICK_WIDTH;
                 int brick_y = (brick_corner_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET;
-                io_printf(IO_BUF, "got in bricked, x:%d, y:%d, brick_x:%d, brick_y:%d, brick_c_x:%d, brick_c_y:%d\n", x, y, brick_x, brick_y, brick_corner_x, brick_corner_y);
+                io_printf(IO_BUF, "got in bricked, u:%d, v%d, x:%d, y:%d, brick_x:%d, brick_y:%d, brick_c_x:%d, brick_c_y:%d, b1:%d\n", u, v, x, y, brick_x, brick_y, brick_corner_x, brick_corner_y, bricked1);
                 //        io_printf(IO_BUF, "x-brick_x = %d, %d %d\n",x/FACT - brick_x, x/FACT, brick_x);
                 //        io_printf(IO_BUF, "y-brick_y = %d, %d %d",y/FACT - brick_y, y/FACT, brick_y);
-
-                if (brick_x + (BRICK_WIDTH / 2) > x && u > 0){
+//                int the_x = x;
+//                int the_y = y;
+                if (bricked1){
+                    set_pixel_col(x, y, COLOUR_BACKGROUND, bricked);
+                    int x = x+(u/2);
+                    int y = y+(v/2);
+                }
+                if (!current_number_of_bricks){
+                   set_pixel_col(x, y, COLOUR_BACKGROUND, bricked);
+                }
+//                if (brick_x == the_x && u > 0){
+//                    u = -u;
+//                }
+//                else if (the_x == brick_x + BRICK_WIDTH - 1 && u < 0){
+//                    u = -u;
+//                }
+//                if (brick_y == the_y && v > 0){
+//                    v = -v;
+//                }
+//                else if (the_y ==  brick_y + BRICK_HEIGHT - 1 && v < 0){
+//                    v = -v;
+//                }
+//                if (brick_x + BRICK_WIDTH <= x - u){// && u < 0){
+//                    u = -u;
+//                }
+//                else if (x - u <= brick_x){// && u > 0){
+//                    u = -u;
+//                }
+//                if (brick_y + BRICK_HEIGHT <= y - v){// && v < 0){
+//                    v = -v;
+//                }
+//                else if (y - v <=  brick_y){// && v > 0){
+//                    v = -v;
+//                }
+                if (brick_x + BRICK_WIDTH == x){// + (u/2)){// && u < 0){
                     u = -u;
                 }
-                else if (x > brick_x + (BRICK_WIDTH / 2) && u < 0){
+                else if (x == brick_x){// && u > 0){
                     u = -u;
                 }
-                if (brick_y + (BRICK_HEIGHT / 2) > y && v > 0){
+                if (brick_y + BRICK_HEIGHT == y){// + (v/2)){// && v < 0){
                     v = -v;
                 }
-                if (y <  brick_y + (BRICK_HEIGHT / 2) && v < 0){
+                else if (y ==  brick_y){// && v > 0){
                     v = -v;
                 }
 
@@ -624,7 +669,7 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "BPR = %d, BPC = %d\n", BRICKS_PER_ROW, BRICKS_PER_COLUMN);
 
     BRICK_WIDTH = GAME_WIDTH / BRICKS_PER_ROW;//BRICK_WIDTH / x_factor;
-    BRICK_HEIGHT = 32 / y_factor;//BRICK_HEIGHT / y_factor;
+    BRICK_HEIGHT = 16 / y_factor;//BRICK_HEIGHT / y_factor;
 
     BRICK_LAYER_OFFSET = BRICK_LAYER_OFFSET / y_factor;
     BRICK_LAYER_HEIGHT = BRICKS_PER_COLUMN * BRICK_HEIGHT;//BRICK_LAYER_HEIGHT / y_factor;
