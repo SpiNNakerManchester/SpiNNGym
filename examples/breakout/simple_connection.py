@@ -111,8 +111,8 @@ UDP_PORT2 = UDP_PORT1 + 1
 p.setup(timestep=1.0)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
 
-x_factor1 = 8
-y_factor1 = 8
+x_factor1 = 2
+y_factor1 = x_factor1
 bricking = 1
 
 # Create breakout population and activate live output for it

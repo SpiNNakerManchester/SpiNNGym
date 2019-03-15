@@ -50,10 +50,8 @@
 #define NUMBER_OF_LIVES 5
 #define SCORE_DOWN_EVENTS_PER_DEATH 5
 
-#define MAX_BRICKS_PER_ROW  32
-#define MAX_BRICKS_PER_COLUMN  2
-int BRICKS_PER_ROW = 32;
-int BRICKS_PER_COLUMN = 2;
+#define BRICKS_PER_ROW  5
+#define BRICKS_PER_COLUMN  2
 
 #define MAX_BALL_SPEED 2
 
@@ -129,7 +127,7 @@ static int y; //= (GAME_HEIGHT - GAME_HEIGHT /8) * FACT;
 
 static int current_number_of_bricks;
 
-static bool bricks[MAX_BRICKS_PER_COLUMN][MAX_BRICKS_PER_ROW];
+static bool bricks[BRICKS_PER_COLUMN][BRICKS_PER_ROW];
 bool print_bricks  = true;
 
 int brick_corner_x=-1, brick_corner_y=-1;
@@ -208,7 +206,7 @@ static inline void add_score_down_event()
 void add_event(int i, int j, colour_t col, bool bricked)
 {
     const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-    io_printf(IO_BUF, "sending payload back i:%d, j:%d, c:%d, b:%d\n", i, j, colour_bit, bricked);
+//    io_printf(IO_BUF, "sending payload back i:%d, j:%d, c:%d, b:%d\n", i, j, colour_bit, bricked);
 
 //    int row_bits = (np.ceil(np.log2(x_res)));
 //    int idx = 0;
@@ -260,16 +258,22 @@ static inline void set_pixel_col (int i, int j, colour_t col, bool bricked)
 static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
 {
 
-//    io_printf(IO_BUF, "%d %d %d %d\n", x, y, pos_x, pos_y);
+//    io_printf(IO_BUF, "x:%d, y:%d, px:%d, py:%d\n", x, y, pos_x, pos_y);
     if (the_x < 0 || the_y < 0 || the_x >= GAME_WIDTH - 1 || the_y >= GAME_HEIGHT - 1){
         return false;
     }
     int pos_x=0, pos_y=0;
 
-    if ( the_y >= BRICK_LAYER_OFFSET && the_y < BRICK_LAYER_OFFSET + BRICK_LAYER_HEIGHT) {
+    if (the_y >= BRICK_LAYER_OFFSET && the_y < BRICK_LAYER_OFFSET + BRICK_LAYER_HEIGHT) {
+//        io_printf(IO_BUF, "in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         pos_x = the_x / BRICK_WIDTH;
         pos_y = (the_y - BRICK_LAYER_OFFSET) / BRICK_HEIGHT;
+//        io_printf(IO_BUF, "2 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         bool val = bricks[pos_y][pos_x];
+        if (val){
+            add_event(pos_x * BRICK_WIDTH, (pos_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET, COLOUR_BACKGROUND, true);
+        }
+//        io_printf(IO_BUF, "3 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         bricks[pos_y][pos_x] = false;
         if (val) {
             brick_corner_x = pos_x;
@@ -281,7 +285,7 @@ static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
             brick_corner_y = -1;
         }
 
-        io_printf(IO_BUF, "x:%d y:%d px:%d py:%d, v:%d\n", the_x, the_y, pos_x, pos_y, val);
+//        io_printf(IO_BUF, "x:%d y:%d px:%d py:%d, v:%d\n", the_x, the_y, pos_x, pos_y, val);
         return val;
     }
     brick_corner_x = -1;
@@ -289,35 +293,50 @@ static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
     return false;
 }
 
-static inline bool * hitting_a_brick(){
-    io_printf(IO_BUF, "hitting brick\n");
+static inline uint32_t hitting_a_brick(int the_x, int the_y){
+//    io_printf(IO_BUF, "hitting brick from x:%d, y:%d\n", the_x, the_y);
+    uint32_t encoded_result = 0;
     bool check_left = false;
     bool check_right = false;
     bool check_up = false;
     bool check_down = false;
     if (u > 0){
-        check_right = is_a_brick(x + 1, y);
-        io_printf(IO_BUF, "b1\n");
+        check_right = is_a_brick(the_x + 1, the_y);
+        if (check_right){
+            encoded_result = encoded_result + 1;
+        }
+//        io_printf(IO_BUF, "b1\n");
     }
     else{
-        check_left = is_a_brick(x - 1, y);
-        io_printf(IO_BUF, "b2\n");
+        check_left = is_a_brick(the_x - 1, the_y);
+        if (check_left){
+            encoded_result = encoded_result + 2;
+        }
+//        io_printf(IO_BUF, "b2\n");
     }
     if (v > 0){
-        check_down = is_a_brick(x, y + 1);
-        io_printf(IO_BUF, "b3\n");
+        check_down = is_a_brick(the_x, the_y + 1);
+        if (check_down){
+            encoded_result = encoded_result + 4;
+        }
+//        io_printf(IO_BUF, "b3\n");
     }
     else{
-        check_up = is_a_brick(x, y - 1);
-        io_printf(IO_BUF, "b4\n");
+        check_up = is_a_brick(the_x, the_y - 1);
+        if (check_up){
+            encoded_result = encoded_result + 8;
+        }
+//        io_printf(IO_BUF, "b4\n");
     }
-    io_printf(IO_BUF, "finished checks\n");
-    bool brick_direction[4] = {check_left, check_right, check_up, check_down};
-    io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
-    bool (*array_pointer)[4] = &brick_direction;
-    io_printf(IO_BUF, "a1:%d, a2:%d, a3:%d, a4:%d\n", array_pointer[0], array_pointer[1], array_pointer[2], array_pointer[3]);
-    io_printf(IO_BUF, "created pointer\n");
-    return array_pointer;
+//    io_printf(IO_BUF, "finished checks\n");
+//    bool brick_direction[4] = {check_left, check_right, check_up, check_down};
+//    io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d h\n", check_left, check_right, check_up, check_down);
+//    bool (*array_pointer)[4] = &brick_direction;
+    //for some reason this print is necessary for it to function
+//    io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d a\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
+//    io_printf(IO_BUF, "result:%d\n", encoded_result);
+//    io_printf(IO_BUF, "created pointer\n");
+    return encoded_result;
 }
 
 //----------------------------------------------------------------------------
@@ -419,8 +438,10 @@ static void update_frame (uint32_t time)
          if (time % (20 * x_factor) == 0)
          {
             // clear pixel to background
-    //        io_printf(IO_BUF, "setting ball to background x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
-            set_pixel_col(x, y, COLOUR_BACKGROUND, false);
+            io_printf(IO_BUF, "setting ball to background x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
+            if (get_pixel_col(x, y) != COLOUR_BAT){
+                set_pixel_col(x, y, COLOUR_BACKGROUND, false);
+            }
 
             // move ball in x and bounce off sides
             x += u;
@@ -441,7 +462,7 @@ static void update_frame (uint32_t time)
     //        if (y == GAME_HEIGHT - 1)
             if (y + v > GAME_HEIGHT)
             {
-                y = GAME_HEIGHT;
+                y = GAME_HEIGHT - 1;
             }
             if (y + v < 0)
             {
@@ -454,96 +475,93 @@ static void update_frame (uint32_t time)
 //            bool bricked = is_a_brick(x, y);
 //            bool bricked = is_a_brick(x+(u/2), y+(v/2));
             io_printf(IO_BUF, "about to check hitting brick\n");
-            bool * brick_direction = hitting_a_brick();
-            io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
+            uint32_t encoded_result = hitting_a_brick(x, y);
+            bool brick_direction[4];// = hitting_a_brick(x+(u/2), y+(v/2));
+            for (int i = 0; i < 4; i++){
+                if ((encoded_result >> i) & 1 == 1){
+                    brick_direction[i] = true;
+                }
+                else{
+                    brick_direction[i] = false;
+                }
+            }
+//            io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d, u:%d, v:%d, result:%u\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3], u, v, encoded_result);
             if (brick_direction[0] || brick_direction[1] || brick_direction[2] || brick_direction[3]) {
-                io_printf(IO_BUF, "a brick was hit\n");
+                set_pixel_col(x, y, COLOUR_BACKGROUND, false);
+//                set_pixel_col(x, y, COLOUR_BALL, false);
+//                io_printf(IO_BUF, "a brick was hit\n");
                 if (brick_direction[0]){
-//                    bool bricked = is_a_brick(x - 1, y);
-//                    int brick_x = brick_corner_x * BRICK_WIDTH;
-//                    int brick_y = (brick_corner_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET;
                     u = -u;
                     brick_direction[0] = false;
                     add_score_up_event();
-                    io_printf(IO_BUF, "ob1\n");
+//                    io_printf(IO_BUF, "ob1\n");
                 }
                 if (brick_direction[1]){
                     u = -u;
                     brick_direction[1] = false;
                     add_score_up_event();
-                    io_printf(IO_BUF, "ob2\n");
+//                    io_printf(IO_BUF, "ob2\n");
                 }
                 if (brick_direction[2]){
                     v = -v;
                     brick_direction[2] = false;
                     add_score_up_event();
-                    io_printf(IO_BUF, "ob3\n");
+//                    io_printf(IO_BUF, "ob3\n");
                 }
                 if (brick_direction[3]){
                     v = -v;
                     brick_direction[3] = false;
                     add_score_up_event();
-                    io_printf(IO_BUF, "ob4\n");
+//                    io_printf(IO_BUF, "ob4\n");
                 }
-//                int brick_x = brick_corner_x * BRICK_WIDTH;
-//                int brick_y = (brick_corner_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET;
-//                io_printf(IO_BUF, "got in bricked, u:%d, v%d, x:%d, y:%d, brick_x:%d, brick_y:%d, brick_c_x:%d, brick_c_y:%d, b1:%d\n", u, v, x, y, brick_x, brick_y, brick_corner_x, brick_corner_y, bricked1);
-//                //        io_printf(IO_BUF, "x-brick_x = %d, %d %d\n",x/FACT - brick_x, x/FACT, brick_x);
-//                //        io_printf(IO_BUF, "y-brick_y = %d, %d %d",y/FACT - brick_y, y/FACT, brick_y);
-////                int the_x = x;
-////                int the_y = y;
-//                if (bricked1){
-//                    set_pixel_col(x, y, COLOUR_BACKGROUND, bricked);
-//                    int x = x+(u/2);
-//                    int y = y+(v/2);
-//                }
-//                if (!current_number_of_bricks){
-//                   set_pixel_col(x, y, COLOUR_BACKGROUND, bricked);
-//                }
-////                if (brick_x == the_x && u > 0){
-////                    u = -u;
-////                }
-////                else if (the_x == brick_x + BRICK_WIDTH - 1 && u < 0){
-////                    u = -u;
-////                }
-////                if (brick_y == the_y && v > 0){
-////                    v = -v;
-////                }
-////                else if (the_y ==  brick_y + BRICK_HEIGHT - 1 && v < 0){
-////                    v = -v;
-////                }
-////                if (brick_x + BRICK_WIDTH <= x - u){// && u < 0){
-////                    u = -u;
-////                }
-////                else if (x - u <= brick_x){// && u > 0){
-////                    u = -u;
-////                }
-////                if (brick_y + BRICK_HEIGHT <= y - v){// && v < 0){
-////                    v = -v;
-////                }
-////                else if (y - v <=  brick_y){// && v > 0){
-////                    v = -v;
-////                }
-//                if (brick_x + BRICK_WIDTH == x){// + (u/2)){// && u < 0){
-//                    u = -u;
-//                }
-//                else if (x == brick_x){// && u > 0){
-//                    u = -u;
-//                }
-//                if (brick_y + BRICK_HEIGHT == y){// + (v/2)){// && v < 0){
-//                    v = -v;
-//                }
-//                else if (y ==  brick_y){// && v > 0){
-//                    v = -v;
-//                }
-
-//                set_pixel_col(x, y, COLOUR_BACKGROUND, bricked);
-
-//                bricked = false;
-                // Increase score
             }
+            else{
+                uint32_t encoded_result = hitting_a_brick(x+(u/2), y+(v/2));
+                bool brick_direction[4];// = hitting_a_brick(x+(u/2), y+(v/2));
+                for (int i = 0; i < 4; i++){
+                    if ((encoded_result >> i) & 1 == 1){
+                        brick_direction[i] = true;
+                    }
+                    else{
+                        brick_direction[i] = false;
+                    }
+                }
+//                bool * brick_direction = hitting_a_brick(x, y);
+//                io_printf(IO_BUF, "2 b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
+                if (brick_direction[0] || brick_direction[1] || brick_direction[2] || brick_direction[3]) {
+//                    io_printf(IO_BUF, "a brick was hit 2\n");
+                    x = x + (u / 2);
+                    y = y + (v / 2);
+                    if (brick_direction[0]){
+                        u = -u;
+                        brick_direction[0] = false;
+                        add_score_up_event();
+//                        io_printf(IO_BUF, "2ob1\n");
+                    }
+                    if (brick_direction[1]){
+                        u = -u;
+                        brick_direction[1] = false;
+                        add_score_up_event();
+//                        io_printf(IO_BUF, "2ob2\n");
+                    }
+                    if (brick_direction[2]){
+                        v = -v;
+                        brick_direction[2] = false;
+                        add_score_up_event();
+//                        io_printf(IO_BUF, "2ob3\n");
+                    }
+                    if (brick_direction[3]){
+                        v = -v;
+                        brick_direction[3] = false;
+                        add_score_up_event();
+//                        io_printf(IO_BUF, "2ob4\n");
+                    }
+                }
+            }
+//            io_printf(IO_BUF, "after brick u:%d, v:%d\n", u, v);
 
-            if (get_pixel_col(x, y+v-(v/2)) == COLOUR_BAT)
+//            if (get_pixel_col(x, y+v-(v/2)) == COLOUR_BAT)
+            if (get_pixel_col(x, y) == COLOUR_BAT || get_pixel_col(x + (u / 2), y + (v / 2)) == COLOUR_BAT || get_pixel_col(x, y + (v / 2)) == COLOUR_BAT)
             {
                 io_printf(IO_BUF, "got in hitting bat x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
                 bool broke = false;
@@ -594,7 +612,7 @@ static void update_frame (uint32_t time)
             {
                 io_printf(IO_BUF, "got in lost ball x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
                 v = -MAX_BALL_SPEED;
-                //todo make this random in some respect or not
+                //todo make this random in some respect or non abusable
                 x = x_bat + (bat_len / 2);
                 y = GAME_HEIGHT - 2;
 
@@ -716,9 +734,9 @@ static bool initialize(uint32_t *timer_period)
         u = -MAX_BALL_SPEED;
     }
 
-    BRICKS_PER_ROW = MAX_BRICKS_PER_ROW / x_factor;
-    BRICKS_PER_COLUMN = MAX_BRICKS_PER_COLUMN;
-    io_printf(IO_BUF, "BPR = %d, BPC = %d\n", BRICKS_PER_ROW, BRICKS_PER_COLUMN);
+//    BRICKS_PER_ROW = MAX_BRICKS_PER_ROW / x_factor;
+//    BRICKS_PER_COLUMN = MAX_BRICKS_PER_COLUMN;
+//    io_printf(IO_BUF, "BPR = %d, BPC = %d\n", BRICKS_PER_ROW, BRICKS_PER_COLUMN);
 
     BRICK_WIDTH = GAME_WIDTH / BRICKS_PER_ROW;//BRICK_WIDTH / x_factor;
     BRICK_HEIGHT = 16 / y_factor;//BRICK_HEIGHT / y_factor;
@@ -765,6 +783,7 @@ void timer_callback(uint unused, uint dummy)
         io_printf(IO_BUF, "if time = %d\n", _time);
         //spin1_pause();
         recording_finalise();
+        io_printf(IO_BUF, "done recording\n");
         // go into pause and resume state to avoid another tick
         simulation_handle_pause_resume(resume_callback);
         //    spin1_callback_off(MC_PACKET_RECEIVED);
@@ -799,6 +818,7 @@ void timer_callback(uint unused, uint dummy)
                     }
                 }
                 current_number_of_bricks = BRICKS_PER_COLUMN * BRICKS_PER_ROW;
+                set_pixel_col(x, y, COLOUR_BACKGROUND, false);
                 //          print_bricks = true;
                 v = -MAX_BALL_SPEED;
                 //todo make this random in some respect or not
@@ -824,11 +844,6 @@ void timer_callback(uint unused, uint dummy)
 //                        io_printf(IO_BUF, "adding brick event at i:%d j:%d\n", i, j);
                         add_event(j * BRICK_WIDTH, (i * BRICK_HEIGHT) + BRICK_LAYER_OFFSET, COLOUR_BRICK_ON, true);
                     }
-                    else
-                    {
-//                        io_printf(IO_BUF, "adding brick event at i:%d j:%d\n", i, j);
-                        add_event(j * BRICK_WIDTH, (i * BRICK_HEIGHT) + BRICK_LAYER_OFFSET, COLOUR_BACKGROUND, true);
-                    }
                 }
             }
             // If this is the first update, draw bat as
@@ -845,7 +860,8 @@ void timer_callback(uint unused, uint dummy)
             update_frame(_time);
             // Update recorded score every 1s
             if(score_change_count>=1000){
-                recording_record(0, &current_score, 4);
+                bool record_check = recording_record(0, &current_score, 4);
+                io_printf(IO_BUF, "record outcome %d when recording %d\n", record_check, current_score);
                 score_change_count=0;
             }
         }

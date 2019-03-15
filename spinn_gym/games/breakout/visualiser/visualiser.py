@@ -82,7 +82,7 @@ class Visualiser(object):
 
         self.y_res = 128 / y_factor
         self.x_res = 160 / x_factor
-        self.BRICK_WIDTH = self.x_res / (32 / x_factor)
+        self.BRICK_WIDTH = self.x_res / 5
         self.BRICK_HEIGHT = 16 / y_factor
         self.x_factor = x_factor
         self.y_factor = y_factor
