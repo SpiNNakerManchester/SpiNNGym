@@ -159,7 +159,7 @@ int BRICK_LAYER_HEIGHT = 12;
 mars_kiss64_seed_t kiss_seed;
 
 // frame buffer: 160 x 128 x 4 bits: [hard/soft, R, G, B]
-static int frame_buff[GAME_WIDTH_MAX/4][GAME_HEIGHT_MAX];
+static int frame_buff[GAME_WIDTH_MAX/2][GAME_HEIGHT_MAX];
 
 // control pause when ball out of play
 static int out_of_play = 0;
