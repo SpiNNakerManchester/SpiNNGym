@@ -2,6 +2,7 @@ from games.breakout.breakout import Breakout
 from games.multi_arm_bandit.bandit import Bandit
 from games.inverted_pendulum.inverted_pendulum import Pendulum
 from games.logic.logic import Logic
+from games.store_recall.store_recall import Recall
 from games.double_inverted_pendulum.double_pendulum import DoublePendulum
 import os
 
