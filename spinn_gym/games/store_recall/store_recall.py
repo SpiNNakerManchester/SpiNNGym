@@ -140,6 +140,7 @@ class Recall(ApplicationVertex,
         'pop_size': 1,
         'prob_command': 1.0/6.0,
         'stochastic': 1,
+        'reward': 0,
         'label': "Recall",
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
@@ -156,6 +157,7 @@ class Recall(ApplicationVertex,
                  prob_command=default_parameters['prob_command'],
                  time_period=default_parameters['time_period'],
                  stochastic=default_parameters['stochastic'],
+                 reward=default_parameters['reward'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
@@ -171,6 +173,7 @@ class Recall(ApplicationVertex,
         self._rate_on = rate_on
         self._rate_off = rate_off
         self._stochastic = stochastic
+        self._reward = reward
         self._pop_size = pop_size
         self._prob_command = prob_command
 
@@ -300,13 +303,6 @@ class Recall(ApplicationVertex,
         spec.write_array(recording_utilities.get_recording_header_array(
             [self._recording_size], ip_tags=ip_tags))
 
-        rate_on = default_parameters['rate_on'],
-        rate_off = default_parameters['rate_off'],
-        pop_size = default_parameters['pop_size'],
-        prob_command = default_parameters['prob_command'],
-        time_period = default_parameters['time_period'],
-        stochastic = default_parameters['stochastic'],
-
         # Write probabilites for arms
         spec.comment("\nWriting arm probability region region:\n")
         spec.switch_write_focus(
@@ -321,6 +317,7 @@ class Recall(ApplicationVertex,
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)
+        spec.write_value(self._reward, data_type=DataType.UINT32)
         spec.write_value(self._prob_command, data_type=DataType.S1615)
 
         # End-of-Spec:

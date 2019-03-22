@@ -9,4 +9,6 @@ cd ../logic
 make
 cd ../multi_arm_bandit
 make
+cd ../store_recall
+make
 cd ..

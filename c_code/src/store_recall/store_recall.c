@@ -29,7 +29,7 @@
 //----------------------------------------------------------------------------
 
 // Frame delay (ms)
-//#define score_delay 200 //14//20
+//#define time_period 200 //14//20
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -66,6 +66,12 @@ typedef enum
 //  KEY_CHOICE_7  = 0x7,
 } arm_key_t;
 
+typedef union{
+   uint32_t u;
+   float f;
+   accum a;
+} uint_float_union;
+
 //----------------------------------------------------------------------------
 // Globals
 //----------------------------------------------------------------------------
@@ -75,29 +81,25 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-const int max_number_of_inputs = 8;
-
-uint32_t *input_sequence;
-
-uint32_t *truth_table;
-
 mars_kiss64_seed_t kiss_seed;
-
-int number_of_inputs;
 
 int rand_seed;
 
 int32_t current_score = 0;
 int32_t stochastic = 1;
-int32_t rate_on = 20;
+int32_t reward = 1;
+float prob_action = 1.f / 6.f;
+int32_t rate_on = 50;
 float max_fire_prob_on;
-int32_t rate_off = 5;
+int32_t rate_off = 0;
 float max_fire_prob_off;
+
+uint_float_union temp_accum;
 
 int32_t correct_output = -1;
 int32_t output_choice[2] = {0};
 
-uint32_t score_delay;
+uint32_t time_period;
 
 //! How many ticks until next frame
 static uint32_t tick_in_frame = 0;
@@ -184,9 +186,22 @@ static bool initialize(uint32_t *timer_period)
        rt_error(RTE_SWERR);
        return false;
     }
+    
+    
+        spec.write_value(self._time_period, data_type=DataType.UINT32)
+        spec.write_value(self._pop_size, data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._rate_on, data_type=DataType.UINT32)
+        spec.write_value(self._rate_off, data_type=DataType.UINT32)
+        spec.write_value(self._stochastic, data_type=DataType.UINT32)
+        spec.write_value(self._reward, data_type=DataType.UINT32)
+        spec.write_value(self._prob_command, data_type=DataType.S1615)
 
     address_t logic_region = data_specification_get_region(REGION_DATA, address);
-    score_delay = logic_region[0];
+    time_period = logic_region[0];
     number_of_inputs = logic_region[1];
 //    rand_seed = logic_region[2];
     kiss_seed[0] = logic_region[2];
@@ -198,41 +213,24 @@ static bool initialize(uint32_t *timer_period)
     max_fire_prob_on = (float)rate_on / 1000.f;
     max_fire_prob_off = (float)rate_off / 1000.f;
     stochastic = logic_region[8];
-    input_sequence = (uint32_t *)&logic_region[9];
-    truth_table = (uint32_t *)&logic_region[9 + number_of_inputs];
-//    double arm_probabilities[10] = {0}
-//    for (int i=1, i<number_of_inputs, i=i+1){
-//        io_printf(IO_BUF, "converting arm prob %d, stage \n", temp_arm_probabilities[i] i)
-//        arm_probabilities[i] = (double)temp_arm_probabilities[i] / 1000.0
-//        io_printf(IO_BUF, "probs after = %d\n", arm_probabilities)
-//    }
-    validate_mars_kiss64_seed(kiss_seed);
+    reward = logic_region[9];
+    temp_accum.u = logic_region[10];
+    prob_action = temp_accum.a;
 
-    int truth_table_index = 0;
-    for(int i=0; i<number_of_inputs; i=i+1){
-        truth_table_index = truth_table_index + (input_sequence[i] * (1 << i));
-        io_printf(IO_BUF, "%d: input %u, index %u, 2 %u\n", i, input_sequence[i], truth_table_index, 1 << i);
-    }
-    for(int i=0; i<(1 << number_of_inputs); i=i+1){
-        io_printf(IO_BUF, "t%d: %u\n", i, truth_table[i]);
-    }
-    correct_output = truth_table[truth_table_index];
+    validate_mars_kiss64_seed(kiss_seed);
 
 //    srand(rand_seed);
     //TODO check this prints right, ybug read the address
-    io_printf(IO_BUF, "score delay %d\n", (uint32_t *)logic_region[0]);
-    io_printf(IO_BUF, "no inputs %d\n", (uint32_t *)logic_region[1]);
+    io_printf(IO_BUF, "time period %d\n", time_period);
+    io_printf(IO_BUF, "pop_size %d\n", pop_size);
     io_printf(IO_BUF, "kiss seed. %d\n", (uint32_t *)logic_region[2]);
     io_printf(IO_BUF, "seed 0x%x\n", (uint32_t *)logic_region[3]);
     io_printf(IO_BUF, "seed %u\n", logic_region[3]);
-    io_printf(IO_BUF, "rate on %u\n", logic_region[6]);
-    io_printf(IO_BUF, "rate off %u\n", logic_region[7]);
-    io_printf(IO_BUF, "stochastic %d\n", logic_region[8]);
-    io_printf(IO_BUF, "input seq %u\n", logic_region[9]);
-    io_printf(IO_BUF, "tt %d\n", logic_region[9 + number_of_inputs]);
-    io_printf(IO_BUF, "tt+1 %d\n", logic_region[9 + number_of_inputs + 1]);
-    io_printf(IO_BUF, "tt-1 %d\n", logic_region[9 + number_of_inputs - 1]);
-    io_printf(IO_BUF, "correct out %d\n", correct_output);
+    io_printf(IO_BUF, "rate on %u\n", rate_on);
+    io_printf(IO_BUF, "rate off %u\n", rate_off);
+    io_printf(IO_BUF, "stochastic %d\n", stochastic);
+    io_printf(IO_BUF, "reward %u\n", reward);
+    io_printf(IO_BUF, "prob action %u\n", (accum)prob_action);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -328,6 +326,10 @@ void mc_packet_received_callback(uint keyx, uint payload)
     }
 }
 
+void change_state(){
+
+}
+
 void timer_callback(uint unused, uint dummy)
 {
     use(unused);
@@ -362,7 +364,7 @@ void timer_callback(uint unused, uint dummy)
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
         did_it_fire(score_change_count);
-        if(tick_in_frame == score_delay)
+        if(tick_in_frame == time_period)
         {
             was_it_correct();
             // Reset ticks in frame and update frame
