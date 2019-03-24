@@ -395,9 +395,11 @@ void timer_callback(uint unused, uint dummy)
 //            update_frame();
             // Update recorded score every 1s
             if(score_change_count >= 1000){
-                current_accuracy = (accum)((float)current_score / (float)number_of_trials);
+                int progress[2] = {current_score, number_of_trials};
+                current_accuracy = (float)((float)current_score / (float)number_of_trials);
+//                accum hold = (accum)((accum)current_score / (accum)number_of_trials);
                 io_printf(IO_BUF, "accuracy:%k; current_score:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score, number_of_trials);
-                recording_record(0, &current_accuracy, 4);
+                recording_record(0, &progress, 8);
                 score_change_count = 0;
             }
         }
