@@ -139,6 +139,7 @@ class Recall(ApplicationVertex,
         'rate_off': 0.0,
         'pop_size': 1,
         'prob_command': 1.0/6.0,
+        'prob_in_change': 1.0/2.0,
         'stochastic': 1,
         'reward': 0,
         'label': "Recall",
@@ -155,6 +156,7 @@ class Recall(ApplicationVertex,
                  rate_off=default_parameters['rate_off'],
                  pop_size=default_parameters['pop_size'],
                  prob_command=default_parameters['prob_command'],
+                 prob_in_change=default_parameters['prob_in_change'],
                  time_period=default_parameters['time_period'],
                  stochastic=default_parameters['stochastic'],
                  reward=default_parameters['reward'],
@@ -176,8 +178,9 @@ class Recall(ApplicationVertex,
         self._reward = reward
         self._pop_size = pop_size
         self._prob_command = prob_command
+        self._prob_in_change = prob_in_change
 
-        self._n_neurons = pop_size * 2
+        self._n_neurons = pop_size * 4
         self._rand_seed = rand_seed
 
         self._time_period = time_period
@@ -319,6 +322,7 @@ class Recall(ApplicationVertex,
         spec.write_value(self._stochastic, data_type=DataType.UINT32)
         spec.write_value(self._reward, data_type=DataType.UINT32)
         spec.write_value(self._prob_command, data_type=DataType.S1615)
+        spec.write_value(self._prob_in_change, data_type=DataType.S1615)
 
         # End-of-Spec:
         spec.end_specification()

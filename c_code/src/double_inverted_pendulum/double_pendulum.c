@@ -374,23 +374,34 @@ bool update_state(float time_step){
     float friction_cart_on_track = 0.0005; // coefficient of friction
     float friction_pole_hinge = 0.000002; // coefficient of friction
 
+    accum test_a = sink((accum)pole_angle);
+    float test_f = (float)sink((accum)pole_angle);
+    temp_accum.a = sink((accum)pole_angle);
+
+    io_printf(IO_BUF, "test a %k, f %k, temp a %k, temp f %k\n", test_a, (accum)test_f, (accum)temp_accum.a, (accum)temp_accum.f);
+
+    io_printf(IO_BUF, "before state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
+                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+
     // equation fro pole 1
     float effective_force_pole_on_cart = 0;
     float mass_pole = mass_pole_pm * half_pole_length;
-    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * sink((accum)pole_angle));
-    float angle_scalar = ((3.0f / 4.0f) * mass_pole * cosk((accum)pole_angle));
+    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * (float)sink((accum)pole_angle));
+    float angle_scalar = ((3.0f / 4.0f) * mass_pole *  (float)cosk((accum)pole_angle));
     float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length)) +
-                        (gravity * sink((accum)pole_angle)));
-    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) * cosk((accum)pole_angle) * cosk((accum)pole_angle)));
+                        (gravity * (float)sink((accum)pole_angle)));
+    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole_angle) *  (float)cosk((accum)pole_angle)));
     effective_force_pole_on_cart = pole_angle_force + (angle_scalar * friction_and_gravity);
 
     // equation for pole 2
     mass_pole = mass_pole_pm * half_pole2_length;
-    pole_angle_force = (mass_pole * half_pole2_length * pole2_velocity * pole2_velocity * sink((accum)pole2_angle));
-    angle_scalar = ((3.0f / 4.0f) * mass_pole * cosk((accum)pole2_angle));
+    pole_angle_force = (mass_pole * half_pole2_length * pole2_velocity * pole2_velocity * (float)sink((accum)pole2_angle));
+    angle_scalar = ((3.0f / 4.0f) * mass_pole *  (float)cosk((accum)pole2_angle));
     friction_and_gravity = (((friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length)) +
-                        (gravity * sink((accum)pole2_angle)));
-    effective_pole_mass = effective_pole_mass + (mass_pole * (1.0f - ((3.0f / 4.0f) * cosk((accum)pole2_angle) * cosk((accum)pole2_angle))));
+                        (gravity * (float)sink((accum)pole2_angle)));
+    effective_pole_mass = effective_pole_mass + (mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole2_angle) *  (float)cosk((accum)pole2_angle))));
 
     effective_force_pole_on_cart = effective_force_pole_on_cart + pole_angle_force + (angle_scalar * friction_and_gravity);
 
@@ -405,8 +416,8 @@ bool update_state(float time_step){
     // time step pole 1
     mass_pole = mass_pole_pm * half_pole_length;
     float length_scalar = -3.0f / (4.0f * half_pole_length);
-    float cart_acceleration_effect = cart_acceleration * cosk((accum)pole_angle);
-    float gravity_effect = gravity * sink((accum)pole_angle);
+    float cart_acceleration_effect = cart_acceleration *  (float)cosk((accum)pole_angle);
+    float gravity_effect = gravity * (float)sink((accum)pole_angle);
     float friction_effect = (friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length);
     pole_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
 
@@ -416,8 +427,8 @@ bool update_state(float time_step){
     // time step pole 2
     mass_pole = mass_pole_pm * half_pole2_length;
     length_scalar = -3.0f / (4.0f * half_pole2_length);
-    cart_acceleration_effect = cart_acceleration * cosk((accum)pole2_angle);
-    gravity_effect = gravity * sink((accum)pole2_angle);
+    cart_acceleration_effect = cart_acceleration *  (float)cosk((accum)pole2_angle);
+    gravity_effect = gravity * (float)sink((accum)pole2_angle);
     friction_effect = (friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length);
     pole2_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
 
@@ -433,6 +444,11 @@ bool update_state(float time_step){
     else{
         motor_force = 0;
     }
+
+    io_printf(IO_BUF, "after state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
+                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
     if (cart_position > track_length || cart_position < 0 ||
         pole_angle > max_pole_angle  || pole_angle < min_pole_angle ||

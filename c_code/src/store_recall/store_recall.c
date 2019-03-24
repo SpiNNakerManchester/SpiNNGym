@@ -44,15 +44,20 @@ typedef enum
 
 typedef enum
 {
-  SPECIAL_EVENT_INPUT_1,
-  SPECIAL_EVENT_INPUT_2,
-  SPECIAL_EVENT_INPUT_3,
-  SPECIAL_EVENT_INPUT_4,
-  SPECIAL_EVENT_INPUT_5,
-  SPECIAL_EVENT_INPUT_6,
-  SPECIAL_EVENT_INPUT_7,
-  SPECIAL_EVENT_INPUT_8,
+  SPECIAL_EVENT_VALUE_0,
+  SPECIAL_EVENT_VALUE_1,
+  SPECIAL_EVENT_STORE,
+  SPECIAL_EVENT_RECALL,
 } special_event_t;
+
+typedef enum
+{
+    STATE_IDLE,
+    STATE_STORING,
+    STATE_STORED,
+    STATE_RECALLING,
+    STATE_SHIFT,
+} current_state_t;
 
 typedef enum
 {
@@ -85,10 +90,13 @@ mars_kiss64_seed_t kiss_seed;
 
 int rand_seed;
 
-int32_t current_score = 0;
+int current_score = 0;
+int number_of_trials = 0;
 int32_t stochastic = 1;
 int32_t reward = 1;
-float prob_action = 1.f / 6.f;
+float prob_command = 1.f / 6.f;
+float prob_in_change = 1.f / 2.f;
+int32_t pop_size = 1;
 int32_t rate_on = 50;
 float max_fire_prob_on;
 int32_t rate_off = 0;
@@ -96,8 +104,12 @@ float max_fire_prob_off;
 
 uint_float_union temp_accum;
 
-int32_t correct_output = -1;
-int32_t output_choice[2] = {0};
+float current_accuracy = 0.f;
+int32_t current_state = STATE_IDLE;
+int32_t current_value = 0;
+int32_t stored_value = 0;
+int32_t chose_0 = 0;
+int32_t chose_1 = 0;
 
 uint32_t time_period;
 
@@ -114,32 +126,24 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void send_spike(int input)
+static inline void spike_value(int value, int pop_index)
 {
-  spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "sending spike to input %d\n", input);
+    spin1_send_mc_packet(key | ((value * pop_size) + pop_index), 0, NO_PAYLOAD);
+//  io_printf(IO_BUF, "sending spike to value %d from %d\n", value, ((input * pop_size) + pop_index));
 //  current_score++;
 }
 
-//static inline void add_no_reward()
-//{
-//  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "No reward\n");
-////  current_score--;
-//}
+static inline void spike_recall(int pop_index){
+    spin1_send_mc_packet(key | ((SPECIAL_EVENT_RECALL * pop_size) + pop_index), 0, NO_PAYLOAD);
+}
+
+static inline void spike_store(int pop_index){
+    spin1_send_mc_packet(key | ((SPECIAL_EVENT_STORE * pop_size) + pop_index), 0, NO_PAYLOAD);
+}
 
 void resume_callback() {
     recording_reset();
 }
-
-//void add_event(int i, int j, colour_t col, bool bricked)
-//{
-//  const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-//  const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
-//
-//  spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "%d, %d, %u, %08x\n", i, j, col, spike_key);
-//}
 
 static bool initialize(uint32_t *timer_period)
 {
@@ -186,23 +190,10 @@ static bool initialize(uint32_t *timer_period)
        rt_error(RTE_SWERR);
        return false;
     }
-    
-    
-        spec.write_value(self._time_period, data_type=DataType.UINT32)
-        spec.write_value(self._pop_size, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
-        spec.write_value(self._rate_on, data_type=DataType.UINT32)
-        spec.write_value(self._rate_off, data_type=DataType.UINT32)
-        spec.write_value(self._stochastic, data_type=DataType.UINT32)
-        spec.write_value(self._reward, data_type=DataType.UINT32)
-        spec.write_value(self._prob_command, data_type=DataType.S1615)
 
     address_t logic_region = data_specification_get_region(REGION_DATA, address);
     time_period = logic_region[0];
-    number_of_inputs = logic_region[1];
+    pop_size = logic_region[1];
 //    rand_seed = logic_region[2];
     kiss_seed[0] = logic_region[2];
     kiss_seed[1] = logic_region[3];
@@ -215,7 +206,9 @@ static bool initialize(uint32_t *timer_period)
     stochastic = logic_region[8];
     reward = logic_region[9];
     temp_accum.u = logic_region[10];
-    prob_action = temp_accum.a;
+    prob_command = temp_accum.a;
+    temp_accum.u = logic_region[11];
+    prob_in_change = temp_accum.a;
 
     validate_mars_kiss64_seed(kiss_seed);
 
@@ -230,59 +223,74 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "rate off %u\n", rate_off);
     io_printf(IO_BUF, "stochastic %d\n", stochastic);
     io_printf(IO_BUF, "reward %u\n", reward);
-    io_printf(IO_BUF, "prob action %u\n", (accum)prob_action);
+    io_printf(IO_BUF, "prob action %k\n", (accum)prob_command);
+    io_printf(IO_BUF, "prob in change %k\n", (accum)prob_in_change);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
     return true;
 }
 
-bool was_it_correct(){
-    int choice = -1;
-    if (output_choice[0] > output_choice[1]){
-        choice = 0;
-    }
-    else if (output_choice[1] > output_choice[0]){
-        choice = 1;
-    }
-//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
-    if (choice == correct_output){
-        current_score = current_score + 1;
-    }
-//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
-    output_choice[0] = 0;
-    output_choice[1] = 0;
-}
-
 float rand021(){
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
-void did_it_fire(uint32_t time){
+void move_state(){
+    current_state = (current_state + 1) % STATE_SHIFT;
+}
+
+void send_value(uint32_t time){
 //    io_printf(IO_BUF, "time = %u\n", time);
 //    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
 //    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
     if(stochastic){
-        for(int i=0; i<number_of_inputs; i=i+1){
-            if(input_sequence[i] == 0){
-                if(rand021() < max_fire_prob_off){
-                    send_spike(i);
+        for(int i=0; i<pop_size; i=i+1){
+            if(current_value == 0){
+                if(rand021() < max_fire_prob_on){
+                    spike_value(0, i);
                 }
             }
             else{
                 if(rand021() < max_fire_prob_on){
-                    send_spike(i);
+                    spike_value(1, i);
                 }
             }
         }
     }
     else{
-        for(int i=0; i<number_of_inputs; i=i+1){
-            if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0){
-                send_spike(i);
+        for(int i=0; i<pop_size; i=i+1){
+            if (current_value == 0 && time % (1000 / rate_on) == 0){
+                spike_value(0, i);
             }
-            else if(input_sequence[i] == 1 && time % (1000 / rate_on) == 0){
-                send_spike(i);
+            else if(current_value == 1 && time % (1000 / rate_on) == 0){
+                spike_value(1, i);
+            }
+        }
+    }
+}
+
+void send_store_recall(uint32_t time){
+    if(stochastic){
+        for(int i=0; i<pop_size; i=i+1){
+            if(current_state == STATE_STORING){
+                if(rand021() < max_fire_prob_on){
+                    spike_store(i);
+                }
+            }
+            else{
+                if(rand021() < max_fire_prob_on){
+                    spike_recall(i);
+                }
+            }
+        }
+    }
+    else{
+        for(int i=0; i<pop_size; i=i+1){
+            if (current_state == STATE_STORING && time % (1000 / rate_on) == 0){
+                spike_store(i);
+            }
+            else if(current_state == STATE_RECALLING && time % (1000 / rate_on) == 0){
+                spike_recall(i);
             }
         }
     }
@@ -298,36 +306,51 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "payload = %x\n", payload);
     use(payload);
     if(compare == KEY_CHOICE_0){
-        output_choice[0]++;
+        chose_0++;
     }
     else if(compare == KEY_CHOICE_1){
-        output_choice[1]++;
+        chose_1++;
     }
-//    else if(compare == KEY_CHOICE_2){
-//        output_choice[2]++;
-//    }
-//    else if(compare == KEY_CHOICE_3){
-//        output_choice[3]++;
-//    }
-//    else if(compare == KEY_CHOICE_4){
-//        output_choice[4]++;
-//    }
-//    else if(compare == KEY_CHOICE_5){
-//        output_choice[5]++;
-//    }
-//    else if(compare == KEY_CHOICE_6){
-//        output_choice[6]++;
-//    }
-//    else if(compare == KEY_CHOICE_7){
-//        output_choice[7]++;
-//    }
     else {
         io_printf(IO_BUF, "it broke key selection %d\n", key);
     }
 }
 
-void change_state(){
+void did_it_store_correctly(){
+    number_of_trials++;
+    if (chose_0 > chose_1 && stored_value == 0){
+        current_score++;
+    }
+    else if (chose_0 < chose_1 && stored_value == 1){
+        current_score++;
+    }
+}
 
+void update_state(){ 
+    if (rand021() < prob_in_change){
+        current_value = (current_value + 1) % 2;
+    }
+    if (current_state == STATE_RECALLING || current_state == STATE_STORING){
+        if (current_state == STATE_RECALLING){
+            did_it_store_correctly();
+        }
+        move_state();
+    }
+    else if (rand021() < prob_command){
+        move_state();
+    }
+    if (current_state == STATE_STORING){
+        stored_value = current_value;
+    }
+}
+
+void send_state(int32_t time){
+    if (current_state != STATE_RECALLING){
+        send_value(time);
+    }
+    if (current_state == STATE_RECALLING || current_state == STATE_STORING){
+        send_store_recall(time);
+    }
 }
 
 void timer_callback(uint unused, uint dummy)
@@ -363,16 +386,18 @@ void timer_callback(uint unused, uint dummy)
     {
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
-        did_it_fire(score_change_count);
+        send_state(_time);
         if(tick_in_frame == time_period)
         {
-            was_it_correct();
+            update_state();
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 1s
             if(score_change_count >= 1000){
-                recording_record(0, &current_score, 4);
+                current_accuracy = (accum)((float)current_score / (float)number_of_trials);
+                io_printf(IO_BUF, "accuracy:%k; current_score:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score, number_of_trials);
+                recording_record(0, &current_accuracy, 4);
                 score_change_count = 0;
             }
         }
