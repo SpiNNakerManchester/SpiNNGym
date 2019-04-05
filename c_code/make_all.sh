@@ -1,8 +1,8 @@
 source ../../spinnaker_tools/setup
 cd src/breakout
 make
-cd ../double_inverted_pendulum
-make
+#cd ../double_inverted_pendulum
+#make
 cd ../inverted_pendulum
 make
 cd ../logic
