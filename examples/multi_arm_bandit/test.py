@@ -32,7 +32,7 @@ output_pop2 = p.Population(2, p.IF_cond_exp())
 random_seed = []
 for j in range(4):
     random_seed.append(np.random.randint(0xffff))
-arms_pop = p.Population(input_size, gym.Bandit(probabilities, 200, rand_seed=random_seed))
+arms_pop = p.Population(input_size, gym.Bandit(probabilities, 500, rand_seed=random_seed, stochastic=0))
 
 input_pop.record('spikes')
 # arms_pop.record('spikes')
