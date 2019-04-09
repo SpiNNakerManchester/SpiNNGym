@@ -431,16 +431,16 @@ void timer_callback(uint unused, uint dummy)
         {
             if (was_there_a_reward()){
                 rewarding = true;
+                current_score++;
                 if (!constant_input){
                     add_reward();
-                    current_score++;
                 }
             }
             else{
                 rewarding = false;
+//                current_score--;
                 if (!constant_input){
                     add_no_reward();
-//                    current_score--;
                 }
             }
             // Reset ticks in frame and update frame
