@@ -114,7 +114,6 @@ static inline void add_reward()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
   io_printf(IO_BUF, "Got a reward\n");
-  current_score++;
 }
 
 static inline void add_no_reward()
@@ -434,12 +433,14 @@ void timer_callback(uint unused, uint dummy)
                 rewarding = true;
                 if (!constant_input){
                     add_reward();
+                    current_score++;
                 }
             }
             else{
                 rewarding = false;
                 if (!constant_input){
                     add_no_reward();
+//                    current_score--;
                 }
             }
             // Reset ticks in frame and update frame
