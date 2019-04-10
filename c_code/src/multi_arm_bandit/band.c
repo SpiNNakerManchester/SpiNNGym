@@ -113,13 +113,13 @@ uint32_t score_change_count=0;
 static inline void add_reward()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "Got a reward\n");
+//  io_printf(IO_BUF, "Got a reward\n");
 }
 
 static inline void add_no_reward()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "No reward\n");
+//  io_printf(IO_BUF, "No reward\n");
 //  current_score--;
 }
 
@@ -209,10 +209,10 @@ static bool initialize(uint32_t *timer_period)
     //TODO check this prints right, ybug read the address
     io_printf(IO_BUF, "reward delay %d\n", (uint32_t *)arms_region[0]);
     io_printf(IO_BUF, "number of arms %d\n", (uint32_t *)arms_region[1]);
-    io_printf(IO_BUF, "seed 0 %d\n", (uint32_t *)arms_region[2]);
-    io_printf(IO_BUF, "seed 1 0x%x\n", (uint32_t *)arms_region[3]);
-    io_printf(IO_BUF, "seed 1 0x%x\n", arms_region[3]);
-    io_printf(IO_BUF, "arm pointer 0x%x\n", arm_probabilities);
+    io_printf(IO_BUF, "seed 0 %d\n", kiss_seed[0]);
+    io_printf(IO_BUF, "seed 1 0x%x\n", kiss_seed[1]);
+    io_printf(IO_BUF, "seed 2 0x%x\n", kiss_seed[2]);
+//    io_printf(IO_BUF, "arm pointer 0x%x\n", arm_probabilities);
     io_printf(IO_BUF, "P() 0 %u\n", arm_probabilities[0]);
     io_printf(IO_BUF, "P() 0 %d\n", arm_probabilities[0]);
     io_printf(IO_BUF, "P() 1 %u\n", arm_probabilities[1]);
@@ -224,7 +224,7 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "stochastic %d\n", stochastic);
     io_printf(IO_BUF, "constant input %d\n", constant_input);
 
-    int highest_prob = 0;
+    float highest_prob = 0.f;
     for(int i=0; i<number_of_arms; i=i+1){
         if(arm_probabilities[i] > highest_prob){
             best_arm = i;
@@ -233,7 +233,7 @@ static bool initialize(uint32_t *timer_period)
     }
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
-    io_printf(IO_BUF, "best arm = %d with prob %d\n", best_arm, highest_prob);
+    io_printf(IO_BUF, "best arm = %d with prob %k\n", best_arm, (accum)highest_prob);
 
     return true;
 }
@@ -431,6 +431,7 @@ void timer_callback(uint unused, uint dummy)
         {
             if (was_there_a_reward()){
                 rewarding = true;
+                io_printf(IO_BUF, "Got a reward\n");
                 current_score++;
                 if (!constant_input){
                     add_reward();
@@ -438,6 +439,7 @@ void timer_callback(uint unused, uint dummy)
             }
             else{
                 rewarding = false;
+                io_printf(IO_BUF, "No reward\n");
 //                current_score--;
                 if (!constant_input){
                     add_no_reward();
