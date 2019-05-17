@@ -13,7 +13,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
+from pacman.model.resources.constant_sdram import ConstantSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
@@ -120,7 +120,7 @@ class Bandit(ApplicationVertex,
 
     BANDIT_REGION_BYTES = 24
     ARMS_REGION_BYTES = 80
-    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7  # 1 week
+    MAX_SIM_DURATION = 1000 * 60 * 60  # 1 hour
 
     # parameters expected by PyNN
     default_parameters = {
@@ -216,7 +216,7 @@ class Bandit(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            sdram=SDRAMResource(
+            sdram=ConstantSDRAM(
                 self.BANDIT_REGION_BYTES +
                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             dtcm=DTCMResource(0),
@@ -242,16 +242,14 @@ class Bandit(ApplicationVertex,
                    "time_scale_factor": "TimeScaleFactor",
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags",
-                                     "n_machine_time_steps"}
+                                     "graph_mapper", "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
-                                    routing_info, tags, n_machine_time_steps):
+                                    routing_info, tags):
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 
@@ -390,8 +388,8 @@ class Bandit(ApplicationVertex,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
-        data = data_values.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data = data_values#.read_all()
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
