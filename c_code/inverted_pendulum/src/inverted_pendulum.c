@@ -185,7 +185,7 @@ void resume_callback() {
 
 static bool initialize(uint32_t *timer_period, bool first)
 {
-    io_printf(IO_BUF, "Setting bandit: started\n");
+    io_printf(IO_BUF, "Init bandit\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     address_t address = data_specification_get_data_address();
@@ -211,7 +211,7 @@ static bool initialize(uint32_t *timer_period, bool first)
         {
           return false;
         }
-        io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
+        io_printf(IO_BUF, "sim time = %u\n", simulation_ticks);
         // Read breakout region
         address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
         key = breakout_region[0];
@@ -307,7 +307,7 @@ static bool initialize(uint32_t *timer_period, bool first)
     io_printf(IO_BUF, "starting state (d,v,a):(%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n", (accum)pole_angle, (accum)pole_velocity,
                         (accum)pole_acceleration, (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
-    io_printf(IO_BUF, "Initialise: completed successfully\n");
+//    io_printf(IO_BUF, "Initialise: completed successfully\n");
 
 //    auto start = chrono::steady_clock::now();
     return true;
@@ -540,7 +540,7 @@ void timer_callback(uint unused, uint dummy)
         simulation_handle_pause_resume(resume_callback);
         //    spin1_callback_off(MC_PACKET_RECEIVED);
 
-        io_printf(IO_BUF, "infinite_run %d; time %d\n",infinite_run, _time);
+        io_printf(IO_BUF, "inf_run %d; t: %d\n",infinite_run, _time);
 //        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
@@ -619,7 +619,7 @@ void c_main(void)
   uint32_t timer_period;
   if (!initialize(&timer_period, true))
   {
-    io_printf(IO_BUF,"Error in initialisation - exiting!\n");
+    io_printf(IO_BUF,"Init err - exit!\n");
     rt_error(RTE_SWERR);
     return;
   }
