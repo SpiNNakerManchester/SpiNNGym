@@ -1,4 +1,5 @@
-DIRS = breakout inverted_pendulum multi_arm_bandit
+DIRS = breakout inverted_pendulum double_inverted_pendulum multi_arm_bandit logic store_recall 
+	   
 
 all: $(DIRS)
 	@for d in $(DIRS); do $(MAKE) -C $$d || exit $$?; done

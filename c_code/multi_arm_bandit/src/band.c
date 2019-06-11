@@ -89,6 +89,13 @@ int32_t reward_based = 1;
 int32_t correct_pulls = 0;
 
 uint32_t reward_delay;
+bool rewarding = false;
+int32_t stochastic = 1;
+int32_t rate_on = 20;
+float max_fire_prob_on;
+int32_t rate_off = 5;
+float max_fire_prob_off;
+int32_t constant_input = 1;
 
 //! How many ticks until next frame
 static uint32_t tick_in_frame = 0;
@@ -106,14 +113,13 @@ uint32_t score_change_count=0;
 static inline void add_reward()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "Got a reward\n");
-  current_score++;
+//  io_printf(IO_BUF, "Got a reward\n");
 }
 
 static inline void add_no_reward()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-  io_printf(IO_BUF, "No reward\n");
+//  io_printf(IO_BUF, "No reward\n");
 //  current_score--;
 }
 
@@ -185,7 +191,13 @@ static bool initialize(uint32_t *timer_period)
     kiss_seed[2] = arms_region[4];
     kiss_seed[3] = arms_region[5];
     reward_based = arms_region[6];
-    arm_probabilities = (uint32_t *)&arms_region[7];
+    rate_on = arms_region[7];
+    rate_off = arms_region[8];
+    max_fire_prob_on = (float)rate_on / 1000.f;
+    max_fire_prob_off = (float)rate_off / 1000.f;
+    stochastic = arms_region[9];
+    constant_input = arms_region[10];
+    arm_probabilities = (uint32_t *)&arms_region[11];
 //    double arm_probabilities[10] = {0}
 //    for (int i=1, i<number_of_arms, i=i+1){
 //        io_printf(IO_BUF, "converting arm prob %d, stage \n", temp_arm_probabilities[i] i)
@@ -195,21 +207,24 @@ static bool initialize(uint32_t *timer_period)
     validate_mars_kiss64_seed(kiss_seed);
 //    srand(rand_seed);
     //TODO check this prints right, ybug read the address
-    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)arms_region[0]);
-    io_printf(IO_BUF, "r2 %d\n", (uint32_t *)arms_region[1]);
-    io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)arms_region[2]);
-    io_printf(IO_BUF, "rand3 0x%x\n", (uint32_t *)arms_region[3]);
-    io_printf(IO_BUF, "r4 0x%x\n", arms_region[3]);
-    io_printf(IO_BUF, "r5 0x%x\n", arm_probabilities);
-    io_printf(IO_BUF, "r6 %u\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r6d %d\n", arm_probabilities[0]);
-    io_printf(IO_BUF, "r7 %u\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "r7d %d\n", arm_probabilities[1]);
-    io_printf(IO_BUF, "re %d\n", reward_based);
-//    io_printf(IO_BUF, "r6 0x%x\n", *arm_probabilities);
-//    io_printf(IO_BUF, "r6 0x%x\n", &arm_probabilities);
+    io_printf(IO_BUF, "reward delay %d\n", (uint32_t *)arms_region[0]);
+    io_printf(IO_BUF, "number of arms %d\n", (uint32_t *)arms_region[1]);
+    io_printf(IO_BUF, "seed 0 %d\n", kiss_seed[0]);
+    io_printf(IO_BUF, "seed 1 0x%x\n", kiss_seed[1]);
+    io_printf(IO_BUF, "seed 2 0x%x\n", kiss_seed[2]);
+//    io_printf(IO_BUF, "arm pointer 0x%x\n", arm_probabilities);
+    io_printf(IO_BUF, "P() 0 %u\n", arm_probabilities[0]);
+    io_printf(IO_BUF, "P() 0 %d\n", arm_probabilities[0]);
+    io_printf(IO_BUF, "P() 1 %u\n", arm_probabilities[1]);
+    io_printf(IO_BUF, "P() 1 %d\n", arm_probabilities[1]);
+    io_printf(IO_BUF, "reward based %d\n", reward_based);
+    io_printf(IO_BUF, "rate on %d\n", rate_on);
+    io_printf(IO_BUF, "rate on prob %k\n", (accum)max_fire_prob_on);
+    io_printf(IO_BUF, "rate off %d\n", rate_off);
+    io_printf(IO_BUF, "stochastic %d\n", stochastic);
+    io_printf(IO_BUF, "constant input %d\n", constant_input);
 
-    int highest_prob = 0;
+    float highest_prob = 0.f;
     for(int i=0; i<number_of_arms; i=i+1){
         if(arm_probabilities[i] > highest_prob){
             best_arm = i;
@@ -218,9 +233,55 @@ static bool initialize(uint32_t *timer_period)
     }
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
-    io_printf(IO_BUF, "best arm = %d with prob %d\n", best_arm, highest_prob);
+    io_printf(IO_BUF, "best arm = %d with prob %k\n", best_arm, (accum)highest_prob);
 
     return true;
+}
+
+float rand021(){
+    return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
+}
+
+void send_state(uint32_t time){
+//    io_printf(IO_BUF, "time = %u\n", time);
+//    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
+//    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
+    if(stochastic){
+        if(rand021() < max_fire_prob_off){
+            if (rewarding){
+                add_no_reward();
+            }
+            else{
+                add_reward();
+            }
+        }
+        if(rand021() < max_fire_prob_on){
+            if (rewarding){
+                add_reward();
+            }
+            else{
+                add_no_reward();
+            }
+        }
+    }
+    else{
+        if (time % (1000 / rate_off) == 0){
+            if (rewarding){
+                add_no_reward();
+            }
+            else{
+                add_reward();
+            }
+        }
+        if(time % (1000 / rate_on) == 0){
+            if (rewarding){
+                add_reward();
+            }
+            else{
+                add_no_reward();
+            }
+        }
+    }
 }
 
 bool was_there_a_reward(){
@@ -369,10 +430,20 @@ void timer_callback(uint unused, uint dummy)
         if(tick_in_frame == reward_delay)
         {
             if (was_there_a_reward()){
-                add_reward();
+                rewarding = true;
+                io_printf(IO_BUF, "Got a reward\n");
+                current_score++;
+                if (!constant_input){
+                    add_reward();
+                }
             }
             else{
-                add_no_reward();
+                rewarding = false;
+                io_printf(IO_BUF, "No reward\n");
+//                current_score--;
+                if (!constant_input){
+                    add_no_reward();
+                }
             }
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
@@ -387,6 +458,9 @@ void timer_callback(uint unused, uint dummy)
                 }
                 score_change_count=0;
             }
+        }
+        if (constant_input){
+            send_state(_time);
         }
     }
 //    io_printf(IO_BUF, "time %u\n", ticks);

@@ -55,8 +55,8 @@ from spinn_front_end_common.abstract_models\
    .abstract_provides_n_keys_for_partition \
    import AbstractProvidesNKeysForPartition
 
-# Bandit imports
-from bandit_machine_vertex import BanditMachineVertex
+# Logic imports
+from logic_machine_vertex import LogicMachineVertex
 
 import numpy
 
@@ -65,18 +65,25 @@ from data_specification.enums.data_type import DataType
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
 # ----------------------------------------------------------------------------
-# Bandit
+# Logic
 # ----------------------------------------------------------------------------
 # **HACK** for Projection to connect a synapse type is required
-# class BanditSynapseType(object):
+# class LogicSynapseType(object):
 #     def get_synapse_id_by_target(self, target):
 #         return 0
 
 
+class Bad_Table(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 # ----------------------------------------------------------------------------
-# Bandit
+# Logic
 # ----------------------------------------------------------------------------
-class Bandit(ApplicationVertex,
+class Logic(ApplicationVertex,
                 AbstractGeneratesDataSpecification,
                 AbstractHasAssociatedBinary,
                 AbstractProvidesOutgoingPartitionConstraints,
@@ -90,7 +97,7 @@ class Bandit(ApplicationVertex,
     def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
                                      routing_infos, synapse_information, machine_time_step):
 
-        super(Bandit, self).get_connections_from_machine(transceiver, placement, edge,
+        super(Logic, self).get_connections_from_machine(transceiver, placement, edge,
                                                            graph_mapper, routing_infos,
                                                            synapse_information,
                                                            machine_time_step)
@@ -99,10 +106,10 @@ class Bandit(ApplicationVertex,
         pass
 
     def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Bandit, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
+        super(Logic, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
 
     # def get_binary_start_type(self):
-    #     super(Bandit, self).get_binary_start_type()
+    #     super(Logic, self).get_binary_start_type()
     #
     # def requires_mapping(self):
     #     pass
@@ -118,36 +125,33 @@ class Bandit(ApplicationVertex,
     def get_synapse_id_by_target(self, target):
         return 0
 
-    BANDIT_REGION_BYTES = 24
-    ARMS_REGION_BYTES = 80
-    MAX_SIM_DURATION = 1000 * 60 * 60  # 1 hour
+    LOGIC_REGION_BYTES = 200
+    DATA_REGION_BYTES = 200
+    MAX_SIM_DURATION = 1000 * 60 * 60 * 24  # 1 day
 
     # parameters expected by PyNN
     default_parameters = {
-        'reward_delay': 200.0,
+        'score_delay': 200.0,
         'constraints': None,
         'rate_on': 20.0,
         'rate_off': 5.0,
-        'constant_input': 0,
+        'input_sequence': [0, 1],
         'stochastic': 1,
-        'reward_based': 1,
-        'label': "Bandit",
+        'label': "Logic",
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
-        'arms': [0.1, 0.9],
+        'truth_table': [0, 1, 1, 0],
         'random_seed': [numpy.random.randint(10000), numpy.random.randint(10000),
                         numpy.random.randint(10000), numpy.random.randint(10000)]}
 
     # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = BanditSynapseType()
+    # synapse_type = LogicSynapseType()
 
-    def __init__(self, arms=default_parameters['arms'],
-                 reward_delay=default_parameters['reward_delay'],
-                 reward_based=default_parameters['reward_based'],
+    def __init__(self, truth_table, input_sequence,
                  rate_on=default_parameters['rate_on'],
                  rate_off=default_parameters['rate_off'],
+                 score_delay=default_parameters['score_delay'],
                  stochastic=default_parameters['stochastic'],
-                 constant_input=default_parameters['constant_input'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
@@ -160,22 +164,22 @@ class Bandit(ApplicationVertex,
         self._label = label
 
         # Pass in variables
-        arms_list = []
-        for arm in arms:
-            arms_list.append(numpy.uint32(arm*0xffffffff))
-        self._arms = arms_list
-
-        self._no_arms = len(arms)
-        self._n_neurons = self._no_arms
-        self._rand_seed = rand_seed
-
-        self._reward_delay = reward_delay
-        self._reward_based = reward_based
-
+        self._truth_table = truth_table
         self._rate_on = rate_on
         self._rate_off = rate_off
         self._stochastic = stochastic
-        self._constant_input = constant_input
+        self._input_sequence = input_sequence
+        self._no_inputs = len(input_sequence)
+        if self._no_inputs != numpy.log2(len(self._truth_table)):
+            try:
+                raise Bad_Table('table and input sequence are not compatible')
+            except Bad_Table as e:
+                print "ERROR: ", e
+                
+        self._n_neurons = self._no_inputs
+        self._rand_seed = rand_seed
+
+        self._score_delay = score_delay
 
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
@@ -203,7 +207,7 @@ class Bandit(ApplicationVertex,
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
-        # Bandit has no synapses so can simulate only one time step of delay
+        # Logic has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
 
     #    def get_max_atoms_per_core(self):
@@ -217,7 +221,7 @@ class Bandit(ApplicationVertex,
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
             sdram=ConstantSDRAM(
-                self.BANDIT_REGION_BYTES +
+                self.LOGIC_REGION_BYTES +
                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
@@ -228,7 +232,7 @@ class Bandit(ApplicationVertex,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        return BanditMachineVertex(resources_required, constraints, self._label)
+        return LogicMachineVertex(resources_required, constraints, self._label)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -253,45 +257,45 @@ class Bandit(ApplicationVertex,
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 
-        spec.comment("\n*** Spec for Bandit Instance ***\n\n")
+        spec.comment("\n*** Spec for Logic Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
 
         # Reserve memory:
         spec.reserve_memory_region(
-            region=BanditMachineVertex._BANDIT_REGIONS.SYSTEM.value,
+            region=LogicMachineVertex._LOGIC_REGIONS.SYSTEM.value,
             size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
             label='setup')
         spec.reserve_memory_region(
-            region=BanditMachineVertex._BANDIT_REGIONS.BANDIT.value,
-            size=self.BANDIT_REGION_BYTES, label='BanditParams')
+            region=LogicMachineVertex._LOGIC_REGIONS.LOGIC.value,
+            size=self.LOGIC_REGION_BYTES, label='LogicParams')
         # vertex.reserve_provenance_data_region(spec)
         # reserve recording region
         spec.reserve_memory_region(
-            BanditMachineVertex._BANDIT_REGIONS.RECORDING.value,
+            LogicMachineVertex._LOGIC_REGIONS.RECORDING.value,
             recording_utilities.get_recording_header_size(1))
         spec.reserve_memory_region(
-            region=BanditMachineVertex._BANDIT_REGIONS.ARMS.value,
-            size=self.ARMS_REGION_BYTES, label='BanditArms')
+            region=LogicMachineVertex._LOGIC_REGIONS.DATA.value,
+            size=self.DATA_REGION_BYTES, label='LogicArms')
 
         # Write setup region
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
-            BanditMachineVertex._BANDIT_REGIONS.SYSTEM.value)
+            LogicMachineVertex._LOGIC_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             self.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
-        # Write bandit region containing routing key to transmit with
-        spec.comment("\nWriting bandit region:\n")
+        # Write logic region containing routing key to transmit with
+        spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
-            BanditMachineVertex._BANDIT_REGIONS.BANDIT.value)
+            LogicMachineVertex._LOGIC_REGIONS.LOGIC.value)
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
         # Write recording region for score
-        spec.comment("\nWriting bandit recording region:\n")
+        spec.comment("\nWriting logic recording region:\n")
         spec.switch_write_focus(
-            BanditMachineVertex._BANDIT_REGIONS.RECORDING.value)
+            LogicMachineVertex._LOGIC_REGIONS.RECORDING.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_array(recording_utilities.get_recording_header_array(
             [self._recording_size], ip_tags=ip_tags))
@@ -299,22 +303,23 @@ class Bandit(ApplicationVertex,
         # Write probabilites for arms
         spec.comment("\nWriting arm probability region region:\n")
         spec.switch_write_focus(
-            BanditMachineVertex._BANDIT_REGIONS.ARMS.value)
+            LogicMachineVertex._LOGIC_REGIONS.DATA.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
-        spec.write_value(self._reward_delay, data_type=DataType.UINT32)
-        spec.write_value(self._no_arms, data_type=DataType.UINT32)
+        spec.write_value(self._score_delay, data_type=DataType.UINT32)
+        spec.write_value(self._no_inputs, data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
-        spec.write_value(self._reward_based, data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)
-        spec.write_value(self._constant_input, data_type=DataType.UINT32)
         # Write the data - Arrays must be 32-bit values, so convert
-        data = numpy.array(self._arms, dtype=numpy.uint32)
+        data = numpy.array(self._input_sequence, dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))
+        data = numpy.array(self._truth_table, dtype=numpy.uint32)
+        spec.write_array(data.view(numpy.uint32))
+
 
         # End-of-Spec:
         spec.end_specification()
@@ -324,7 +329,7 @@ class Bandit(ApplicationVertex,
     # ------------------------------------------------------------------------
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
-        return "bandit.aplx"
+        return "logic.aplx"
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):

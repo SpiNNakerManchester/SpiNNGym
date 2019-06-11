@@ -15,15 +15,14 @@ from spinn_front_end_common.interface.buffer_management \
 from spinn_front_end_common.interface.buffer_management.buffer_models import (
     AbstractReceiveBuffersToHost)
 
-
 # ----------------------------------------------------------------------------
-# BanditMachineVertex
+# LogicMachineVertex
 # ----------------------------------------------------------------------------
-class PendulumMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
-    _PENDULUM_REGIONS = Enum(
-        value="_PENDULUM_REGIONS",
+class LogicMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
+    _LOGIC_REGIONS = Enum(
+        value="_LOGIC_REGIONS",
         names=[('SYSTEM', 0),
-               ('PENDULUM', 1),
+               ('LOGIC', 1),
                ('RECORDING', 2),
                ('DATA', 3)])
 
@@ -51,4 +50,4 @@ class PendulumMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
 
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._PENDULUM_REGIONS.RECORDING.value, txrx)
+            placement, self._LOGIC_REGIONS.RECORDING.value, txrx)

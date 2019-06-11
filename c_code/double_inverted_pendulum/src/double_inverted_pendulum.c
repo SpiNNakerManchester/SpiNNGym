@@ -21,6 +21,28 @@
 #include <recording.h>
 
 //----------------------------------------------------------------------------
+// Macros
+//----------------------------------------------------------------------------
+
+// Frame delay (ms)
+//#define time_increment 200 //14//20
+/*
+    number of bins for current angle of the pole
+    number of bins for the force to be applied or number of spikes per tick equals a force
+    mass of the cart
+    mass of the pole
+    initial starting angle
+    velocity of the cart
+    velocity of the pendulum
+    base rate for the neurons to fire in each bin
+    each spike equals a change in force to be applied (what is that amount)
+    receptive field of each bin
+    update model on each timer tick and on each spike received, or number of spikes per tick equals a force
+
+    add option to rate (increased poisson P()) code and rank code
+*/
+
+//----------------------------------------------------------------------------
 // Enumerations
 //----------------------------------------------------------------------------
 typedef enum
@@ -34,8 +56,10 @@ typedef enum
 typedef enum
 {
   SPECIAL_EVENT_ANGLE,
+  SPECIAL_EVENT_ANGLE_2,
   SPECIAL_EVENT_CART,
   SPECIAL_EVENT_ANGLE_V,
+  SPECIAL_EVENT_ANGLE_2_V,
   SPECIAL_EVENT_CART_V,
 } special_event_t;
 
@@ -47,6 +71,7 @@ typedef enum // forward will be considered positive motion
 
 typedef union{
    uint32_t u;
+//   uint32_t* us;
    float f;
    accum a;
 } uint_float_union;
@@ -84,13 +109,19 @@ uint_float_union pole_angle_accum;
 float pole_angle;
 float pole_velocity = 0; // angular/s
 float pole_acceleration = 0; // angular/s^2
+uint_float_union half_pole_length_accum; // m
+float half_pole_length; // m
+float pole2_angle;
+float pole2_velocity = 0; // angular/s
+float pole2_acceleration = 0; // angular/s^2
+float half_pole2_length; // m
 float highend_pole_v = 5; // used to calculate firing rate and bins
 
-#define max_bins 10
-float pole_angle_spike_time[max_bins] = {0.f};
-float pole_velocity_spike_time[max_bins] = {0.f};
-float cart_position_spike_time[max_bins] = {0.f};
-float cart_velocity_spike_time[max_bins] = {0.f};
+//#define max_bins 10
+//float pole_angle_spike_time[max_bins] = {0.f};
+//float pole_velocity_spike_time[max_bins] = {0.f};
+//float cart_position_spike_time[max_bins] = {0.f};
+//float cart_velocity_spike_time[max_bins] = {0.f};
 
 int max_firing_rate = 20;
 float max_firing_prob = 0;
@@ -104,12 +135,10 @@ uint_float_union temp_accum;
 int central = 1; // if it's central that mean perfectly central on the track and angle is the lowest rate, else half
 
 // experimental parameters
-uint_float_union half_pole_length_accum; // m
-float half_pole_length; // m
 
 float max_balance_time = 0;
 
-float current_state[2];
+float current_state[3];
 bool in_bounds = true;
 
 uint32_t time_increment;
@@ -122,7 +151,7 @@ static uint32_t key;
 
 //! the number of timer ticks that this model should run for before exiting.
 uint32_t simulation_ticks = 0;
-uint32_t score_change_count = 0;
+uint32_t score_change_count=0;
 
 //----------------------------------------------------------------------------
 // Inline functions
@@ -130,12 +159,7 @@ uint32_t score_change_count = 0;
 static inline void spike_angle(int bin)
 {
     uint32_t mask;
-    if (encoding_scheme != 0){
-        mask = (SPECIAL_EVENT_ANGLE * number_of_bins) + bin;
-    }
-    else{
-        mask = SPECIAL_EVENT_ANGLE;
-    }
+    mask = (SPECIAL_EVENT_ANGLE * number_of_bins) + bin;
     spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
 //    io_printf(IO_BUF, "spike_angle \t%d - \t%u\n", bin, mask);
 }
@@ -143,12 +167,23 @@ static inline void spike_angle(int bin)
 static inline void spike_angle_v(int bin)
 {
     uint32_t mask;
-    if (encoding_scheme != 0){
-        mask = (SPECIAL_EVENT_ANGLE_V * number_of_bins) + bin;
-    }
-    else{
-        mask = SPECIAL_EVENT_ANGLE_V;
-    }
+    mask = (SPECIAL_EVENT_ANGLE_V * number_of_bins) + bin;
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_angle_v \t%d - \t%u\n", bin, mask);
+}
+
+static inline void spike_angle_2(int bin)
+{
+    uint32_t mask;
+    mask = (SPECIAL_EVENT_ANGLE_2 * number_of_bins) + bin;
+    spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
+//    io_printf(IO_BUF, "spike_angle \t%d - \t%u\n", bin, mask);
+}
+
+static inline void spike_angle_2_v(int bin)
+{
+    uint32_t mask;
+    mask = (SPECIAL_EVENT_ANGLE_2_V * number_of_bins) + bin;
     spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
 //    io_printf(IO_BUF, "spike_angle_v \t%d - \t%u\n", bin, mask);
 }
@@ -156,12 +191,7 @@ static inline void spike_angle_v(int bin)
 static inline void spike_cart(int bin)
 {
     uint32_t mask;
-    if (encoding_scheme != 0){
-        mask = (SPECIAL_EVENT_CART * number_of_bins) + bin;
-    }
-    else{
-        mask = SPECIAL_EVENT_CART;
-    }
+    mask = (SPECIAL_EVENT_CART * number_of_bins) + bin;
     spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
 //    io_printf(IO_BUF, "spike_cart \t%d - \t%u\n", bin, mask);
 }
@@ -169,12 +199,7 @@ static inline void spike_cart(int bin)
 static inline void spike_cart_v(int bin)
 {
     uint32_t mask;
-    if (encoding_scheme != 0){
-        mask = (SPECIAL_EVENT_CART_V * number_of_bins) + bin;
-    }
-    else{
-        mask = SPECIAL_EVENT_CART_V;
-    }
+    mask = (SPECIAL_EVENT_CART_V * number_of_bins) + bin;
     spin1_send_mc_packet(key | (mask), 0, NO_PAYLOAD);
 //    io_printf(IO_BUF, "spike_cart_v \t%d - \t%u\n", bin, mask);
 }
@@ -183,91 +208,99 @@ void resume_callback() {
     recording_reset();
 }
 
-static bool initialize(uint32_t *timer_period, bool first)
+//void add_event(int i, int j, colour_t col, bool bricked)
+//{
+//  const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
+//  const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
+//
+//  spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
+//  io_printf(IO_BUF, "%d, %d, %u, %08x\n", i, j, col, spike_key);
+//}
+
+static bool initialize(uint32_t *timer_period)
 {
-    io_printf(IO_BUF, "Init bandit\n");
+    io_printf(IO_BUF, "Initialise bandit: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     address_t address = data_specification_get_data_address();
 
-    if (first){
+    // Read the header
+    if (!data_specification_read_header(address))
+    {
+      return false;
+    }
+    /*
+    simulation_initialise(
+        address_t address, uint32_t expected_app_magic_number,
+        uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
+        uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
+        int dma_transfer_done_callback_priority)
+    */
+    // Get the timing details and set up thse simulation interface
+    if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
+    APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+    &infinite_run, 1, NULL))
+    {
+      return false;
+    }
+    io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
 
-        // Read the header
-        if (!data_specification_read_header(address))
-        {
-          return false;
-        }
-        /*
-        simulation_initialise(
-            address_t address, uint32_t expected_app_magic_number,
-            uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
-            uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
-            int dma_transfer_done_callback_priority)
-        */
-        // Get the timing details and set up thse simulation interface
-        if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
-        APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-        &infinite_run, 1, NULL))
-        {
-          return false;
-        }
-        io_printf(IO_BUF, "sim time = %u\n", simulation_ticks);
-        // Read breakout region
-        address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
-        key = breakout_region[0];
-        io_printf(IO_BUF, "\tKey=%08x\n", key);
-        io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
-        //get recording region
-        address_t recording_address = data_specification_get_region(
-                                           REGION_RECORDING,address);
-        // Setup recording
-        uint32_t recording_flags = 0;
-        if (!recording_initialize(recording_address, &recording_flags))
-        {
-           rt_error(RTE_SWERR);
-           return false;
-        }
+    // Read breakout region
+    address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
+    key = breakout_region[0];
+    io_printf(IO_BUF, "\tKey=%08x\n", key);
+    io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
+
+    //get recording region
+    address_t recording_address = data_specification_get_region(
+                                       REGION_RECORDING,address);
+    // Setup recording
+    uint32_t recording_flags = 0;
+    if (!recording_initialize(recording_address, &recording_flags))
+    {
+       rt_error(RTE_SWERR);
+       return false;
     }
 
     cart_position = track_length / 2;
-    cart_velocity = 0;  // m/s
-    cart_acceleration = 0;  // m/s^2
-    pole_velocity = 0; // angular/s
-    pole_acceleration = 0; // angular/s^2
 
     address_t pend_region = data_specification_get_region(REGION_DATA, address);
 //    encoding_scheme = pend_region[0]; // 0 rate
     encoding_scheme = pend_region[0];
     time_increment = pend_region[1];
     half_pole_length_accum.u = pend_region[2];
-    half_pole_length = half_pole_length_accum.a / 2.0f;
     pole_angle_accum.u = pend_region[3];
     pole_angle = pole_angle_accum.a;
     pole_angle = (pole_angle / 180.0f) * M_PI;
-    reward_based = pend_region[4];
-    force_increment = pend_region[5];
-    max_firing_rate = pend_region[6];
-    number_of_bins = pend_region[7];
-    central = pend_region[8];
+    half_pole_length_accum.u = pend_region[4];
+    pole_angle_accum.u = pend_region[5];
+    pole2_angle = 0.1;pole_angle_accum.a;
+    pole2_angle = (pole2_angle / 180.0f) * M_PI;
+    reward_based = pend_region[6];
+    force_increment = pend_region[7]; // (float)pend_region[5] / (float)0xffff;
+    max_firing_rate = pend_region[8];
+    number_of_bins = pend_region[9];
+    central = pend_region[10];
 
     bin_width = 1.f / ((float)number_of_bins - 1.f);
     max_firing_prob = max_firing_rate / 1000.f;
+//    accum
     // pass in random seeds
-    kiss_seed[0] = pend_region[9];
-    kiss_seed[1] = pend_region[10];
-    kiss_seed[2] = pend_region[11];
-    kiss_seed[3] = pend_region[12];
+    kiss_seed[0] = pend_region[11];
+    kiss_seed[1] = pend_region[12];
+    kiss_seed[2] = pend_region[13];
+    kiss_seed[3] = pend_region[14];
     validate_mars_kiss64_seed(kiss_seed);
 
-    temp_accum.u = pend_region[13];
+    temp_accum.u = pend_region[15];
     bin_overlap = temp_accum.a;
-    temp_accum.u = pend_region[14];
+    temp_accum.u = pend_region[16];
     tau_force = temp_accum.a;
 
     force_increment = (float)((max_motor_force - min_motor_force) / (float)force_increment);
 
-    //Print variable for inspection if needed
+    //TODO check this prints right, ybug read the address
 //    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)pend_region[0]);
 //    io_printf(IO_BUF, "r2 %d\n", (uint32_t *)pend_region[1]);
 //    io_printf(IO_BUF, "rand3. %d\n", (uint32_t *)pend_region[2]);
@@ -304,31 +337,74 @@ static bool initialize(uint32_t *timer_period, bool first)
 //    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
 //    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);
 
-    io_printf(IO_BUF, "starting state (d,v,a):(%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n", (accum)pole_angle, (accum)pole_velocity,
-                        (accum)pole_acceleration, (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+    io_printf(IO_BUF, "starting state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
+                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
-//    io_printf(IO_BUF, "Initialise: completed successfully\n");
+    io_printf(IO_BUF, "Initialise: completed successfully\n");
 
 //    auto start = chrono::steady_clock::now();
     return true;
 }
 
+//float firing_time(float relative_value, int bin){
+//    float separation = relative_value - (bin_width * (float)bin);
+//    float maximum_time_window = 1000.f / max_firing_rate;
+//    float delay;
+//    if (separation < 1){
+//        delay = maximum_time_window * separation;
+//    }
+//    else{
+//        if (encoding_scheme == 2){
+//            delay = maximum_time_window;
+//        }
+//        else{
+//            delay = maximum_time_window * separation;
+//        }
+//    }
+//    return delay;
+//}
+
 // updates the current state of the pendulum
 bool update_state(float time_step){
     float gravity = -9.8; // m/s^2
     float mass_cart = 1; // kg
-    float mass_pole = 0.1; // kg
+    float mass_pole_pm = 0.1; // kg
     float friction_cart_on_track = 0.0005; // coefficient of friction
     float friction_pole_hinge = 0.000002; // coefficient of friction
 
-    float effective_force_pole_on_cart = 0;
-    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * sin(pole_angle));
-    float angle_scalar = ((3.0f / 4.0f) * mass_pole * cos(pole_angle));
-    float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length)) +
-                        (gravity * sin(pole_angle)));
-    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) * cos(pole_angle) * cos(pole_angle)));
+    accum test_a = sink((accum)pole_angle);
+    float test_f = (float)sink((accum)pole_angle);
+    temp_accum.a = sink((accum)pole_angle);
 
+    io_printf(IO_BUF, "test a %k, f %k, temp a %k, temp f %k\n", test_a, (accum)test_f, (accum)temp_accum.a, (accum)temp_accum.f);
+
+    io_printf(IO_BUF, "before state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
+                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+
+    // equation fro pole 1
+    float effective_force_pole_on_cart = 0;
+    float mass_pole = mass_pole_pm * half_pole_length;
+    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * (float)sink((accum)pole_angle));
+    float angle_scalar = ((3.0f / 4.0f) * mass_pole *  (float)cosk((accum)pole_angle));
+    float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length)) +
+                        (gravity * (float)sink((accum)pole_angle)));
+    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole_angle) *  (float)cosk((accum)pole_angle)));
     effective_force_pole_on_cart = pole_angle_force + (angle_scalar * friction_and_gravity);
+
+    // equation for pole 2
+    mass_pole = mass_pole_pm * half_pole2_length;
+    pole_angle_force = (mass_pole * half_pole2_length * pole2_velocity * pole2_velocity * (float)sink((accum)pole2_angle));
+    angle_scalar = ((3.0f / 4.0f) * mass_pole *  (float)cosk((accum)pole2_angle));
+    friction_and_gravity = (((friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length)) +
+                        (gravity * (float)sink((accum)pole2_angle)));
+    effective_pole_mass = effective_pole_mass + (mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole2_angle) *  (float)cosk((accum)pole2_angle))));
+
+    effective_force_pole_on_cart = effective_force_pole_on_cart + pole_angle_force + (angle_scalar * friction_and_gravity);
+
     if (cart_velocity > 0){
         cart_acceleration = (motor_force - friction_cart_on_track + effective_force_pole_on_cart) /
                                 (mass_cart + effective_pole_mass);
@@ -337,18 +413,30 @@ bool update_state(float time_step){
         cart_acceleration = (motor_force + friction_cart_on_track + effective_force_pole_on_cart) /
                                 (mass_cart + effective_pole_mass);
     }
-
+    // time step pole 1
+    mass_pole = mass_pole_pm * half_pole_length;
     float length_scalar = -3.0f / (4.0f * half_pole_length);
-    float cart_acceleration_effect = cart_acceleration * cos(pole_angle);
-    float gravity_effect = gravity * sin(pole_angle);
+    float cart_acceleration_effect = cart_acceleration *  (float)cosk((accum)pole_angle);
+    float gravity_effect = gravity * (float)sink((accum)pole_angle);
     float friction_effect = (friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length);
     pole_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
 
-    cart_velocity = (cart_acceleration * time_step) + cart_velocity;
-    cart_position = (cart_velocity * time_step) + cart_position;
-
     pole_velocity = (pole_acceleration * time_step) + pole_velocity;
     pole_angle = (pole_velocity * time_step) + pole_angle;
+
+    // time step pole 2
+    mass_pole = mass_pole_pm * half_pole2_length;
+    length_scalar = -3.0f / (4.0f * half_pole2_length);
+    cart_acceleration_effect = cart_acceleration *  (float)cosk((accum)pole2_angle);
+    gravity_effect = gravity * (float)sink((accum)pole2_angle);
+    friction_effect = (friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length);
+    pole2_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
+
+    pole2_velocity = (pole2_acceleration * time_step) + pole2_velocity;
+    pole2_angle = (pole2_velocity * time_step) + pole2_angle;
+
+    cart_velocity = (cart_acceleration * time_step) + cart_velocity;
+    cart_position = (cart_velocity * time_step) + cart_position;
 
     if (tau_force){
         motor_force = motor_force * exp(time_step / tau_force);
@@ -357,9 +445,14 @@ bool update_state(float time_step){
         motor_force = 0;
     }
 
-    if (cart_position > track_length || cart_position < 0  || pole_angle > max_pole_angle  || pole_angle < min_pole_angle) {
-//        io_printf(IO_BUF, "failed state (d,v,a):(%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n", (accum)pole_angle, (accum)pole_velocity,
-//                            (accum)pole_acceleration, (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+    io_printf(IO_BUF, "after state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
+                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+
+    if (cart_position > track_length || cart_position < 0 ||
+        pole_angle > max_pole_angle  || pole_angle < min_pole_angle ||
+        pole2_angle > max_pole_angle  || pole2_angle < min_pole_angle) {
         io_printf(IO_BUF, "failed out\n");
         return false;
     }
@@ -370,6 +463,7 @@ bool update_state(float time_step){
 
 void mc_packet_received_callback(uint keyx, uint payload)
 {
+    // make this bin related for rank encoding, relate to force increments
     uint32_t compare;
     compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
@@ -423,102 +517,42 @@ bool firing_prob(float relative_value, int bin){
 }
 
 void send_status(){
-    if (encoding_scheme == 0){ // rate encoding
-        float relative_cart = 0;
-        float relative_angle = 0;
-        float relative_cart_velocity = 0;
-        float relative_angular_velocity = 0;
-        if (central){
-            if (pole_angle > 0){
-                relative_angle = pole_angle / max_pole_angle_bin;
-            }
-            else{
-                relative_angle = -pole_angle / max_pole_angle_bin;
-            }
-            if (pole_velocity > 0){
-                relative_angular_velocity = pole_velocity / highend_pole_v;
-            }
-            else{
-                relative_angular_velocity = -pole_velocity / highend_pole_v;
-            }
-            if (cart_position - (track_length / 2.0f) > 0){
-                relative_cart = (cart_position - (track_length / 2.0f)) / (track_length / 2.0f);
-            }
-            else{
-                relative_cart = -(cart_position - (track_length / 2.0f)) / (track_length / 2.0f);
-            }
-            if (cart_velocity > 0){
-                relative_cart_velocity = cart_velocity / (highend_cart_v);
-            }
-            else{
-                relative_cart_velocity = -cart_velocity / (highend_cart_v);
-            }
+    float relative_cart;
+    float relative_cart_velocity;
+    float relative_angle;
+    float relative_angular_velocity;
+    float relative_angle_2;
+    float relative_angular_velocity_2;
+    relative_cart = cart_position / track_length;
+//    io_printf(IO_BUF, "rela = %k, cart = %k, max = %k\n", (accum)relative_cart, (accum)cart_position, (accum)track_length);
+    relative_cart_velocity = (cart_velocity + highend_cart_v) / (2.f * highend_cart_v);
+//    io_printf(IO_BUF, "rela = %k, cartv = %k, maxv = %k\n", (accum)relative_cart_velocity, (accum)cart_velocity, (accum)highend_cart_v);
+    relative_angle = (pole_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
+//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
+    relative_angular_velocity = (pole_velocity + highend_pole_v) / (2.f * highend_pole_v);
+//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
+    relative_angle_2 = (pole2_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
+//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
+    relative_angular_velocity_2 = (pole2_velocity + highend_pole_v) / (2.f * highend_pole_v);
+//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
+    for (int i = 0; i < number_of_bins; i = i + 1){
+        if (firing_prob(relative_cart, i)){
+            spike_cart(i);
         }
-        else{
-            relative_angle = (pole_angle - min_pole_angle_bin) / (max_pole_angle_bin - min_pole_angle_bin);
-            relative_angular_velocity = (pole_velocity + highend_pole_v) / (highend_pole_v * 2.f);
-            relative_cart = cart_position / track_length;
-            relative_cart_velocity = (cart_velocity + highend_cart_v) / (highend_cart_v * 2.f);
+        if (firing_prob(relative_cart_velocity, i)){
+            spike_cart_v(i);
         }
-//        io_printf(IO_BUF, "relative (angle, v) (%k, %k) and (cart, v) (%k, %k)\n", (accum)relative_angle,
-//                            (accum)relative_angular_velocity, (accum)relative_cart, (accum)relative_cart_velocity);
-        float angle_roll = 0;
-        float angle_roll_v = 0;
-        float cart_roll = 0;
-        float cart_roll_v = 0;
-        angle_roll = rand021();
-        angle_roll_v = rand021();
-        cart_roll = rand021();
-        cart_roll_v = rand021();
-//        io_printf(IO_BUF, "roll (angle, v) (%k, %k) and (cart, v) %k, %k wth max = %k\n", (accum)angle_roll,
-//                                                                        (accum)angle_roll_v, (accum)cart_roll,
-//                                                                        (accum)cart_roll_v, (accum)max_firing_prob);
-        angle_roll = angle_roll / relative_angle;
-        angle_roll_v = angle_roll_v / relative_angular_velocity;
-        cart_roll = cart_roll / relative_cart_velocity;
-        cart_roll_v = cart_roll_v / relative_cart_velocity;
-//        io_printf(IO_BUF, "relative roll (angle, v) (%k, %k) and (cart, v) %k, %k wth max = %k\n", (accum)angle_roll,
-//                                                                        (accum)angle_roll_v, (accum)cart_roll,
-//                                                                        (accum)cart_roll_v, (accum)max_firing_prob);
-        if (angle_roll < max_firing_prob){
-            spike_angle(0);
+        if (firing_prob(relative_angle, i)){
+            spike_angle(i);
         }
-        if (angle_roll_v < max_firing_prob){
-            spike_angle_v(0);
+        if (firing_prob(relative_angular_velocity, i)){
+            spike_angle_v(i);
         }
-        if (cart_roll < max_firing_prob){
-            spike_cart(0);
+        if (firing_prob(relative_angle_2, i)){
+            spike_angle_2(i);
         }
-        if (cart_roll_v < max_firing_prob){
-            spike_cart_v(0);
-        }
-    }
-    else if (encoding_scheme == 1){ // rate encoding with bins
-        float relative_cart;
-        float relative_angle;
-        float relative_cart_velocity;
-        float relative_angular_velocity;
-        relative_angle = (pole_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
-    //    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
-        relative_angular_velocity = (pole_velocity + highend_pole_v) / (2.f * highend_pole_v);
-    //    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
-        relative_cart = cart_position / track_length;
-    //    io_printf(IO_BUF, "rela = %k, cart = %k, max = %k\n", (accum)relative_cart, (accum)cart_position, (accum)track_length);
-        relative_cart_velocity = (cart_velocity + highend_cart_v) / (2.f * highend_cart_v);
-    //    io_printf(IO_BUF, "rela = %k, cartv = %k, maxv = %k\n", (accum)relative_cart_velocity, (accum)cart_velocity, (accum)highend_cart_v);
-        for (int i = 0; i < number_of_bins; i = i + 1){
-            if (firing_prob(relative_angle, i)){
-                spike_angle(i);
-            }
-            if (firing_prob(relative_angular_velocity, i)){
-                spike_angle_v(i);
-            }
-            if (firing_prob(relative_cart, i)){
-                spike_cart(i);
-            }
-            if (firing_prob(relative_cart_velocity, i)){
-                spike_cart_v(i);
-            }
+        if (firing_prob(relative_angular_velocity_2, i)){
+            spike_angle_2_v(i);
         }
     }
 }
@@ -528,7 +562,6 @@ void timer_callback(uint unused, uint dummy)
     use(unused);
     use(dummy);
 
-    current_time = current_time + 1;
     _time++;
     score_change_count++;
 
@@ -540,12 +573,12 @@ void timer_callback(uint unused, uint dummy)
         simulation_handle_pause_resume(resume_callback);
         //    spin1_callback_off(MC_PACKET_RECEIVED);
 
-        io_printf(IO_BUF, "inf_run %d; t: %d\n",infinite_run, _time);
-//        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+        io_printf(IO_BUF, "infinite_run %d; time %d\n",infinite_run, _time);
+        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
 
-//        io_printf(IO_BUF, "Exiting on timer.\n");
+        io_printf(IO_BUF, "Exiting on timer.\n");
 //        simulation_handle_pause_resume(NULL);
         simulation_ready_to_read();
 
@@ -557,38 +590,28 @@ void timer_callback(uint unused, uint dummy)
     {
         if (_time == 0){
             update_state(0);
+            // possibly use this to allow updating of time whenever
+//            auto start = chrono::steady_clock::now();
         }
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
         if(tick_in_frame == time_increment)
         {
-//            io_printf(IO_BUF, "time inc %u, time %k, score_change %u resetting to initial conditions\n", time_increment, (accum)current_time, score_change_count);
-            send_status();
             if (in_bounds){
-                if (current_time > max_balance_time){
-                    max_balance_time = current_time;
-                }
-//                max_balance_time = (float)_time;
+                max_balance_time = (float)_time;
 //                max_balance_time = max_balance_time + 1;
                 in_bounds = update_state((float)time_increment / 1000.f);
-            }
-            else{
-                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum)current_time);
-                current_time = 0;
-                uint32_t timer_period;
-                initialize(&timer_period, false);
-//                in_bounds = update_state((float)time_increment / 1000.f);
-                in_bounds = true;
             }
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 0.1s
             if(score_change_count >= 100){
+                current_state[0] = cart_position;
+                current_state[1] = pole_angle;
+                current_state[2] = pole2_angle;
                 if(reward_based == 0){
-                    current_state[0] = cart_position;
-                    current_state[1] = pole_angle;
-                    recording_record(0, &current_state, 8);
+                    recording_record(0, &current_state, 12);
                 }
                 else{
                     recording_record(0, &max_balance_time, 4);
@@ -596,9 +619,9 @@ void timer_callback(uint unused, uint dummy)
                 score_change_count=0;
             }
         }
-//        if (in_bounds){
-//            send_status();
-//        }
+        if (in_bounds){
+            send_status();
+        }
     }
 //    io_printf(IO_BUF, "time %u\n", ticks);
 //    io_printf(IO_BUF, "time %u\n", _time);
@@ -617,9 +640,9 @@ void c_main(void)
 {
   // Load DTCM data
   uint32_t timer_period;
-  if (!initialize(&timer_period, true))
+  if (!initialize(&timer_period))
   {
-    io_printf(IO_BUF,"Init err - exit!\n");
+    io_printf(IO_BUF,"Error in initialisation - exiting!\n");
     rt_error(RTE_SWERR);
     return;
   }

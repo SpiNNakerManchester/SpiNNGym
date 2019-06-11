@@ -230,16 +230,14 @@ class Pendulum(ApplicationVertex,
                    "time_scale_factor": "TimeScaleFactor",
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags",
-                                     "n_machine_time_steps"}
+                                     "graph_mapper", "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
-                                    routing_info, tags, n_machine_time_steps):
+                                    routing_info, tags):
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 
@@ -379,8 +377,8 @@ class Pendulum(ApplicationVertex,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
-        data = data_values.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data = data_values#.read_all()
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.float32))
