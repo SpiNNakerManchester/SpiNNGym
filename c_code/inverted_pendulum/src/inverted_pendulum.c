@@ -540,7 +540,7 @@ void timer_callback(uint unused, uint dummy)
         simulation_handle_pause_resume(resume_callback);
         //    spin1_callback_off(MC_PACKET_RECEIVED);
 
-        io_printf(IO_BUF, "inf_run %d; t: %d\n",infinite_run, _time);
+//        io_printf(IO_BUF, "inf_run %d; t: %d\n",infinite_run, _time);
 //        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
@@ -573,7 +573,7 @@ void timer_callback(uint unused, uint dummy)
                 in_bounds = update_state((float)time_increment / 1000.f);
             }
             else{
-                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum)current_time);
+                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum) current_time);
                 current_time = 0;
                 uint32_t timer_period;
                 initialize(&timer_period, false);
