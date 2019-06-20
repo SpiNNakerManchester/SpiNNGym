@@ -14,6 +14,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
 from pacman.model.resources.sdram_resource import SDRAMResource
+from pacman.model.resources.variable_sdram import VariableSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
@@ -224,9 +225,10 @@ class Recall(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            sdram=SDRAMResource(
-                self.RECALL_REGION_BYTES +
-                front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
+            # sdram=SDRAMResource(
+            #     self.RECALL_REGION_BYTES +
+            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -397,7 +399,7 @@ class Recall(ApplicationVertex,
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
-        data = data_values.read_all()
+        data = data_values#.read_all()
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
