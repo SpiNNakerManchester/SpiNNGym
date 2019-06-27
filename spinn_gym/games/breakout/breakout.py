@@ -13,7 +13,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
+from pacman.model.resources import ConstantSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
@@ -207,7 +207,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            sdram=SDRAMResource(
+            sdram=ConstantSDRAM(
                 self.BREAKOUT_REGION_BYTES +
                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             dtcm=DTCMResource(0),
@@ -236,8 +236,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                    "time_scale_factor": "TimeScaleFactor",
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
                                      "graph_mapper", "routing_info", "tags",
@@ -245,7 +244,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
-                                    routing_info, tags, n_machine_time_steps):
+                                    routing_info, tags):
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 

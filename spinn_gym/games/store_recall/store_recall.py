@@ -13,7 +13,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
+from pacman.model.resources import ConstantSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
@@ -224,7 +224,7 @@ class Recall(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            sdram=SDRAMResource(
+            sdram=ConstantSDRAM(
                 self.RECALL_REGION_BYTES +
                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             dtcm=DTCMResource(0),

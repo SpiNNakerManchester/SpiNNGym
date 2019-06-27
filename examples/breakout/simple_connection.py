@@ -5,6 +5,8 @@ import spinn_gym as gym
 from spynnaker.pyNN.connections.\
     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
+from spinn_front_end_common.utilities.database.database_connection \
+    import DatabaseConnection
 
 import pylab
 import matplotlib.pyplot as plt
@@ -18,6 +20,7 @@ import socket
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
+import functools
 
 # Layout of pixels
 from spynnaker.pyNN.models.utility_models.spike_injector import \
@@ -25,18 +28,14 @@ from spynnaker.pyNN.models.utility_models.spike_injector import \
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 
-def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
-    id = UDP_PORT - UDP_PORT1
-    print "threadin ", running, id
+def thread_visualiser(board_address, tag, xr, yr, xb, yb, key_conn):
     # time.sleep(5)
     # xb = np.uint32(np.ceil(np.log2(X_RESOLUTION / x_factor1)))
     # yb = np.uint32(np.ceil(np.log2(Y_RESOLUTION / y_factor1)))
-    Figure
     visualiser = Visualiser(
-        UDP_PORT, key_conn,# id,
+        board_address, tag, key_conn,
         x_factor=xr, y_factor=yr,
         x_bits=xb, y_bits=yb)
-    print "threadin2 ", running, id
     visualiser.show()
     # visualiser._update(None)
     # score = 0
@@ -48,6 +47,15 @@ def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
     # score = visualiser._return_score()
     # visual[id] = visualiser._return_image_data()
     # result[id] = score
+
+
+def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
+    _, _, _, board_address, tag = database.get_live_output_details(
+        pop_label, "LiveSpikeReceiver")
+    thread = threading.Thread(target=thread_visualiser, args=[
+        board_address, tag, xr, yr, xb, yb, key_conn])
+    thread.start()
+
 
 def get_scores(breakout_pop,simulator):
     b_vertex = breakout_pop._vertex
@@ -126,7 +134,7 @@ breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 # breakout_pop2 = p.Population(b2.neurons(), b2, label="breakout2")
 
 
-ex.activate_live_output_for(breakout_pop, host="0.0.0.0", port=UDP_PORT1)
+ex.activate_live_output_for(breakout_pop)
 
 
 # ex.activate_live_output_for(breakout_pop2, host="0.0.0.0", port=UDP_PORT2)
@@ -193,10 +201,6 @@ print key_input_connection
 #                         )
 
 
-t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_factor1,
-                                                     np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-                                                     np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
-                                                     key_input_connection])
 # t = threading.Thread(target=thread_visualiser, args=[UDP_PORT2, X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1,
 #                                                      np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1)))-1,
 #                                                      np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))-1])
@@ -212,8 +216,18 @@ t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_fac
 # t.daemon = True
 # Run simulation (non-blocking)
 # visualiser.show()
+
+d_conn = DatabaseConnection(local_port=None)
+d_conn.add_database_callback(functools.partial(
+    start_visualiser, pop_label=b1.label, xr=x_factor1, yr=y_factor1,
+    xb=np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
+    yb=np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
+    key_conn=key_input_connection))
+p.external_devices.add_database_socket_address(
+     "localhost", d_conn.local_port, None)
+
+
 print "reached here 1"
-t.start()
 # r.start()
 runtime = 1000 * 30
 

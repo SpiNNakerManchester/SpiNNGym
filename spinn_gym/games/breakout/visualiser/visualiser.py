@@ -1,8 +1,9 @@
-import multiprocessing
+from spinnman.connections.udp_packet_connections import SCAMPConnection
+from spinnman.utilities.utility_functions import reprogram_tag
+from spinnman.exceptions import SpinnmanIOException
 
 import enum
 import numpy as np
-import socket
 
 import matplotlib.animation as animation
 import matplotlib.colors as col
@@ -11,8 +12,8 @@ import datetime
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import cv2
-import io
 import os
+import sys
 
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 BRIGHT_RED = (0.9, 0.0, 0.0)
@@ -50,7 +51,7 @@ class Visualiser(object):
     # How many bits are used to represent colour and brick
     colour_bits = 2
 
-    def __init__(self, udp_port, key_input_connection=None, scale=4,
+    def __init__(self, machine_address, tag, key_input_connection=None, scale=4,
                  x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
         # Reset input state
         self.input_state = InputState.idle
@@ -104,9 +105,8 @@ class Visualiser(object):
         print "Brick Height", self.BRICK_HEIGHT
 
         # Open socket to receive datagrams
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(("0.0.0.0", udp_port))
-        self.socket.setblocking(False)
+        self.connection = SCAMPConnection(remote_host=machine_address)
+        reprogram_tag(self.connection, tag, strip=True)
 
         # Make awesome CRT palette
         cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
@@ -185,8 +185,8 @@ class Visualiser(object):
         message_received = False
         while True:
             try:
-                raw_data = self.socket.recv(512)
-            except socket.error:
+                raw_data = self.connection.receive()
+            except SpinnmanIOException:
                 # If error isn't just a non-blocking read fail, print it
                 # if e != "[Errno 11] Resource temporarily unavailable":
                 #    print "Error '%s'" % e
@@ -314,7 +314,7 @@ class Visualiser(object):
 
 if __name__ == "__main__":
     print("Running from command line")
-    UDP_PORT = 17893
-    vis = Visualiser(UDP_PORT)
+    machine = sys.argv[1]
+    tag = sys.argv[2]
+    vis = Visualiser(machine, tag)
     vis.show()
-
