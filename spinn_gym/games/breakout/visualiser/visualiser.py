@@ -184,15 +184,10 @@ class Visualiser(object):
         # Read all datagrams received during last frame
         message_received = False
         while True:
-            try:
-                raw_data = self.connection.receive()
-            except SpinnmanIOException:
-                # If error isn't just a non-blocking read fail, print it
-                # if e != "[Errno 11] Resource temporarily unavailable":
-                #    print "Error '%s'" % e
-                # Stop reading datagrams
+            if not self.connection.is_ready_to_receive(0):
                 break
             else:
+                raw_data = self.connection.receive()
                 message_received = True
                 # Slice off EIEIO header and convert to numpy array of uint32
                 payload = np.fromstring(raw_data[6:], dtype="uint32")
