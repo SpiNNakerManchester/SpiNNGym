@@ -239,8 +239,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                    "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags",
-                                     "n_machine_time_steps"}
+                                     "graph_mapper", "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
