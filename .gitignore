@@ -106,7 +106,7 @@ venv.bak/
 /.pydevproject
 
 # SpiNNGym ignores
-/c_code/src/modified_src
+**/modified_src
 /spinn_gym/model_binaries
 
 application_generated_data_files

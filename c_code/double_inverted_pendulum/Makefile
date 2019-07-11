@@ -4,15 +4,15 @@ ifndef NEURAL_MODELLING_DIRS
     neural_modelling folder within the sPyNNaker source folder))
 endif
 
-APP := breakout
+APP := double_inverted_pendulum
 BUILD_DIR = $(abspath $(CURRENT_DIR)/../../build/$(APP))/
-SOURCES = bkout.c
+SOURCES = double_inverted_pendulum.c
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-MODIFIED_DIR := $(abspath $(CURRENT_DIR)/../../modified_src/)/ 
 CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-EXTRA_SRC_DIR := $(abspath $(CURRENT_DIR))
+EXTRA_SRC_DIR := $(abspath $(CURRENT_DIR))/src
 SOURCE_DIRS += $(EXTRA_SRC_DIR)
-APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../../spinn_gym/model_binaries/)/
+APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../spinn_gym/model_binaries/)/
 CFLAGS += -I$(NEURAL_MODELLING_DIRS)/src
 
 include $(SPINN_DIRS)/make/local.mk
+

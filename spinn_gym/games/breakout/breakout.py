@@ -13,7 +13,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources import ConstantSDRAM
+from pacman.model.resources.variable_sdram import VariableSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
@@ -207,9 +207,10 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            sdram=ConstantSDRAM(
-                self.BREAKOUT_REGION_BYTES +
-                front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
+#             sdram=SDRAMResource(
+#                 self.BREAKOUT_REGION_BYTES +
+#                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
+            sdram = VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -236,14 +237,16 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                    "time_scale_factor": "TimeScaleFactor",
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags"})
+                   "tags": "MemoryTags",
+                   "n_machine_time_steps": "DataNTimeSteps"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags"}
+                                     "graph_mapper", "routing_info", "tags",
+                                     "n_machine_time_steps"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
-                                    routing_info, tags):
+                                    routing_info, tags, n_machine_time_steps):
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 
@@ -375,8 +378,8 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement,0)
-        data = data_values.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement,0)
+        data = data_values #.read_all()
 
         numpy_format=list()
         numpy_format.append(("Score",numpy.int32))

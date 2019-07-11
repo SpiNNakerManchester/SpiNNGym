@@ -10,12 +10,13 @@ from spinn_front_end_common.interface.provenance \
     .provides_provenance_data_from_machine_impl \
     import ProvidesProvenanceDataFromMachineImpl
 from spinn_front_end_common.utilities import helpful_functions, constants
+from spinn_front_end_common.interface.buffer_management.buffer_models.abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
 
 
 # ----------------------------------------------------------------------------
 # RecallMachineVertex
 # ----------------------------------------------------------------------------
-class RecallMachineVertex(MachineVertex):
+class RecallMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
     _RECALL_REGIONS = Enum(
         value="_RECALL_REGIONS",
         names=[('SYSTEM', 0),
@@ -38,3 +39,10 @@ class RecallMachineVertex(MachineVertex):
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._RECALL_REGIONS.RECORDING.value, txrx)
+
+    def get_recorded_region_ids(self):
+        """ Get the recording region IDs that have been recorded using buffering
+
+        :return: The region numbers that have active recording
+        :rtype: iterable(int) """
+        return [0]

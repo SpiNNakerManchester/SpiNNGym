@@ -90,7 +90,7 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y, weigh
     connection_list_off = []
 
     sx_res = int(x_res) // int(subsamp_factor_x)
-    row_bits = int(np.ceil(np.log2(x_res)))
+    row_bits = int(np.ceil(np.log2(y_res)))
     for j in range(int(y_res)):
         for i in range(int(x_res)):
             si = i // subsamp_factor_x
