@@ -96,6 +96,7 @@ int32_t stochastic = 1;
 int32_t reward = 1;
 float prob_command = 1.f / 6.f;
 float prob_in_change = 1.f / 2.f;
+int32_t time_since_command = 0;
 int32_t pop_size = 1;
 int32_t rate_on = 50;
 float max_fire_prob_on;
@@ -326,7 +327,7 @@ void did_it_store_correctly(){
     }
 }
 
-void update_state(){ 
+void update_state(){
     if (rand021() < prob_in_change){
         current_value = (current_value + 1) % 2;
     }
@@ -335,9 +336,13 @@ void update_state(){
             did_it_store_correctly();
         }
         move_state();
+        time_since_command = 0;
     }
-    else if (rand021() < prob_command){
+    else if (time_since_command == 5){
         move_state();
+    }
+    else{
+        time_since_command++;
     }
     if (current_state == STATE_STORING){
         stored_value = current_value;
@@ -398,7 +403,8 @@ void timer_callback(uint unused, uint dummy)
                 int progress[2] = {current_score, number_of_trials};
                 current_accuracy = (float)((float)current_score / (float)number_of_trials);
 //                accum hold = (accum)((accum)current_score / (accum)number_of_trials);
-                io_printf(IO_BUF, "accuracy:%k; current_score:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score, number_of_trials);
+                io_printf(IO_BUF, "accuracy:%k, current_score:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score, number_of_trials);
+                io_printf(IO_BUF, "state:%u, time:%u\n", current_state, _time);
                 recording_record(0, &progress, 8);
                 score_change_count = 0;
             }

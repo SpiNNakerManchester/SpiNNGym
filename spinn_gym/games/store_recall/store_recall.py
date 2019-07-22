@@ -228,7 +228,7 @@ class Recall(ApplicationVertex,
             # sdram=SDRAMResource(
             #     self.RECALL_REGION_BYTES +
             #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=8),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -253,7 +253,7 @@ class Recall(ApplicationVertex,
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
                    "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "n_machine_time_steps": "DataNTimeSteps"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
                                      "graph_mapper", "routing_info", "tags",
@@ -334,7 +334,7 @@ class Recall(ApplicationVertex,
     # ------------------------------------------------------------------------
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
-        return "recall.aplx"
+        return "store_recall.aplx"
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
@@ -398,7 +398,8 @@ class Recall(ApplicationVertex,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
+        # data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
+        data_values, _ = buffer_manager.get_data_by_placement(placement,0)
         data = data_values#.read_all()
 
         numpy_format = list()

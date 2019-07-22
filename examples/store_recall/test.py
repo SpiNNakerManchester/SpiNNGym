@@ -26,7 +26,7 @@ pop_size = 1
 prob_command = 1.0/6.0
 prob_in_change = 1./2.
 time_period = 200
-stochastic = 1
+stochastic = 0
 reward = 0
 
 p.setup(timestep=1.0)
