@@ -228,7 +228,7 @@ class Recall(ApplicationVertex,
             # sdram=SDRAMResource(
             #     self.RECALL_REGION_BYTES +
             #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=8),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 

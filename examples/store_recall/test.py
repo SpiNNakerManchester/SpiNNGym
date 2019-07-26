@@ -20,7 +20,7 @@ def get_scores(recall_pop, simulator):
 
     return scores.tolist()
 
-rate_on = 50
+rate_on = 10
 rate_off = 0
 pop_size = 1
 prob_command = 1.0/6.0

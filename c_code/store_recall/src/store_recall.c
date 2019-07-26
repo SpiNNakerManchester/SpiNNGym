@@ -48,6 +48,7 @@ typedef enum
   SPECIAL_EVENT_VALUE_1,
   SPECIAL_EVENT_STORE,
   SPECIAL_EVENT_RECALL,
+  SPECIAL_EVENT_FORGET,
 } special_event_t;
 
 typedef enum
@@ -56,6 +57,7 @@ typedef enum
     STATE_STORING,
     STATE_STORED,
     STATE_RECALLING,
+    STATE_FORGET,
     STATE_SHIFT,
 } current_state_t;
 
@@ -90,13 +92,14 @@ mars_kiss64_seed_t kiss_seed;
 
 int rand_seed;
 
-int current_score = 0;
+int current_score_0 = 0;
+int current_score_1 = 0;
 int number_of_trials = 0;
 int32_t stochastic = 1;
 int32_t reward = 1;
 float prob_command = 1.f / 6.f;
 float prob_in_change = 1.f / 2.f;
-int32_t time_since_command = 0;
+int32_t time_until_command = 0;
 int32_t pop_size = 1;
 int32_t rate_on = 50;
 float max_fire_prob_on;
@@ -142,6 +145,10 @@ static inline void spike_store(int pop_index){
     spin1_send_mc_packet(key | ((SPECIAL_EVENT_STORE * pop_size) + pop_index), 0, NO_PAYLOAD);
 }
 
+static inline void spike_forget(int pop_index){
+//    spin1_send_mc_packet(key | ((SPECIAL_EVENT_FORGET * pop_size) + pop_index), 0, NO_PAYLOAD);
+}
+
 void resume_callback() {
     recording_reset();
 }
@@ -168,7 +175,7 @@ static bool initialize(uint32_t *timer_period)
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
     APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, 1, NULL))
+    &infinite_run, _time, 1, NULL))
     {
       return false;
     }
@@ -270,12 +277,17 @@ void send_value(uint32_t time){
     }
 }
 
-void send_store_recall(uint32_t time){
+void send_store_recall_forget(uint32_t time){
     if(stochastic){
         for(int i=0; i<pop_size; i=i+1){
             if(current_state == STATE_STORING){
                 if(rand021() < max_fire_prob_on){
                     spike_store(i);
+                }
+            }
+            else if(current_state == STATE_FORGET){
+                if(rand021() < max_fire_prob_on){
+                    spike_forget(i);
                 }
             }
             else{
@@ -292,6 +304,9 @@ void send_store_recall(uint32_t time){
             }
             else if(current_state == STATE_RECALLING && time % (1000 / rate_on) == 0){
                 spike_recall(i);
+            }
+            else if(current_state == STATE_FORGET && time % (1000 / rate_on) == 0){
+                spike_forget(i);
             }
         }
     }
@@ -319,11 +334,21 @@ void mc_packet_received_callback(uint keyx, uint payload)
 
 void did_it_store_correctly(){
     number_of_trials++;
-    if (chose_0 > chose_1 && stored_value == 0){
-        current_score++;
+    if (stored_value == 0){
+        if (chose_0 > chose_1){
+            current_score_0++;
+        }
+        else if (chose_0 < chose_1 && prob_command > 0.5){
+            current_score_0--;
+        }
     }
-    else if (chose_0 < chose_1 && stored_value == 1){
-        current_score++;
+    else if (stored_value == 1){
+        if(chose_0 < chose_1){
+            current_score_1++;
+        }
+        else if (chose_0 > chose_1 && prob_command > 0.5){
+            current_score_1--;
+        }
     }
 }
 
@@ -334,18 +359,22 @@ void update_state(){
     if (current_state == STATE_RECALLING || current_state == STATE_STORING){
         if (current_state == STATE_RECALLING){
             did_it_store_correctly();
+            time_until_command = 5;
+        }
+        else{
+            time_until_command = 3;
         }
         move_state();
-        time_since_command = 0;
     }
-    else if (time_since_command == 5){
+    else if (time_until_command == 0){
         move_state();
     }
     else{
-        time_since_command++;
+        time_until_command--;
     }
     if (current_state == STATE_STORING){
         stored_value = current_value;
+//        io_printf(IO_BUF, "storing state:%u, stored:%u, time:%u\n", current_state, stored_value, _time);
     }
 }
 
@@ -353,8 +382,8 @@ void send_state(int32_t time){
     if (current_state != STATE_RECALLING){
         send_value(time);
     }
-    if (current_state == STATE_RECALLING || current_state == STATE_STORING){
-        send_store_recall(time);
+    if (current_state == STATE_RECALLING || current_state == STATE_STORING || current_state == STATE_FORGET){
+        send_store_recall_forget(time);
     }
 }
 
@@ -395,17 +424,18 @@ void timer_callback(uint unused, uint dummy)
         if(tick_in_frame == time_period)
         {
             update_state();
+//            io_printf(IO_BUF, "state:%u, stored:%u, time:%u\n", current_state, stored_value, _time);
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 1s
             if(score_change_count >= 1000){
-                int progress[2] = {current_score, number_of_trials};
-                current_accuracy = (float)((float)current_score / (float)number_of_trials);
+                int progress[3] = {current_score_0, current_score_1, number_of_trials};
+                current_accuracy = (float)((float)(current_score_0 + current_score_1) / (float)number_of_trials);
 //                accum hold = (accum)((accum)current_score / (accum)number_of_trials);
-                io_printf(IO_BUF, "accuracy:%k, current_score:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score, number_of_trials);
-                io_printf(IO_BUF, "state:%u, time:%u\n", current_state, _time);
-                recording_record(0, &progress, 8);
+                io_printf(IO_BUF, "accuracy:%k, current_score_0:%u, current_score_1:%u, number_of_trials:%u\n", (accum)current_accuracy, current_score_0, current_score_1, number_of_trials);
+//                io_printf(IO_BUF, "state:%u, time:%u\n", current_state, _time);
+                recording_record(0, &progress, 12);
                 score_change_count = 0;
             }
         }
