@@ -106,6 +106,10 @@ typedef enum
   SPECIAL_EVENT_MAX,
 } special_event_t;
 
+typedef enum callback_priorities {
+    MC = -1, DMA = 0, USER = 0, SDP = 1, TIMER = 2
+} callback_priorities;
+
 //----------------------------------------------------------------------------
 // Globals
 //----------------------------------------------------------------------------
@@ -661,17 +665,17 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "Initialise breakout: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
-    address_t address = data_specification_get_data_address();
+    data_specification_metadata_t *ds_regions = data_specification_get_data_address();
 
     // Read the header
-    if (!data_specification_read_header(address))
+    if (!data_specification_read_header(ds_regions))
     {
         return false;
     }
     // Get the timing details and set up thse simulation interface
-    if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
+    if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, ds_regions),
     APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, 1, NULL))
+    &infinite_run, &_time, SDP, DMA))
     {
         return false;
     }
@@ -679,17 +683,17 @@ static bool initialize(uint32_t *timer_period)
 
 
     // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_BREAKOUT, address);
+    address_t breakout_region = data_specification_get_region(REGION_BREAKOUT, ds_regions);
     key = breakout_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
     //get recording region
     address_t recording_address = data_specification_get_region(
-                                       REGION_RECORDING,address);
+                                       REGION_RECORDING, ds_regions);
 
     // Read param region
-    address_t param_region = data_specification_get_region(REGION_PARAM, address);
+    address_t param_region = data_specification_get_region(REGION_PARAM, ds_regions);
 
     x_factor = param_region[0];
     y_factor = param_region[1];
@@ -953,8 +957,8 @@ void c_main(void)
     io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
 
     // Register callback
-    spin1_callback_on(TIMER_TICK, timer_callback, 2);
-    spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+    spin1_callback_on(TIMER_TICK, timer_callback, TIMER);
+    spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, MC);
 
     _time = UINT32_MAX;
 
