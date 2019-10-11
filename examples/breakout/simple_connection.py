@@ -1,3 +1,4 @@
+from __future__ import print_function
 import spynnaker8 as p
 import spinn_gym as gym
 # from spynnaker_external_devices_plugin.pyNN.connections.\
@@ -151,13 +152,13 @@ print(np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))))
 print(key_input_connection)
 
 
-#t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_factor1,
-                                                     #np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-                                                     #np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
-                                                     #key_input_connection])
+t = threading.Thread(target=thread_visualiser, args=[UDP_PORT2, x_factor1, y_factor1,
+                                                    np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
+                                                    np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
+                                                    key_input_connection])
 
 print("reached here 1")
-#t.start()
+t.start()
 
 runtime = 1000 * 15
 simulator = get_simulator()

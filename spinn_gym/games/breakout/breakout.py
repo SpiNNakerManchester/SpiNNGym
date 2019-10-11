@@ -1,3 +1,4 @@
+from __future__ import print_function
 # PACMAN imports
 # from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
 #     PopulationSettableChangeRequiresMapping
@@ -52,7 +53,7 @@ from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
 # Breakout imports
-from breakout_machine_vertex import BreakoutMachineVertex
+from spinn_gym.games.breakout.breakout_machine_vertex import BreakoutMachineVertex
 
 import numpy
 

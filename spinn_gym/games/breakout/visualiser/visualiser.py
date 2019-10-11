@@ -1,3 +1,4 @@
+from __future__ import print_function
 import multiprocessing
 
 import enum
@@ -90,18 +91,18 @@ class Visualiser(object):
         self.fps = fps
         self.scale = scale
 
-        print "x_factor", self.x_factor
-        print "y_factor", self.y_factor
-        print "x_res", self.x_res
-        print "y_res", self.y_res
-        print "x_bits", x_bits
-        print "y_bits", y_bits
-        print "x_mask", self.x_mask
-        print "y_mask", self.y_mask
-        print "v_mask", self.value_mask
-        print "bat width", self.bat_width
-        print "Brick Width", self.BRICK_WIDTH
-        print "Brick Height", self.BRICK_HEIGHT
+        print("x_factor", self.x_factor)
+        print("y_factor", self.y_factor)
+        print("x_res", self.x_res)
+        print("y_res", self.y_res)
+        print("x_bits", x_bits)
+        print("y_bits", y_bits)
+        print("x_mask", self.x_mask)
+        print("y_mask", self.y_mask)
+        print("v_mask", self.value_mask)
+        print("bat width", self.bat_width)
+        print("Brick Width", self.BRICK_WIDTH)
+        print("Brick Height", self.BRICK_HEIGHT)
 
         # Open socket to receive datagrams
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -225,7 +226,7 @@ class Visualiser(object):
                 try:
                     for x1, y1, c1, b1 in zip(x, y, c, b):
                         # self.image_data[:] = 0
-                        print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+                        print("valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b))
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
                         elif b1 == 1:
