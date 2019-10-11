@@ -27,7 +27,7 @@ from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
     id = UDP_PORT - UDP_PORT1
-    print "threadin ", running, id
+    print("threadin ", running, id)
     # time.sleep(5)
     # xb = np.uint32(np.ceil(np.log2(X_RESOLUTION / x_factor1)))
     # yb = np.uint32(np.ceil(np.log2(Y_RESOLUTION / y_factor1)))
@@ -36,7 +36,7 @@ def thread_visualiser(UDP_PORT, xr, yr, xb=8, yb=8, key_conn=None):
         UDP_PORT, key_conn,# id,
         x_factor=xr, y_factor=yr,
         x_bits=xb, y_bits=yb)
-    print "threadin2 ", running, id
+    print("threadin2 ", running, id)
     visualiser.show()
     # visualiser._update(None)
     # score = 0
@@ -143,12 +143,12 @@ spike_input.record('spikes')
 
 running = True
 
-print UDP_PORT1
-print X_RESOLUTION/x_factor1
-print Y_RESOLUTION/y_factor1
-print np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1)))
-print np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))
-print key_input_connection
+print(UDP_PORT1)
+print(X_RESOLUTION/x_factor1)
+print(Y_RESOLUTION/y_factor1)
+print(np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))))
+print(np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))))
+print(key_input_connection)
 
 
 #t = threading.Thread(target=thread_visualiser, args=[UDP_PORT1, x_factor1, y_factor1,
@@ -156,14 +156,14 @@ print key_input_connection
                                                      #np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
                                                      #key_input_connection])
 
-print "reached here 1"
+print("reached here 1")
 #t.start()
 
 runtime = 1000 * 15
 simulator = get_simulator()
 
 p.run(runtime)
-print "reached here 2"
+print("reached here 2")
 
 running = False
 
@@ -182,6 +182,6 @@ scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 # End simulation
 p.end()
 
-print "1", scores
+print("1", scores)
 # print "2", scores2
 
