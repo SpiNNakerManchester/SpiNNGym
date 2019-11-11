@@ -52,6 +52,8 @@ def thread_visualiser(board_address, tag, xr, yr, xb, yb, key_conn):
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
+
+    # Start from command line here instead
     thread = threading.Thread(target=thread_visualiser, args=[
         board_address, tag, xr, yr, xb, yb, key_conn])
     thread.start()
