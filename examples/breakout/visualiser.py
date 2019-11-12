@@ -9,7 +9,6 @@ import matplotlib.animation as animation
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
 import datetime
-import time
 
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import cv2
@@ -72,11 +71,15 @@ class Visualiser(object):
         self.y_shift = self.colour_bits
 
         # assert self.y_shift == 2, self.y_shift
+
         self.colour_mask = 1
         self.bricked_mask = 2
 
         self.value_mask = (1 << (x_bits + y_bits + self.colour_bits)) - 1
 
+        # assert x_bits + y_bits + self.colour_bits == 18, x_bits + y_bits + self.colour_bits
+
+        # assert self.value_mask == 0x3FFFF, self.value_mask
 
         self.y_res = 128 / y_factor
         self.x_res = 160 / x_factor
@@ -88,20 +91,18 @@ class Visualiser(object):
         self.fps = fps
         self.scale = scale
 
-        print("\n\nVisualiser Initialised With Parameters:")
-        print "\tx_factor", self.x_factor
-        print "\ty_factor", self.y_factor
-        print "\tx_res", self.x_res
-        print "\ty_res", self.y_res
-        print "\tx_bits", x_bits
-        print "\ty_bits", y_bits
-        print "\tx_mask", self.x_mask
-        print "\ty_mask", self.y_mask
-        print "\tv_mask", self.value_mask
-        print "\tbat width", self.bat_width
-        print "\tBrick Width", self.BRICK_WIDTH
-        print "\tBrick Height", self.BRICK_HEIGHT
-
+        print "x_factor", self.x_factor
+        print "y_factor", self.y_factor
+        print "x_res", self.x_res
+        print "y_res", self.y_res
+        print "x_bits", x_bits
+        print "y_bits", y_bits
+        print "x_mask", self.x_mask
+        print "y_mask", self.y_mask
+        print "v_mask", self.value_mask
+        print "bat width", self.bat_width
+        print "Brick Width", self.BRICK_WIDTH
+        print "Brick Height", self.BRICK_HEIGHT
 
         # Open socket to receive datagrams
         self.connection = SCAMPConnection(remote_host=machine_address)
@@ -110,7 +111,6 @@ class Visualiser(object):
         # Make awesome CRT palette
         cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
-#         plt.ion()
         # Create image plot to display game screen
         self.fig = plt.figure("BreakOut", figsize=(8, 6))
         self.axis = plt.subplot(1, 1, 1)
@@ -159,19 +159,12 @@ class Visualiser(object):
     def show(self):
         # Play animation
         interval = (1000. / self.fps)
-#         self.animation = animation.FuncAnimation(self.fig, self._update,
-#                                                  interval=interval,
-#                                                  blit=False)
+        self.animation = animation.FuncAnimation(self.fig, self._update,
+                                                 interval=interval,
+                                                 blit=False)
         # Show animated plot (blocking)
         try:
-            plt.ion()
             plt.show()
-            plt.draw()
-#             plt.pause(0.001)
-            print("showed visualiser")
-#             self.fig.canvas.draw()
-#             self.
-#             plt.draw()
         except:
             pass
 
@@ -196,20 +189,17 @@ class Visualiser(object):
             else:
                 raw_data = self.connection.receive()
                 message_received = True
-
                 # Slice off EIEIO header and convert to numpy array of uint32
                 payload = np.fromstring(raw_data[6:], dtype="uint32")
 
                 payload_value = payload & self.value_mask
                 vision_event_mask = payload_value >= SpecialEvent.max
-
                 # Payload is a pixel:
-
                 # Create mask to select vision (rather than special event) packets
+
                 # Extract coordinates
                 'const uint32_t spike_key = ' \
                     'key | (SPECIAL_EVENT_MAX + (i << (game_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);'
-
                 vision_payload = payload_value[
                                      vision_event_mask] - SpecialEvent.max
                 x = (vision_payload >> self.x_shift) & self.x_mask
@@ -218,27 +208,24 @@ class Visualiser(object):
                 c = (vision_payload & self.colour_mask)
                 b = (vision_payload & self.bricked_mask) >> 1
 
-#                 '''if y.any() == self.y_res-1:
-#                     if c[np.where(y==self.y_res-1)].any()==1:
-#                         #add remaining bat pixels to image
-#                         x_pos=x[np.where(y==self.y_res-1)]
-#                         for i in range(1,self.bat_width):
-#                             np.hstack((y,self.y_res-1))
-#                             np.hstack((c,1))
-#                             np.hstack((x,x_pos+i))'''
-
+                '''if y.any() == self.y_res-1:
+                    if c[np.where(y==self.y_res-1)].any()==1:
+                        #add remaining bat pixels to image
+                        x_pos=x[np.where(y==self.y_res-1)]
+                        for i in range(1,self.bat_width):
+                            np.hstack((y,self.y_res-1))
+                            np.hstack((c,1))
+                            np.hstack((x,x_pos+i))'''
                 # Set valid pixels
                 try:
                     for x1, y1, c1, b1 in zip(x, y, c, b):
                         # self.image_data[:] = 0
-#                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+                        print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
-
                         elif b1 == 1:
                             self.image_data[y1:(y1 + self.BRICK_HEIGHT),
-                            x1:(x1 + self.BRICK_WIDTH)] = c1 #*
-                            #np.random.randint(2, 6) # to show individual bricks
+                            x1:(x1 + self.BRICK_WIDTH)] = c1 * np.random.randint(2, 6)
 
                     # if c>0:
                     # self.video_data[:] = 0
@@ -304,15 +291,12 @@ class Visualiser(object):
         # **YUCK** score_text must be returned whether it has
         # been updated or not to prevent overdraw
         # self.first_update = False
-#         print("redrawing...")
-        plt.draw()
-        plt.pause(0.01)
         return [self.image, self.score_text]
 
     def _on_key_press(self, event):
         # Send appropriate bits
         if event.key == "left":
-            print("Left key pressed!\n")
+            # print
             self.input_state = InputState.left
         elif event.key == "right":
             self.input_state = InputState.right
@@ -324,25 +308,8 @@ class Visualiser(object):
 
 
 if __name__ == "__main__":
-    # Visualiser process to be called from Breakout script
-    print("\nStarting visualiser process")
-    print("\targs: 1: {}, 2: {}, 3: {}, 4: {}".format(
-        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
-
-    # Parse arguments
+    print("Running from command line")
     machine = sys.argv[1]
-    tag = int(sys.argv[2])
-    xb = int(sys.argv[3])
-    yb = int(sys.argv[4])
-
-    # Create visualiser
-    vis = Visualiser(machine_address=machine, tag=tag, x_factor=2, y_factor=2,
-                     x_bits=xb, y_bits=yb)
-    print("\nDisplaying visualiser")
+    tag = sys.argv[2]
+    vis = Visualiser(machine, tag)
     vis.show()
-    print("...awaiting game signals")
-
-    while True:
-#         print "updating..."
-        score = vis._update(None)
-        time.sleep(0.001)
