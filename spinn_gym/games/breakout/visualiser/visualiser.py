@@ -168,7 +168,7 @@ class Visualiser(object):
             plt.show()
             plt.draw()
 #             plt.pause(0.001)
-            print("showed visualiser")
+            print("Visualiser displayed")
 #             self.fig.canvas.draw()
 #             self.
 #             plt.draw()
@@ -342,7 +342,13 @@ if __name__ == "__main__":
     vis.show()
     print("...awaiting game signals")
 
-    while True:
-#         print "updating..."
+    elapsed_time = 0
+    refresh_time = 0.001
+    
+    while elapsed_time < 10.0:
+#         print("updating... {}".format(elapsed_time))
         score = vis._update(None)
-        time.sleep(0.001)
+        time.sleep(refresh_time)
+        elapsed_time += refresh_time
+        
+    print("visualiser gets to here?")

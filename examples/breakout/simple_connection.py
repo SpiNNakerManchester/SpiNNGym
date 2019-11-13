@@ -45,9 +45,9 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
          board_address,
          tag.__str__(),
          xb.__str__(),
-         yb.__str__(),
+         yb.__str__()
          ])
-    
+    print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 def get_scores(breakout_pop,simulator):
     b_vertex = breakout_pop._vertex
@@ -144,9 +144,9 @@ p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
 
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
-spike_input2 = p.Population(2, p.SpikeSourcePoisson(rate=2),
+spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
                             label="input_connect")
-p.Projection(spike_input2, breakout_pop, p.AllToAllConnector(),
+p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
 weight = 0.1
@@ -154,21 +154,24 @@ weight = 0.1
     X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1, 1, 1, weight,
     row_col_to_input_breakout)
 
-# receive_pop_size1 = (160/x_factor1)*(128/y_factor1)
-# receive_pop_size2 = (160/x_factor2)*(128/y_factor2)
-#
-# receive_pop_1 = p.Population(receive_pop_size1, p.IF_cond_exp(),
-#                              label="receive_pop")
-#
-# receive_pop_2 = p.Population(receive_pop_size2, p.IF_cond_exp(),
-#                              label="receive_pop")
-#
-# p.Projection(breakout_pop, receive_pop_1, p.FromListConnector(Connections_on),
-#              p.StaticSynapse(weight=weight))
-#
-# p.Projection(breakout_pop2, receive_pop_2,p.OneToOneConnector(),
-#              p.StaticSynapse(weight=weight))
-# receive_pop_1.record('spikes')#["spikes"])
+# Create population of neurons to receive input from Breakout
+receive_pop_size = int(X_RESOLUTION/x_factor1) * int(Y_RESOLUTION/y_factor1)
+receive_pop = p.Population(receive_pop_size, p.IF_cond_exp(),
+                             label="receive_pop")
+p.Projection(breakout_pop, receive_pop, p.FromListConnector(Connections_on),
+             p.StaticSynapse(weight=weight))
+
+# Create population to receive reward signal from Breakout (n0: rew, n1: pun)
+receive_reward_pop = p.Population(2, p.IF_cond_exp(),
+                             label="receive_rew_pop")
+p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(), 
+             p.StaticSynapse(weight=0.1 * weight))
+       
+
+# Setup recording
+spike_input.record('spikes')
+receive_pop.record('spikes')
+receive_reward_pop.record('all')
 
 
 # -----------------------------------------------------------------------------
@@ -205,12 +208,34 @@ p.run(runtime)
 # -----------------------------------------------------------------------------
 # Post-Process Results
 # -----------------------------------------------------------------------------
-print("\nSimulation Complete - Post-processing")
+print("\nSimulation Complete - Extracting Data and Post-Processing")
 
+spike_input_spikes = spike_input.get_data('spikes')
+receive_pop_spikes = receive_pop.get_data('spikes')
+receive_reward_pop_output = receive_reward_pop.get_data()
+
+figure_filename = "results.png"
+Figure(
+    # raster plot of the presynaptic neuron spike times
+    Panel(spike_input_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(receive_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+          ylabel="gsyn excitatory (mV)", 
+          data_labels=[receive_reward_pop.label], 
+          yticks=True, 
+          xlim=(0, runtime)
+          )
+    # title="Simple Breakout Example"
+)
+
+plt.show()
 
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
+print("Scores: {}".format(scores))
 
 # End simulation
 p.end()
 
-print("Scores: {}".format(scores))
+
