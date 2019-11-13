@@ -57,7 +57,7 @@ from spinn_front_end_common.abstract_models\
    import AbstractProvidesNKeysForPartition
 
 # Bandit imports
-from bandit_machine_vertex import BanditMachineVertex
+from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import BanditMachineVertex
 
 import numpy
 

@@ -19,7 +19,9 @@ import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import functools
+
 import subprocess
+import sys
 
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
@@ -32,17 +34,20 @@ from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
+    
+    print("Calling \'start_visualiser\'")
 
     # Calling visualiser - must be done as process rather than on thread due to
     # OS security (Mac)
-    subprocess.Popen(
-        ['python',
+    vis_proc = subprocess.Popen(
+        [sys.executable,
          '../../spinn_gym/games/breakout/visualiser/visualiser.py',
          board_address,
          tag.__str__(),
          xb.__str__(),
          yb.__str__(),
          ])
+    
 
 def get_scores(breakout_pop,simulator):
     b_vertex = breakout_pop._vertex
@@ -200,7 +205,7 @@ p.run(runtime)
 # -----------------------------------------------------------------------------
 # Post-Process Results
 # -----------------------------------------------------------------------------
-print "Simulation Complete - Post-processing"
+print("\nSimulation Complete - Post-processing")
 
 
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)

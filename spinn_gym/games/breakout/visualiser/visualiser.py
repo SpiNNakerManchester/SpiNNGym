@@ -78,29 +78,29 @@ class Visualiser(object):
         self.value_mask = (1 << (x_bits + y_bits + self.colour_bits)) - 1
 
 
-        self.y_res = 128 / y_factor
-        self.x_res = 160 / x_factor
-        self.BRICK_WIDTH = self.x_res / 5
-        self.BRICK_HEIGHT = 16 / y_factor
+        self.y_res = int(128 / y_factor)
+        self.x_res = int(160 / x_factor)
+        self.BRICK_WIDTH = int(self.x_res / 5)
+        self.BRICK_HEIGHT = int(16 / y_factor)
         self.x_factor = x_factor
         self.y_factor = y_factor
-        self.bat_width = 32 / x_factor
+        self.bat_width = int(32 / x_factor)
         self.fps = fps
         self.scale = scale
 
         print("\n\nVisualiser Initialised With Parameters:")
-        print "\tx_factor", self.x_factor
-        print "\ty_factor", self.y_factor
-        print "\tx_res", self.x_res
-        print "\ty_res", self.y_res
-        print "\tx_bits", x_bits
-        print "\ty_bits", y_bits
-        print "\tx_mask", self.x_mask
-        print "\ty_mask", self.y_mask
-        print "\tv_mask", self.value_mask
-        print "\tbat width", self.bat_width
-        print "\tBrick Width", self.BRICK_WIDTH
-        print "\tBrick Height", self.BRICK_HEIGHT
+        print("\tx_factor".format(self.x_factor))
+        print("\ty_factor".format(self.y_factor))
+        print("\tx_res".format(self.x_res))
+        print("\ty_res".format(self.y_res))
+        print("\tx_bits".format(x_bits))
+        print("\ty_bits".format(y_bits))
+        print("\tx_mask".format(self.x_mask))
+        print("\ty_mask".format(self.y_mask))
+        print("\tv_mask".format(self.value_mask))
+        print("\tbat width".format(self.bat_width))
+        print("\tBrick Width".format(self.BRICK_WIDTH))
+        print("\tBrick Height".format(self.BRICK_HEIGHT))
 
 
         # Open socket to receive datagrams
@@ -198,7 +198,7 @@ class Visualiser(object):
                 message_received = True
 
                 # Slice off EIEIO header and convert to numpy array of uint32
-                payload = np.fromstring(raw_data[6:], dtype="uint32")
+                payload = np.frombuffer(raw_data[6:], dtype="uint32")
 
                 payload_value = payload & self.value_mask
                 vision_event_mask = payload_value >= SpecialEvent.max
