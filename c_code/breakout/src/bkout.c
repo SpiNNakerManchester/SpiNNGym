@@ -125,10 +125,10 @@ int v = -MAX_BALL_SPEED;// * FACT;
 int x_bat = 32;
 
 // bat length in pixels
-int bat_len = 48;
+int bat_len = 24;
 
 int BRICK_WIDTH = 10;
-int BRICK_HEIGHT = 6;
+int BRICK_HEIGHT = 5;
 
 int BRICK_LAYER_OFFSET = 16;
 int BRICK_LAYER_HEIGHT = 12;
@@ -183,29 +183,9 @@ static inline void add_score_down_event()
 void add_event(int i, int j, colour_t col, bool bricked)
 {
     const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-//    io_printf(IO_BUF, "sending payload back i:%d, j:%d, c:%d, b:%d\n", i, j, colour_bit, bricked);
-
-//    int row_bits = (np.ceil(np.log2(x_res)));
-//    int idx = 0;
-//
-//    if (colour_bit):
-//        idx = 1;
-//
-//    int row += 0
-//    idx = idx | (row << (colour_bits));  // colour bit
-//    idx = idx | (col << (row_bits + colour_bits));
-//
-//    // add two to allow for special event bits
-//    idx = idx + 2;
-//    io_printf(IO_BUF, "sending fixed payload back i:%d, j:%d, c:%d, b:%d\n", i, j, colour_bit, bricked);
-//    io_printf(IO_BUF, "fixed payload: full:%d, nokey:%d, bits:%d\n",
-//        key | (SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit),
-//        (SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit),
-//        (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);
-
 
     const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);
-//    const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + colour_bit)) + (j << colour_bit) + colour_bit);
+    // const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + colour_bit)) + (j << colour_bit) + colour_bit);
 
     spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
 }
@@ -235,22 +215,22 @@ static inline void set_pixel_col (int i, int j, colour_t col, bool bricked)
 static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
 {
 
-//    io_printf(IO_BUF, "x:%d, y:%d, px:%d, py:%d\n", x, y, pos_x, pos_y);
+    // io_printf(IO_BUF, "x:%d, y:%d, px:%d, py:%d\n", x, y, pos_x, pos_y);
     if (the_x < 0 || the_y < 0 || the_x >= GAME_WIDTH - 1 || the_y >= GAME_HEIGHT - 1){
         return false;
     }
     int pos_x=0, pos_y=0;
 
     if (the_y >= BRICK_LAYER_OFFSET && the_y < BRICK_LAYER_OFFSET + BRICK_LAYER_HEIGHT) {
-//        io_printf(IO_BUF, "in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
+        // io_printf(IO_BUF, "in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         pos_x = the_x / BRICK_WIDTH;
         pos_y = (the_y - BRICK_LAYER_OFFSET) / BRICK_HEIGHT;
-//        io_printf(IO_BUF, "2 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
+        // io_printf(IO_BUF, "2 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         bool val = bricks[pos_y][pos_x];
         if (val){
             add_event(pos_x * BRICK_WIDTH, (pos_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET, COLOUR_BACKGROUND, true);
         }
-//        io_printf(IO_BUF, "3 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
+        // io_printf(IO_BUF, "3 in brick layer x:%d y:%d px:%d py:%d\n", the_x, the_y, pos_x, pos_y);
         bricks[pos_y][pos_x] = false;
         if (val) {
             brick_corner_x = pos_x;
@@ -262,7 +242,7 @@ static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
             brick_corner_y = -1;
         }
 
-//        io_printf(IO_BUF, "x:%d y:%d px:%d py:%d, v:%d\n", the_x, the_y, pos_x, pos_y, val);
+        // io_printf(IO_BUF, "x:%d y:%d px:%d py:%d, v:%d\n", the_x, the_y, pos_x, pos_y, val);
         return val;
     }
     brick_corner_x = -1;
@@ -271,7 +251,7 @@ static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
 }
 
 static inline uint32_t hitting_a_brick(int the_x, int the_y){
-//    io_printf(IO_BUF, "hitting brick from x:%d, y:%d\n", the_x, the_y);
+    // io_printf(IO_BUF, "hitting brick from x:%d, y:%d\n", the_x, the_y);
     uint32_t encoded_result = 0;
     bool check_left = false;
     bool check_right = false;
@@ -282,37 +262,30 @@ static inline uint32_t hitting_a_brick(int the_x, int the_y){
         if (check_right){
             encoded_result = encoded_result + 1;
         }
-//        io_printf(IO_BUF, "b1\n");
+        // io_printf(IO_BUF, "b1\n");
     }
     else{
         check_left = is_a_brick(the_x - 1, the_y);
         if (check_left){
             encoded_result = encoded_result + 2;
         }
-//        io_printf(IO_BUF, "b2\n");
+        // io_printf(IO_BUF, "b2\n");
     }
     if (v > 0){
         check_down = is_a_brick(the_x, the_y + 1);
         if (check_down){
             encoded_result = encoded_result + 4;
         }
-//        io_printf(IO_BUF, "b3\n");
+        // io_printf(IO_BUF, "b3\n");
     }
     else{
         check_up = is_a_brick(the_x, the_y - 1);
         if (check_up){
             encoded_result = encoded_result + 8;
         }
-//        io_printf(IO_BUF, "b4\n");
+        // io_printf(IO_BUF, "b4\n");
     }
-//    io_printf(IO_BUF, "finished checks\n");
-//    bool brick_direction[4] = {check_left, check_right, check_up, check_down};
-//    io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d h\n", check_left, check_right, check_up, check_down);
-//    bool (*array_pointer)[4] = &brick_direction;
-    //for some reason this print is necessary for it to function
-//    io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d a\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
-//    io_printf(IO_BUF, "result:%d\n", encoded_result);
-//    io_printf(IO_BUF, "created pointer\n");
+
     return encoded_result;
 }
 
@@ -351,9 +324,10 @@ static void update_frame (uint32_t time)
 	if (PRINT_GAME_EVOLUTION) {
 		io_printf(IO_BUF, "time = %u, t20xf = %u\n", time, time % (20 * x_factor));
 	}
-    // draw bat
+
+    // Draw bat
     // Cache old bat position
-    const uint32_t old_xbat = x_bat;
+    const int old_xbat = x_bat;
     int move_direction;
     if (right_key_count > left_key_count){
         move_direction = KEY_RIGHT;
@@ -369,8 +343,6 @@ static void update_frame (uint32_t time)
         move_direction = 2;
         //    io_printf(IO_BUF, "didn't move!\n");
     }
-//    io_printf(IO_BUF, "left = %d, right = %d\n", left_key_count, right_key_count);
-
 
     // Update bat and clamp
     if (move_direction == KEY_LEFT && --x_bat < 0)
@@ -390,7 +362,7 @@ static void update_frame (uint32_t time)
     if (old_xbat != x_bat)
     {
         // Draw bat pixels
-//        io_printf(IO_BUF, "oxb:%d, xb:%d, bl:%d\n", old_xbat, x_bat, bat_len);
+        // io_printf(IO_BUF, "oxb:%d, xb:%d, bl:%d\n", old_xbat, x_bat, bat_len);
         for (int i = x_bat; i < (x_bat + bat_len); i++)
         {
             set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
@@ -440,8 +412,7 @@ static void update_frame (uint32_t time)
 
             // move ball in y and bounce off top
             y += v;
-            // if ball entering bottom row, keep it out XXX SD
-    //        if (y == GAME_HEIGHT - 1)
+
             if (y + v > GAME_HEIGHT)
             {
                 y = GAME_HEIGHT - 1;
@@ -451,104 +422,90 @@ static void update_frame (uint32_t time)
                 v = -v;
             }
 
-    //        io_printf(IO_BUF, "about to is a brick x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
-            //detect collision
-            // if we hit something hard! -- paddle or brick
-//            bool bricked = is_a_brick(x, y);
-//            bool bricked = is_a_brick(x+(u/2), y+(v/2));
-//            io_printf(IO_BUF, "about to check hitting brick\n");
             uint32_t encoded_result = hitting_a_brick(x, y);
             bool brick_direction[4];// = hitting_a_brick(x+(u/2), y+(v/2));
             for (int i = 0; i < 4; i++){
-                if ((encoded_result >> i) & 1 == 1){
+                if (((encoded_result >> i) & 1 ) == 1){
                     brick_direction[i] = true;
                 }
                 else{
                     brick_direction[i] = false;
                 }
             }
-//            io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d, u:%d, v:%d, result:%u\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3], u, v, encoded_result);
+            // io_printf(IO_BUF, "b1:%d, b2:%d, b3:%d, b4:%d, u:%d, v:%d, result:%u\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3], u, v, encoded_result);
             if (brick_direction[0] || brick_direction[1] || brick_direction[2] || brick_direction[3]) {
                 set_pixel_col(x, y, COLOUR_BACKGROUND, false);
-//                set_pixel_col(x, y, COLOUR_BALL, false);
-//                io_printf(IO_BUF, "a brick was hit\n");
+
                 if (brick_direction[0]){
                     u = -u;
                     brick_direction[0] = false;
                     add_score_up_event();
-//                    io_printf(IO_BUF, "ob1\n");
+                    // io_printf(IO_BUF, "ob1\n");
                 }
                 if (brick_direction[1]){
                     u = -u;
                     brick_direction[1] = false;
                     add_score_up_event();
-//                    io_printf(IO_BUF, "ob2\n");
+                    // io_printf(IO_BUF, "ob2\n");
                 }
                 if (brick_direction[2]){
                     v = -v;
                     brick_direction[2] = false;
                     add_score_up_event();
-//                    io_printf(IO_BUF, "ob3\n");
+                    // io_printf(IO_BUF, "ob3\n");
                 }
                 if (brick_direction[3]){
                     v = -v;
                     brick_direction[3] = false;
                     add_score_up_event();
-//                    io_printf(IO_BUF, "ob4\n");
+                    // io_printf(IO_BUF, "ob4\n");
                 }
             }
             else{
                 uint32_t encoded_result = hitting_a_brick(x+(u/2), y+(v/2));
                 bool brick_direction[4];// = hitting_a_brick(x+(u/2), y+(v/2));
                 for (int i = 0; i < 4; i++){
-                    if ((encoded_result >> i) & 1 == 1){
+                    if (((encoded_result >> i) & 1) == 1){
                         brick_direction[i] = true;
                     }
                     else{
                         brick_direction[i] = false;
                     }
                 }
-//                bool * brick_direction = hitting_a_brick(x, y);
-//                io_printf(IO_BUF, "2 b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
+                // bool * brick_direction = hitting_a_brick(x, y);
+                // io_printf(IO_BUF, "2 b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0], brick_direction[1], brick_direction[2], brick_direction[3]);
                 if (brick_direction[0] || brick_direction[1] || brick_direction[2] || brick_direction[3]) {
-//                    io_printf(IO_BUF, "a brick was hit 2\n");
                     x = x + (u / 2);
                     y = y + (v / 2);
                     if (brick_direction[0]){
                         u = -u;
                         brick_direction[0] = false;
                         add_score_up_event();
-//                        io_printf(IO_BUF, "2ob1\n");
                     }
                     if (brick_direction[1]){
                         u = -u;
                         brick_direction[1] = false;
                         add_score_up_event();
-//                        io_printf(IO_BUF, "2ob2\n");
                     }
                     if (brick_direction[2]){
                         v = -v;
                         brick_direction[2] = false;
                         add_score_up_event();
-//                        io_printf(IO_BUF, "2ob3\n");
                     }
                     if (brick_direction[3]){
                         v = -v;
                         brick_direction[3] = false;
                         add_score_up_event();
-//                        io_printf(IO_BUF, "2ob4\n");
                     }
                 }
             }
-//            io_printf(IO_BUF, "after brick u:%d, v:%d\n", u, v);
 
-//            if (get_pixel_col(x, y+v-(v/2)) == COLOUR_BAT)
+
             if (get_pixel_col(x, y) == COLOUR_BAT || get_pixel_col(x + (u / 2), y + (v / 2)) == COLOUR_BAT || get_pixel_col(x, y + (v / 2)) == COLOUR_BAT)
             {
             	if (PRINT_GAME_EVOLUTION) {
             		io_printf(IO_BUF, "got in hitting bat x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
             	}
-                bool broke = false;
                 if (x < (x_bat + bat_len/4))
                 {
                 	if (PRINT_GAME_EVOLUTION){
@@ -586,14 +543,8 @@ static void update_frame (uint32_t time)
                 	if (PRINT_GAME_EVOLUTION) {
                 		io_printf(IO_BUF, "Broke bat 0x%x\n", frame_buff[x][y]);
                 	}
-                    broke = true;
                 }
 
-    //            if (broke == false)
-    //            {
-    //              v = -MAX_BALL_SPEED / x_factor;
-    //              y -= 16 / y_factor;
-    //            }
                 // Increase score
                 if (!bricking){
                     add_score_up_event();
@@ -601,7 +552,6 @@ static void update_frame (uint32_t time)
             }
 
             // lost ball
-    //        if (y >= GAME_HEIGHT - v)
             if (y + v > GAME_HEIGHT)
             {
             	if (PRINT_GAME_EVOLUTION) {
@@ -749,10 +699,6 @@ static bool initialize(uint32_t *timer_period)
         u = -MAX_BALL_SPEED;
     }
 
-//    BRICKS_PER_ROW = MAX_BRICKS_PER_ROW / x_factor;
-//    BRICKS_PER_COLUMN = MAX_BRICKS_PER_COLUMN;
-//    io_printf(IO_BUF, "BPR = %d, BPC = %d\n", BRICKS_PER_ROW, BRICKS_PER_COLUMN);
-
     BRICK_WIDTH = GAME_WIDTH / BRICKS_PER_ROW;//BRICK_WIDTH / x_factor;
     BRICK_HEIGHT = 16 / y_factor;//BRICK_HEIGHT / y_factor;
 
@@ -798,10 +744,6 @@ void timer_callback(uint unused, uint dummy)
 //    io_printf(IO_BUF, "time = %d", _time);
     use(unused);
     use(dummy);
-    // If a fixed number of simulation ticks are specified and these have passed
-    //
-    //  ticks++;
-    //this makes it count twice, WTF!?
 
     _time++;
     score_change_count++;
@@ -833,7 +775,7 @@ void timer_callback(uint unused, uint dummy)
     else
     {
         // Increment ticks in frame counter and if this has reached frame delay
-//        io_printf(IO_BUF, "else time = %d\n", _time);
+        // io_printf(IO_BUF, "else time = %d\n", _time);
         if(_time % 20 == 0)
         {
             if (!current_number_of_bricks && bricking == 1)
@@ -869,7 +811,7 @@ void timer_callback(uint unused, uint dummy)
                 {
                     if (bricks[i][j])
                     {
-//                        io_printf(IO_BUF, "adding brick event at i:%d j:%d\n", i, j);
+                        // io_printf(IO_BUF, "adding brick event at i:%d j:%d\n", i, j);
                         add_event(j * BRICK_WIDTH, (i * BRICK_HEIGHT) + BRICK_LAYER_OFFSET, COLOUR_BRICK_ON, true);
                     }
                 }
@@ -878,7 +820,7 @@ void timer_callback(uint unused, uint dummy)
             // collision detection relies on this
             if(_time == FRAME_DELAY)
             {
-//                io_printf(IO_BUF, "sets the bat for the first time bl:%d, xb:%, gh:%d\n", bat_len, x_bat, GAME_HEIGHT);
+                // io_printf(IO_BUF, "sets the bat for the first time bl:%d, xb:%, gh:%d\n", bat_len, x_bat, GAME_HEIGHT);
                 // Draw bat
                 for (int i = x_bat; i < (x_bat + bat_len); i++)
                 {
@@ -913,40 +855,39 @@ void mc_packet_received_callback(uint key, uint payload)
 INT_HANDLER sark_int_han (void);
 
 
-void rte_handler (uint code)
-{
-  // Save code
-
-  sark.vcpu->user0 = code;
-  sark.vcpu->user1 = (uint) sark.sdram_buf;
-
-  // Copy ITCM to SDRAM
-
-  sark_word_cpy (sark.sdram_buf, (void *) ITCM_BASE, ITCM_SIZE);
-
-  // Copy DTCM to SDRAM
-
-  sark_word_cpy (sark.sdram_buf + ITCM_SIZE, (void *) DTCM_BASE, DTCM_SIZE);
-
-  // Try to re-establish consistent SARK state
-
-  sark_vic_init ();
-
-  sark_vic_set ((vic_slot) sark_vec->sark_slot, CPU_INT, 1, sark_int_han);
-
-  uint *stack = sark_vec->stack_top - sark_vec->svc_stack;
-
-  stack = cpu_init_mode (stack, IMASK_ALL+MODE_IRQ, sark_vec->irq_stack);
-  stack = cpu_init_mode (stack, IMASK_ALL+MODE_FIQ, sark_vec->fiq_stack);
-  (void)  cpu_init_mode (stack, IMASK_ALL+MODE_SYS, 0);
-
-  cpu_set_cpsr (MODE_SYS);
-
-  // ... and sleep
-
-  while (1)
-    cpu_wfi ();
-}
+//void rte_handler (uint code)
+//{
+//  // Save code
+//
+//  sark.vcpu->user0 = code;
+//  sark.vcpu->user1 = (uint) sark.sdram_buf;
+//
+//  // Copy ITCM to SDRAM
+//  sark_word_cpy(sark.sdram_buf, (void *) ITCM_BASE, ITCM_SIZE);
+//
+//  // Copy DTCM to SDRAM
+//
+//  sark_word_cpy(sark.sdram_buf + ITCM_SIZE, (void *) DTCM_BASE, DTCM_SIZE);
+//
+//  // Try to re-establish consistent SARK state
+//
+//  sark_vic_init ();
+//
+//  sark_vic_set ((vic_slot) sark_vec->sark_slot, CPU_INT, 1, sark_int_han);
+//
+//  uint *stack = sark_vec->stack_top - sark_vec->svc_stack;
+//
+//  stack = cpu_init_mode (stack, IMASK_ALL+MODE_IRQ, sark_vec->irq_stack);
+//  stack = cpu_init_mode (stack, IMASK_ALL+MODE_FIQ, sark_vec->fiq_stack);
+//  (void)  cpu_init_mode (stack, IMASK_ALL+MODE_SYS, 0);
+//
+//  cpu_set_cpsr (MODE_SYS);
+//
+//  // ... and sleep
+//
+//  while (1)
+//    cpu_wfi ();
+//}
 
 //-------------------------------------------------------------------------------
 
@@ -959,14 +900,10 @@ void c_main(void)
     uint32_t timer_period;
     if (!initialize(&timer_period))
     {
-        io_printf(IO_BUF,"Error in initialisation - exiting!\n");
+        io_printf(IO_BUF,"Init err!\n");
         rt_error(RTE_SWERR);
         return;
     }
-
-
-    // frame buffer: 160 x 128 x 4 bits: [hard/soft, R, G, B]
-//    static int frame_buff[GAME_WIDTH / 8][GAME_HEIGHT];
 
     init_frame();
     keystate = 0; // IDLE
