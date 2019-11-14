@@ -131,7 +131,7 @@ p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 # Game resolution sampling factors
 x_factor1 = 2
 y_factor1 = x_factor1
-bricking = 0
+bricking = 1
 
 
 # -----------------------------------------------------------------------------

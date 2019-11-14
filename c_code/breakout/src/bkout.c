@@ -94,9 +94,9 @@ static uint32_t infinite_run;
 static uint32_t _time = 0;
 uint32_t pkt_count;
 
-uint32_t GAME_WIDTH = 160; // baseline before subsampling
-uint32_t GAME_HEIGHT = 128; // baseline before subsampling
-uint32_t y_bits = 8; // baseline to enable building of correct key
+int GAME_WIDTH = 160; // baseline before subsampling
+int GAME_HEIGHT = 128; // baseline before subsampling
+int y_bits = 8; // baseline to enable building of correct key
 
 // ball coordinates in fixed-point
 static int x; //= (GAME_WIDTH / 4) * FACT;
