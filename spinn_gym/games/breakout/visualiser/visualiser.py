@@ -1,3 +1,4 @@
+
 from spinnman.connections.udp_packet_connections import SCAMPConnection
 from spinnman.utilities.utility_functions import reprogram_tag
 from spinnman.exceptions import SpinnmanIOException
@@ -87,6 +88,7 @@ class Visualiser(object):
         self.bat_width = int(32 / x_factor)
         self.fps = fps
         self.scale = scale
+
 
         print("\n\nVisualiser Initialised With Parameters:")
         print("\tx_factor".format(self.x_factor))
@@ -231,7 +233,9 @@ class Visualiser(object):
                 try:
                     for x1, y1, c1, b1 in zip(x, y, c, b):
                         # self.image_data[:] = 0
+
 #                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
 

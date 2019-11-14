@@ -1,3 +1,4 @@
+from __future__ import print_function
 import spynnaker8 as p
 import spinn_gym as gym
 from spynnaker.pyNN.connections.\
@@ -26,6 +27,7 @@ import sys
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
+
 
 # -----------------------------------------------------------------------------
 #  Globals
@@ -129,15 +131,18 @@ p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 # Game resolution sampling factors
 x_factor1 = 2
 y_factor1 = x_factor1
-bricking = 1
+bricking = 0
+
 
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
 # -----------------------------------------------------------------------------
 
+
 # Create breakout population and activate live output
 b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
 breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+
 # ex is the external device plugin manager
 ex.activate_live_output_for(breakout_pop)
 
@@ -239,6 +244,7 @@ plt.show()
 
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
+
 
 # End simulation
 p.end()

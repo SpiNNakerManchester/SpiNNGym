@@ -1,3 +1,4 @@
+from __future__ import print_function
 # PACMAN imports
 # from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
 #     PopulationSettableChangeRequiresMapping
