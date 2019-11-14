@@ -27,6 +27,10 @@ from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
+# -----------------------------------------------------------------------------
+#  Globals
+# -----------------------------------------------------------------------------
+vis_proc = None # Visuliser process (global)
 
 # -----------------------------------------------------------------------------
 #  Helper Functions
@@ -39,6 +43,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
     # Calling visualiser - must be done as process rather than on thread due to
     # OS security (Mac)
+    global vis_proc
     vis_proc = subprocess.Popen(
         [sys.executable,
          '../../spinn_gym/games/breakout/visualiser/visualiser.py',
@@ -47,7 +52,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
          xb.__str__(),
          yb.__str__()
          ])
-    print("Visualiser proc ID: {}".format(vis_proc.pid))
+    # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 def get_scores(breakout_pop,simulator):
     b_vertex = breakout_pop._vertex
@@ -119,7 +124,7 @@ UDP_PORT2 = UDP_PORT1 + 1
 
 # Setup pyNN simulation
 p.setup(timestep=1.0)
-p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
+p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
 # Game resolution sampling factors
 x_factor1 = 2
@@ -237,5 +242,7 @@ print("Scores: {}".format(scores))
 
 # End simulation
 p.end()
+vis_proc.terminate()
+print("Simulation Complete")
 
 

@@ -318,6 +318,7 @@ class Visualiser(object):
             self.input_state = InputState.right
 
     def _on_key_release(self, event):
+        print("Right key pressed!\n")
         # If either key is released set state to idle
         if event.key == "left" or event.key == "right":
             self.input_state = InputState.idle
