@@ -121,10 +121,20 @@ def separate_connections(ball_population_size, connections_on):
             ball_list.append(val)
         else:
             index_in_pad_pop = idx - ball_population_size
-            new_el_mapping = (val[0], index_in_pad_pop, val[2], val[3])
-            pad_list.append(new_el_mapping)
+            new_el_connection = (val[0], index_in_pad_pop, val[2], val[3])
+            pad_list.append(new_el_connection)
 
     return ball_list, pad_list
+
+
+def compress_to_x_axis(connections, x_resolution):
+    compressed_connections = []
+
+    for idx, val in enumerate(connections):
+        new_el_connection = (val[0], val[1] % x_resolution, val[2], val[3])
+        compressed_connections.append(new_el_connection)
+
+    return compressed_connections
 
 
 # -----------------------------------------------------------------------------
@@ -178,19 +188,18 @@ weight = 0.1
     X_RESOLUTION / x_factor1, Y_RESOLUTION / y_factor1, 1, 1, weight,
     row_col_to_input_breakout)
 
+# Final Resolution
+x_res = int(X_RESOLUTION / x_factor1)
+y_res = int(Y_RESOLUTION / y_factor1)
+
 # Population sizes
-total_receive_pop_size = int(X_RESOLUTION / x_factor1) * int(Y_RESOLUTION / y_factor1)
+total_receive_pop_size = x_res * y_res
 
-pad_pop_size = int(X_RESOLUTION / x_factor1)
-ball_pop_size = total_receive_pop_size - pad_pop_size
+pad_pop_size = x_res
+ball_pop_size = x_res
 
-[Ball_connections, Pad_connections] = separate_connections(ball_pop_size, Connections_on)
-
-# # Create population of neurons to receive input from Breakout
-# receive_pop = p.Population(total_receive_pop_size, p.IF_cond_exp(),
-#                            label="receive_pop")
-# p.Projection(breakout_pop, receive_pop, p.FromListConnector(Connections_on),
-#              p.StaticSynapse(weight=weight))
+[Ball_connections, Pad_connections] = separate_connections(total_receive_pop_size - pad_pop_size, Connections_on)
+Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
 
 # Create the Pad position population
 pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
@@ -198,10 +207,10 @@ pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
 p.Projection(breakout_pop, pad_pop, p.FromListConnector(Pad_connections),
              p.StaticSynapse(weight=weight))
 
-# Create the Ball trajectory population
+# Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
                         label="ball_pop")
-p.Projection(breakout_pop, ball_pop, p.FromListConnector(Ball_connections),
+p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
              p.StaticSynapse(weight=weight))
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
