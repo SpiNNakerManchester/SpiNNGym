@@ -215,7 +215,6 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
 spike_input.record('spikes')
 pad_pop.record('spikes')
 ball_pop.record('spikes')
-# receive_pop.record('spikes')
 receive_reward_pop.record('all')
 
 # -----------------------------------------------------------------------------
@@ -256,7 +255,6 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 spike_input_spikes = spike_input.get_data('spikes')
 pad_pop_spikes = pad_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-# receive_pop_spikes = receive_pop.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
 
 Figure(
