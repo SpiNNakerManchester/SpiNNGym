@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
+*.aplx
+*.dict
 
 # Distribution / packaging
 .Python
@@ -111,3 +113,4 @@ venv.bak/
 
 application_generated_data_files
 reports
+*.m4v
