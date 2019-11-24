@@ -1,7 +1,5 @@
 ifndef NEURAL_MODELLING_DIRS
-    $(error NEURAL_MODELLING_DIRS is not set.  Please define 
-    NEURAL_MODELLING_DIRS (possibly by running "source setup" in the 
-    neural_modelling folder within the sPyNNaker source folder))
+    $(error NEURAL_MODELLING_DIRS is not set. Please define NEURAL_MODELLING_DIRS (possibly by running "source setup" in the neural_modelling folder within the sPyNNaker source folder))
 endif
 
 APP := breakout

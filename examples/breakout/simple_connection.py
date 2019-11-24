@@ -1,32 +1,24 @@
 from __future__ import print_function
-import spynnaker8 as p
-import spinn_gym as gym
-from spynnaker.pyNN.connections. \
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spinn_front_end_common.utilities.globals_variables import get_simulator
-from spinn_front_end_common.utilities.database.database_connection \
-    import DatabaseConnection
 
-import pylab
-import matplotlib.pyplot as plt
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
-from spynnaker import plot_utils
-import threading
-import time
-from multiprocessing.pool import ThreadPool
-import socket
-import numpy as np
-from pyNN.utility.plotting import Figure, Panel
-import matplotlib.pyplot as plt
 import functools
-
 import subprocess
 import sys
 
+import matplotlib.pyplot as plt
+import numpy as np
+from pyNN.utility.plotting import Figure, Panel
+
+import spinn_gym as gym
+import spynnaker8 as p
+from spinn_front_end_common.utilities.database.database_connection \
+    import DatabaseConnection
+from spinn_front_end_common.utilities.globals_variables import get_simulator
+from spynnaker.pyNN.connections. \
+    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
+from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
+    SpynnakerExternalDevicePluginManager as ex
 
 # -----------------------------------------------------------------------------
 #  Globals
