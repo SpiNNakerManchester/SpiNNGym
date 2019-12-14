@@ -104,6 +104,7 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
     return connection_list_on, connection_list_off
 
 
+# Separates the ball and pad connections in different populations
 def separate_connections(ball_population_size, connections_on):
     pad_list = []
     ball_list = []
@@ -119,7 +120,8 @@ def separate_connections(ball_population_size, connections_on):
     return ball_list, pad_list
 
 
-def map_to_one_neuron_per_pad(pop_size, no_pad_neurons, syn_weight, pad_connections):
+# Get connections of compressed PADDLE population to one neuron each
+def map_to_one_neuron_per_paddle(pop_size, no_pad_neurons, syn_weight, pad_connections):
     connections = []
 
     no_pad_neurons = int(no_pad_neurons)
@@ -136,13 +138,14 @@ def map_to_one_neuron_per_pad(pop_size, no_pad_neurons, syn_weight, pad_connecti
     return connections
 
 
-# TODO: use this
+# TODO: use this OR change tau parameters in pad_pop cells
 def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons, syn_weight):
     lat_connections = []
 
     return lat_connections
 
 
+# Get connections of compressed BALL population to the X axis
 def compress_to_x_axis(connections, x_resolution):
     compressed_connections = []
 
@@ -153,46 +156,8 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
-# TODO: not used, delete
-def inverse_connections_split_on_middle(no_neurons, syn_weight):
-    connections = []
-
-    no_neurons = int(no_neurons)
-    half_neurons_ = int(no_neurons / 2)
-
-    # Connect Left side of bat_pop to Right side of new_pop (allToAll)
-    for bat_neuron in range(0, half_neurons_):
-        for new_neuron in range(half_neurons_, no_neurons):
-            connections.append((bat_neuron, new_neuron, syn_weight, 1.))
-
-    # Connect Right side of bat_pop to Left side of new_pop (allToAll)
-    for bat_neuron in range(half_neurons_, no_neurons):
-        for new_neuron in range(0, half_neurons_):
-            connections.append((bat_neuron, new_neuron, syn_weight, 1.))
-
-    return connections
-
-
-# TODO: delete
-def connections_split_on_middle(no_neurons, syn_weight):
-    connections = []
-
-    no_neurons = int(no_neurons)
-    half_neurons_ = int(no_neurons / 2)
-
-    # Connect Left side of bat_pop to Left side of new_pop (allToAll)
-    for ball_neuron in range(0, half_neurons_):
-        for new_neuron in range(0, half_neurons_):
-            connections.append((ball_neuron, new_neuron, syn_weight, 1.))
-
-    # Connect Right side of bat_pop to Right side of new_pop (allToAll)
-    for ball_neuron in range(half_neurons_, no_neurons):
-        for new_neuron in range(half_neurons_, no_neurons):
-            connections.append((ball_neuron, new_neuron, syn_weight, 1.))
-
-    return connections
-
-
+# TODO: decide if useful
+# Splits the decision pop in LEFT or RIGHT decision
 def split_decision_connections(no_neurons, syn_weight):
     connections = []
 
@@ -246,7 +211,7 @@ breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 # ex is the external device plugin manager
 ex.activate_live_output_for(breakout_pop)
 
-# TODO: not working atm
+# Future TODO: not working atm
 # Connect key spike injector to breakout population
 key_input = p.Population(2, SpikeInjector, label="key_input")
 key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
@@ -281,37 +246,30 @@ total_receive_pop_size = x_res * y_res
 # and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
 # Triggers only the middle neuron of the pad
 pad_to_one_neuron_weight = 0.0035
-Compresses_pad_connections = map_to_one_neuron_per_pad(pad_pop_size, pad_neuron_size,
-                                                       pad_to_one_neuron_weight, Pad_connections)
+Compressed_pad_connections = map_to_one_neuron_per_paddle(pad_pop_size, pad_neuron_size,
+                                                          pad_to_one_neuron_weight, Pad_connections)
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
-
-# TODO: delete
-# hidden_pad_weight = 0.003
-# Hidden_pop_pad_connections = inverse_connections_split_on_middle(hidden_pop_size, hidden_pad_weight)
-
-# TODO: delete
-# hidden_ball_weight = 0.095
-# Hidden_pop_ball_connections = connections_split_on_middle(hidden_pop_size, hidden_ball_weight)
 
 # Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
 
 
+# TODO: check more about this
 # Create the Pad position population
 cell_params_lif = {
-    'cm': 0.25,         # nF membrane capacitance
-    'i_offset': 0.5,    # nA    bias current
-    'tau_m': 20.0,      # ms    membrane time constant
+    'cm': 0.25,  # nF membrane capacitance
+    'i_offset': 0.5,  # nA    bias current
+    'tau_m': 20.0,  # ms    membrane time constant
     'tau_refrac': 2.0,  # ms    refractory period
-    'tau_syn_E': 5.0,   # ms    excitatory synapse time constant
-    'tau_syn_I': 5.0,   # ms    inhibitory synapse time constant
-    'v_reset': -70.0,   # mV    reset membrane potential
-    'v_rest': -65.0,    # mV    rest membrane potential
+    'tau_syn_E': 5.0,  # ms    excitatory synapse time constant
+    'tau_syn_I': 5.0,  # ms    inhibitory synapse time constant
+    'v_reset': -70.0,  # mV    reset membrane potential
+    'v_rest': -65.0,  # mV    rest membrane potential
     'v_thresh': -50.0,  # mV    firing threshold voltage
 }
 
 pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
                        label="pad_pop")
-p.Projection(breakout_pop, pad_pop, p.FromListConnector(Compresses_pad_connections),
+p.Projection(breakout_pop, pad_pop, p.FromListConnector(Compressed_pad_connections),
              p.StaticSynapse(weight=pad_to_one_neuron_weight, delay=10.))
 
 # Create the Ball position population
@@ -320,6 +278,7 @@ ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
 p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
              p.StaticSynapse(weight=weight))
 
+# TODO: Update this to the new connections (not implemented yet tho :)) )
 # Create the hidden population
 # hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
 #                           label="hidden_pop")
@@ -341,7 +300,7 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
 #              p.StaticSynapse(weight=0.1))
 
 
-# TODO: temporary input needed to display the paddle
+# TODO: temporary input needed to display the paddle - delete at some point
 p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
