@@ -119,6 +119,30 @@ def separate_connections(ball_population_size, connections_on):
     return ball_list, pad_list
 
 
+def map_to_one_neuron_per_pad(pop_size, no_pad_neurons, syn_weight, pad_connections):
+    connections = []
+
+    no_pad_neurons = int(no_pad_neurons)
+    offset = no_pad_neurons // 2
+
+    for idx, val in enumerate(pad_connections):
+        from_neuron = val[1] - offset
+        to_neuron = val[1] + offset + 1
+
+        for neuron_no in range(from_neuron, to_neuron):
+            if 0 <= neuron_no < pop_size:
+                connections.append((val[0], neuron_no, syn_weight, 10.))
+
+    return connections
+
+
+# TODO: use this
+def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons, syn_weight):
+    lat_connections = []
+
+    return lat_connections
+
+
 def compress_to_x_axis(connections, x_resolution):
     compressed_connections = []
 
@@ -129,6 +153,7 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
+# TODO: not used, delete
 def inverse_connections_split_on_middle(no_neurons, syn_weight):
     connections = []
 
@@ -148,6 +173,7 @@ def inverse_connections_split_on_middle(no_neurons, syn_weight):
     return connections
 
 
+# TODO: delete
 def connections_split_on_middle(no_neurons, syn_weight):
     connections = []
 
@@ -205,6 +231,9 @@ x_factor1 = 2
 y_factor1 = x_factor1
 bricking = 1
 
+# based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
+pad_neuron_size = 25
+
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
 # -----------------------------------------------------------------------------
@@ -224,13 +253,12 @@ key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
-# TODO: Not used
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
-# spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
-#                            label="input_connect")
-# p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
-#              p.StaticSynapse(weight=0.1))
+spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
+                           label="input_connect")
+p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
+             p.StaticSynapse(weight=0.1))
 
 weight = 0.1
 [Connections_on, Connections_off] = subsample_connection(
@@ -242,29 +270,49 @@ x_res = int(X_RESOLUTION / x_factor1)
 y_res = int(Y_RESOLUTION / y_factor1)
 
 # Population sizes
-total_receive_pop_size = x_res * y_res
-
 pad_pop_size = x_res
 ball_pop_size = x_res
 hidden_pop_size = x_res
+total_receive_pop_size = x_res * y_res
 
 [Ball_connections, Pad_connections] = separate_connections(total_receive_pop_size - pad_pop_size, Connections_on)
 
+# Calculated using pad_neuron_size * weight = 5 // to fire
+# and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
+# Triggers only the middle neuron of the pad
+pad_to_one_neuron_weight = 0.0035
+Compresses_pad_connections = map_to_one_neuron_per_pad(pad_pop_size, pad_neuron_size,
+                                                       pad_to_one_neuron_weight, Pad_connections)
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
 
-hidden_pad_weight = 0.003
-Hidden_pop_pad_connections = inverse_connections_split_on_middle(hidden_pop_size, hidden_pad_weight)
+# TODO: delete
+# hidden_pad_weight = 0.003
+# Hidden_pop_pad_connections = inverse_connections_split_on_middle(hidden_pop_size, hidden_pad_weight)
 
-hidden_ball_weight = 0.095
-Hidden_pop_ball_connections = connections_split_on_middle(hidden_pop_size, hidden_ball_weight)
+# TODO: delete
+# hidden_ball_weight = 0.095
+# Hidden_pop_ball_connections = connections_split_on_middle(hidden_pop_size, hidden_ball_weight)
 
-Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
+# Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
+
 
 # Create the Pad position population
+cell_params_lif = {
+    'cm': 0.25,         # nF membrane capacitance
+    'i_offset': 0.5,    # nA    bias current
+    'tau_m': 20.0,      # ms    membrane time constant
+    'tau_refrac': 2.0,  # ms    refractory period
+    'tau_syn_E': 5.0,   # ms    excitatory synapse time constant
+    'tau_syn_I': 5.0,   # ms    inhibitory synapse time constant
+    'v_reset': -70.0,   # mV    reset membrane potential
+    'v_rest': -65.0,    # mV    rest membrane potential
+    'v_thresh': -50.0,  # mV    firing threshold voltage
+}
+
 pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
                        label="pad_pop")
-p.Projection(breakout_pop, pad_pop, p.FromListConnector(Pad_connections),
-             p.StaticSynapse(weight=weight))
+p.Projection(breakout_pop, pad_pop, p.FromListConnector(Compresses_pad_connections),
+             p.StaticSynapse(weight=pad_to_one_neuron_weight, delay=10.))
 
 # Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
@@ -273,21 +321,28 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
              p.StaticSynapse(weight=weight))
 
 # Create the hidden population
-hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
-                          label="hidden_pop")
-p.Projection(pad_pop, hidden_pop, p.FromListConnector(Hidden_pop_pad_connections),
-             p.StaticSynapse(weight=hidden_pad_weight))
-p.Projection(ball_pop, hidden_pop, p.FromListConnector(Hidden_pop_ball_connections),
-             p.StaticSynapse(weight=hidden_ball_weight))
+# hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
+#                           label="hidden_pop")
+# p.Projection(pad_pop, hidden_pop, p.FromListConnector(Hidden_pop_pad_connections),
+#              p.StaticSynapse(weight=hidden_pad_weight))
+# p.Projection(ball_pop, hidden_pop, p.FromListConnector(Hidden_pop_ball_connections),
+#              p.StaticSynapse(weight=hidden_ball_weight))
+
 
 # Create the decision population
-decision_input_pop = p.Population(2, p.IF_cond_exp(),
-                                  label="decision_input_pop")
-p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
-             p.StaticSynapse(weight=weight))
+# decision_input_pop = p.Population(2, p.IF_cond_exp(),
+#                                   label="decision_input_pop")
+# p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
+#              p.StaticSynapse(weight=weight))
+
 
 # Connect input Decision population to the game
-p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
+# p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
+#              p.StaticSynapse(weight=0.1))
+
+
+# TODO: temporary input needed to display the paddle
+p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
@@ -299,7 +354,8 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
 # Setup recording
 pad_pop.record('spikes')
 ball_pop.record('spikes')
-decision_input_pop.record('spikes')
+# decision_input_pop.record('spikes')
+spike_input.record('spikes')
 receive_reward_pop.record('all')
 
 # -----------------------------------------------------------------------------
@@ -327,7 +383,7 @@ p.external_devices.add_database_socket_address(
 # -----------------------------------------------------------------------------
 # Run Simulation
 # -----------------------------------------------------------------------------
-runtime = 1000 * 30
+runtime = 1000 * 10
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
@@ -339,7 +395,8 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = pad_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-decision_input_pop_spikes = decision_input_pop.get_data('spikes')
+# decision_input_pop_spikes = decision_input_pop.get_data('spikes')
+spike_input_spikes = spike_input.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
 
 Figure(
@@ -348,7 +405,10 @@ Figure(
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(decision_input_pop_spikes.segments[0].spiketrains,
+    # Panel(decision_input_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(spike_input_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
