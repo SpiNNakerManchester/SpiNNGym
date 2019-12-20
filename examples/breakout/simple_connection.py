@@ -133,14 +133,30 @@ def map_to_one_neuron_per_paddle(pop_size, no_pad_neurons, syn_weight, pad_conne
 
         for neuron_no in range(from_neuron, to_neuron):
             if 0 <= neuron_no < pop_size:
-                connections.append((val[0], neuron_no, syn_weight, 10.))
+                connections.append((val[0], neuron_no, syn_weight, val[3]))
 
     return connections
 
 
-# TODO: use this OR change tau parameters in pad_pop cells
 def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons, syn_weight):
     lat_connections = []
+
+    no_pad_neurons = int(no_pad_neurons)
+    # just a precaution
+    no_pad_neurons += 2
+    pad_neurons_offset = no_pad_neurons // 2
+
+    # If the no_pad_neurons is even
+    # then recalculate the offset
+    if no_pad_neurons % 2 == 0:
+        pad_neurons_offset -= 1
+
+    for neuron in range(0, pop_size):
+        for pad_neuron in range(neuron - pad_neurons_offset, neuron + pad_neurons_offset + 1):
+            if pad_neuron != neuron and 0 <= pad_neuron < pop_size:
+                # calculate the weight based on the number of excitatory input connections
+                new_weight = syn_weight * (no_pad_neurons - abs(neuron - pad_neuron))
+                lat_connections.append((neuron, pad_neuron, new_weight, 1.))
 
     return lat_connections
 
@@ -156,7 +172,6 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
-# TODO: decide if useful
 # Splits the decision pop in LEFT or RIGHT decision
 def split_decision_connections(no_neurons, syn_weight):
     connections = []
@@ -248,29 +263,22 @@ total_receive_pop_size = x_res * y_res
 pad_to_one_neuron_weight = 0.0035
 Compressed_pad_connections = map_to_one_neuron_per_paddle(pad_pop_size, pad_neuron_size,
                                                           pad_to_one_neuron_weight, Pad_connections)
+Inhibitory_lateral_pad_connections = create_lateral_inhibitory_paddle_connections(pad_pop_size, pad_neuron_size,
+                                                                                  pad_to_one_neuron_weight + 0.0005)
+
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
 
 # Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
 
-
-# TODO: check more about this
 # Create the Pad position population
-cell_params_lif = {
-    'cm': 0.25,  # nF membrane capacitance
-    'i_offset': 0.5,  # nA    bias current
-    'tau_m': 20.0,  # ms    membrane time constant
-    'tau_refrac': 2.0,  # ms    refractory period
-    'tau_syn_E': 5.0,  # ms    excitatory synapse time constant
-    'tau_syn_I': 5.0,  # ms    inhibitory synapse time constant
-    'v_reset': -70.0,  # mV    reset membrane potential
-    'v_rest': -65.0,  # mV    rest membrane potential
-    'v_thresh': -50.0,  # mV    firing threshold voltage
-}
-
 pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
                        label="pad_pop")
 p.Projection(breakout_pop, pad_pop, p.FromListConnector(Compressed_pad_connections),
-             p.StaticSynapse(weight=pad_to_one_neuron_weight, delay=10.))
+             p.StaticSynapse(weight=pad_to_one_neuron_weight, delay=1.))
+
+# If a neuron fired then discharge all the other charged neurons
+p.Projection(pad_pop, pad_pop, p.FromListConnector(Inhibitory_lateral_pad_connections),
+             synapse_type=p.StaticSynapse(weight=-pad_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
 
 # Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
