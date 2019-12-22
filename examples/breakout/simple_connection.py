@@ -172,12 +172,19 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
+def paddle_and_ball_connections_to_hidden_pop():
+    paddle_connections = []
+    ball_connections = []
+
+    return paddle_connections, ball_connections
+
+
 # Splits the decision pop in LEFT or RIGHT decision
 def split_decision_connections(no_neurons, syn_weight):
     connections = []
 
     no_neurons = int(no_neurons)
-    half_neurons_ = int(no_neurons / 2)
+    half_neurons_ = no_neurons // 2
 
     # Connect Left side to 0 (left input neuron)
     for n in range(0, half_neurons_):
@@ -268,7 +275,7 @@ Inhibitory_lateral_pad_connections = create_lateral_inhibitory_paddle_connection
 
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
 
-# Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
+Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
 
 # Create the Pad position population
 pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
@@ -286,10 +293,10 @@ ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
 p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
              p.StaticSynapse(weight=weight))
 
-# TODO: Update this to the new connections (not implemented yet tho :)) )
 # Create the hidden population
-# hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
-#                           label="hidden_pop")
+hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
+                          label="hidden_pop")
+# TODO: Update this to the new connections (not implemented yet tho :)) )
 # p.Projection(pad_pop, hidden_pop, p.FromListConnector(Hidden_pop_pad_connections),
 #              p.StaticSynapse(weight=hidden_pad_weight))
 # p.Projection(ball_pop, hidden_pop, p.FromListConnector(Hidden_pop_ball_connections),
@@ -297,15 +304,15 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
 
 
 # Create the decision population
-# decision_input_pop = p.Population(2, p.IF_cond_exp(),
-#                                   label="decision_input_pop")
-# p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
-#              p.StaticSynapse(weight=weight))
+decision_input_pop = p.Population(2, p.IF_cond_exp(),
+                                  label="decision_input_pop")
+p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
+             p.StaticSynapse(weight=weight))
 
 
 # Connect input Decision population to the game
-# p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
-#              p.StaticSynapse(weight=0.1))
+p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
+             p.StaticSynapse(weight=0.1))
 
 
 # TODO: temporary input needed to display the paddle - delete at some point
