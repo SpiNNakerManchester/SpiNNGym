@@ -106,28 +106,28 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
 
 # Separates the ball and pad connections in different populations
 def separate_connections(ball_population_size, connections_on):
-    pad_list = []
+    paddle_list = []
     ball_list = []
 
     for idx, val in enumerate(connections_on):
         if idx < ball_population_size:
             ball_list.append(val)
         else:
-            index_in_pad_pop = idx - ball_population_size
-            new_el_connection = (val[0], index_in_pad_pop, val[2], val[3])
-            pad_list.append(new_el_connection)
+            index_in_paddle_pop = idx - ball_population_size
+            new_el_connection = (val[0], index_in_paddle_pop, val[2], val[3])
+            paddle_list.append(new_el_connection)
 
-    return ball_list, pad_list
+    return ball_list, paddle_list
 
 
 # Get connections of compressed PADDLE population to one neuron each
-def map_to_one_neuron_per_paddle(pop_size, no_pad_neurons, syn_weight, pad_connections):
+def map_to_one_neuron_per_paddle(pop_size, no_paddle_neurons, syn_weight, paddle_connections):
     connections = []
 
-    no_pad_neurons = int(no_pad_neurons)
-    offset = no_pad_neurons // 2
+    no_paddle_neurons = int(no_paddle_neurons)
+    offset = no_paddle_neurons // 2
 
-    for idx, val in enumerate(pad_connections):
+    for idx, val in enumerate(paddle_connections):
         from_neuron = val[1] - offset
         to_neuron = val[1] + offset + 1
 
@@ -138,25 +138,25 @@ def map_to_one_neuron_per_paddle(pop_size, no_pad_neurons, syn_weight, pad_conne
     return connections
 
 
-def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons):
+def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons):
     lat_connections = []
 
-    no_pad_neurons = int(no_pad_neurons)
+    no_paddle_neurons = int(no_paddle_neurons)
     # just a precaution
-    no_pad_neurons += 2
-    pad_neurons_offset = no_pad_neurons // 2
+    no_paddle_neurons += 2
+    paddle_neurons_offset = no_paddle_neurons // 2
 
     # If the no_pad_neurons is even
     # then recalculate the offset
-    if no_pad_neurons % 2 == 0:
-        pad_neurons_offset -= 1
+    if no_paddle_neurons % 2 == 0:
+        paddle_neurons_offset -= 1
 
     for neuron in range(0, pop_size):
-        for pad_neuron in range(neuron - pad_neurons_offset, neuron + pad_neurons_offset + 1):
-            if pad_neuron != neuron and 0 <= pad_neuron < pop_size:
+        for paddle_neuron in range(neuron - paddle_neurons_offset, neuron + paddle_neurons_offset + 1):
+            if paddle_neuron != neuron and 0 <= paddle_neuron < pop_size:
                 # I used to calculate the weight based on the number of excitatory input connections
-                # new_weight = syn_weight * (no_pad_neurons - abs(neuron - pad_neuron))
-                lat_connections.append((neuron, pad_neuron, 1., 1.))
+                # new_weight = syn_weight * (no_pad_neurons - abs(neuron - paddle_neuron))
+                lat_connections.append((neuron, paddle_neuron, 1., 1.))
 
     return lat_connections
 
@@ -202,6 +202,19 @@ x_factor1 = 2
 y_factor1 = x_factor1
 bricking = 1
 
+# Final Resolution
+X_RES = int(X_RESOLUTION / x_factor1)
+Y_RES = int(Y_RESOLUTION / y_factor1)
+
+# Population sizes
+paddle_pop_size = X_RES
+ball_pop_size = X_RES
+hidden_pop_size = X_RES
+breakout_pop_size = X_RES * Y_RES
+
+# Weights
+weight = 0.1
+
 # based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
 paddle_neuron_size = 25
 
@@ -232,20 +245,9 @@ spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
 p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
-weight = 0.1
 [Connections_on, Connections_off] = subsample_connection(
     X_RESOLUTION / x_factor1, Y_RESOLUTION / y_factor1, 1, 1, weight,
     row_col_to_input_breakout)
-
-# Final Resolution
-x_res = int(X_RESOLUTION / x_factor1)
-y_res = int(Y_RESOLUTION / y_factor1)
-
-# Population sizes
-paddle_pop_size = x_res
-ball_pop_size = x_res
-hidden_pop_size = x_res
-breakout_pop_size = x_res * y_res
 
 [Ball_connections, Paddle_connections] = separate_connections(breakout_pop_size - paddle_pop_size, Connections_on)
 
@@ -255,9 +257,10 @@ breakout_pop_size = x_res * y_res
 paddle_to_one_neuron_weight = 0.0035
 Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
                                                              paddle_to_one_neuron_weight, Paddle_connections)
-Inhibitory_lateral_pad_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size, paddle_neuron_size)
+# TODO: refactor this into map_to_one_neuron_per_paddle function
+Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size, paddle_neuron_size)
 
-Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
+Compressed_ball_connections = compress_to_x_axis(Ball_connections, X_RES)
 
 # Create the Pad position population
 paddle_pop = p.Population(paddle_pop_size, p.IF_cond_exp(),
@@ -266,7 +269,7 @@ p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_con
              p.StaticSynapse(weight=paddle_to_one_neuron_weight, delay=1.))
 
 # If a neuron fired then discharge all the other charged neurons
-p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_pad_connections),
+p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_paddle_connections),
              synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
 
 # Create the Ball position population
