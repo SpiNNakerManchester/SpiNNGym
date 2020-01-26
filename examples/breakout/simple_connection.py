@@ -172,12 +172,31 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
-# TODO: Delete or Modify
-def paddle_and_ball_connections_to_hidden_pop():
-    paddle_connections = []
-    ball_connections = []
+# TODO: refactor pls
+def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight=0.05):
+    left_connections = []
+    right_connections = []
 
-    return paddle_connections, ball_connections
+    for ball_neuron in range(0, pop_size):
+        # Connect the ball neuron to all the neurons to the left of it in the left hidden population
+        for left_hidden_neuron in range(0, ball_neuron):
+            right_connections.append((ball_neuron, left_hidden_neuron, ball_presence_weight, 1.))
+        # Connect the ball neuron to all the neurons to the right of it in the right hidden population
+        for right_hidden_neuron in range(ball_neuron + 1, pop_size):
+            left_connections.append((ball_neuron, right_hidden_neuron, ball_presence_weight, 1.))
+
+    return left_connections, right_connections
+
+
+def generate_decision_connections(pop_size, decision_weight):
+    left_conn = []
+    right_conn = []
+
+    for neuron in range(0, pop_size):
+        left_conn.append((neuron, 0, decision_weight, 1.))
+        right_conn.append((neuron, 1, decision_weight, 1.))
+
+    return left_conn, right_conn
 
 
 # -----------------------------------------------------------------------------
@@ -218,7 +237,6 @@ weight = 0.1
 # based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
 paddle_neuron_size = 25
 
-
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
 # -----------------------------------------------------------------------------
@@ -240,9 +258,9 @@ p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
 
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
-spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
-                           label="input_connect")
-p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
+random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=3),
+                                  label="input_connect")
+p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
 [Connections_on, Connections_off] = subsample_connection(
@@ -258,7 +276,8 @@ paddle_to_one_neuron_weight = 0.0035
 Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
                                                              paddle_to_one_neuron_weight, Paddle_connections)
 # TODO: refactor this into map_to_one_neuron_per_paddle function
-Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size, paddle_neuron_size)
+Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size,
+                                                                                     paddle_neuron_size)
 
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, X_RES)
 
@@ -279,24 +298,39 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
              p.StaticSynapse(weight=weight))
 
 # Create the hidden populations
-hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
-                          label="hidden_pop")
-# TODO: Update this to the new connections (not implemented yet tho :)) )
-# p.Projection(pad_pop, hidden_pop, p.FromListConnector(Hidden_pop_pad_connections),
-#              p.StaticSynapse(weight=hidden_pad_weight))
-# p.Projection(ball_pop, hidden_pop, p.FromListConnector(Hidden_pop_ball_connections),
-#              p.StaticSynapse(weight=hidden_ball_weight))
+left_hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
+                               label="left_hidden_pop")
+right_hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
+                                label="right_hidden_pop")
 
+# Project the paddle population on left/right hidden populations
+# so that it charges the neurons without spiking
+p.Projection(paddle_pop, left_hidden_pop, p.OneToOneConnector(),
+             p.StaticSynapse(0.05))
+p.Projection(paddle_pop, right_hidden_pop, p.OneToOneConnector(),
+             p.StaticSynapse(0.05))
+
+[Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
+    generate_ball_to_hidden_pop_connections(pop_size=X_RES, ball_presence_weight=0.07)
+
+p.Projection(ball_pop, left_hidden_pop, p.FromListConnector(Ball_to_left_hidden_connections))
+p.Projection(ball_pop, right_hidden_pop, p.FromListConnector(Ball_to_right_hidden_connections))
+
+[Left_decision_connections, Right_decision_connections] = \
+    generate_decision_connections(pop_size=X_RES, decision_weight=0.1)
 
 # Create the decision population
 decision_input_pop = p.Population(2, p.IF_cond_exp(),
                                   label="decision_input_pop")
-# p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
-#              p.StaticSynapse(weight=weight))
+p.Projection(left_hidden_pop, decision_input_pop, p.FromListConnector(Left_decision_connections))
+p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_decision_connections))
 
+# TODO: connect the decision to the game!
 # Connect input Decision population to the game
-p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
-             p.StaticSynapse(weight=0.1))
+# p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
+#              p.StaticSynapse(weight=0.1))
+# p.FromListConnector([(0, 1, 1., 1.),
+#                      (1, 2, 1., 1.)]))
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
@@ -307,13 +341,16 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
 # Setup recording
 paddle_pop.record('spikes')
 ball_pop.record('spikes')
-# decision_input_pop.record('spikes')
-spike_input.record('spikes')
+left_hidden_pop.record('spikes')
+right_hidden_pop.record('spikes')
+decision_input_pop.record('spikes')
+# spike_input.record('spikes')
 receive_reward_pop.record('all')
 
 # -----------------------------------------------------------------------------
 # Configure Visualiser
 # -----------------------------------------------------------------------------
+
 print("UDP_PORT1: {}".format(UDP_PORT1))
 print("x_fact: {}, y_fact: {}".format(x_factor1, y_factor1))
 print("x_bits: {}, y_bits: {}".format(
@@ -336,7 +373,8 @@ p.external_devices.add_database_socket_address(
 # -----------------------------------------------------------------------------
 # Run Simulation
 # -----------------------------------------------------------------------------
-runtime = 1000 * 10
+
+runtime = 1000 * 15
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
@@ -344,32 +382,42 @@ p.run(runtime)
 # -----------------------------------------------------------------------------
 # Post-Process Results
 # -----------------------------------------------------------------------------
+
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-# decision_input_pop_spikes = decision_input_pop.get_data('spikes')
-spike_input_spikes = spike_input.get_data('spikes')
+left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
+right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
+decision_input_pop_spikes = decision_input_pop.get_data('spikes')
+# spike_input_spikes = spike_input.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
 
 Figure(
     Panel(pad_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
+
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(decision_input_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-
-    Panel(spike_input_spikes.segments[0].spiketrains,
+    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
-          ylabel="gsyn excitatory (mV)",
-          data_labels=[receive_reward_pop.label],
-          yticks=True,
-          xlim=(0, runtime)
-          )
+    Panel(right_hidden_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(decision_input_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    # Panel(spike_input_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    # Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+    #       ylabel="gsyn excitatory (mV)",
+    #       data_labels=[receive_reward_pop.label],
+    #       yticks=True,
+    #       xlim=(0, runtime)
+    #       )
     # title="Simple Breakout Example"
 )
 
