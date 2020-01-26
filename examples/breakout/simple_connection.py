@@ -138,7 +138,7 @@ def map_to_one_neuron_per_paddle(pop_size, no_pad_neurons, syn_weight, pad_conne
     return connections
 
 
-def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons, syn_weight):
+def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons):
     lat_connections = []
 
     no_pad_neurons = int(no_pad_neurons)
@@ -154,9 +154,9 @@ def create_lateral_inhibitory_paddle_connections(pop_size, no_pad_neurons, syn_w
     for neuron in range(0, pop_size):
         for pad_neuron in range(neuron - pad_neurons_offset, neuron + pad_neurons_offset + 1):
             if pad_neuron != neuron and 0 <= pad_neuron < pop_size:
-                # calculate the weight based on the number of excitatory input connections
-                new_weight = syn_weight * (no_pad_neurons - abs(neuron - pad_neuron))
-                lat_connections.append((neuron, pad_neuron, new_weight, 1.))
+                # I used to calculate the weight based on the number of excitatory input connections
+                # new_weight = syn_weight * (no_pad_neurons - abs(neuron - pad_neuron))
+                lat_connections.append((neuron, pad_neuron, 1., 1.))
 
     return lat_connections
 
@@ -172,6 +172,7 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
+# TODO: Delete or Modify
 def paddle_and_ball_connections_to_hidden_pop():
     paddle_connections = []
     ball_connections = []
@@ -179,27 +180,10 @@ def paddle_and_ball_connections_to_hidden_pop():
     return paddle_connections, ball_connections
 
 
-# Splits the decision pop in LEFT or RIGHT decision
-def split_decision_connections(no_neurons, syn_weight):
-    connections = []
-
-    no_neurons = int(no_neurons)
-    half_neurons_ = no_neurons // 2
-
-    # Connect Left side to 0 (left input neuron)
-    for n in range(0, half_neurons_):
-        connections.append((n, 0, syn_weight, 1.))
-
-    # Connect Right side to 1 (right input neuron)
-    for n in range(half_neurons_, no_neurons):
-        connections.append((n, 1, syn_weight, 1.))
-
-    return connections
-
-
 # -----------------------------------------------------------------------------
 # Initialise Simulation and Parameters
 # -----------------------------------------------------------------------------
+
 
 # Game resolution
 X_RESOLUTION = 160
@@ -219,7 +203,8 @@ y_factor1 = x_factor1
 bricking = 1
 
 # based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
-pad_neuron_size = 25
+paddle_neuron_size = 25
+
 
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
@@ -257,35 +242,32 @@ x_res = int(X_RESOLUTION / x_factor1)
 y_res = int(Y_RESOLUTION / y_factor1)
 
 # Population sizes
-pad_pop_size = x_res
+paddle_pop_size = x_res
 ball_pop_size = x_res
 hidden_pop_size = x_res
-total_receive_pop_size = x_res * y_res
+breakout_pop_size = x_res * y_res
 
-[Ball_connections, Pad_connections] = separate_connections(total_receive_pop_size - pad_pop_size, Connections_on)
+[Ball_connections, Paddle_connections] = separate_connections(breakout_pop_size - paddle_pop_size, Connections_on)
 
 # Calculated using pad_neuron_size * weight = 5 // to fire
 # and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
 # Triggers only the middle neuron of the pad
-pad_to_one_neuron_weight = 0.0035
-Compressed_pad_connections = map_to_one_neuron_per_paddle(pad_pop_size, pad_neuron_size,
-                                                          pad_to_one_neuron_weight, Pad_connections)
-Inhibitory_lateral_pad_connections = create_lateral_inhibitory_paddle_connections(pad_pop_size, pad_neuron_size,
-                                                                                  pad_to_one_neuron_weight + 0.0005)
+paddle_to_one_neuron_weight = 0.0035
+Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
+                                                             paddle_to_one_neuron_weight, Paddle_connections)
+Inhibitory_lateral_pad_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size, paddle_neuron_size)
 
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, x_res)
 
-Decision_pop_connections = split_decision_connections(hidden_pop_size, weight)
-
 # Create the Pad position population
-pad_pop = p.Population(pad_pop_size, p.IF_cond_exp(),
-                       label="pad_pop")
-p.Projection(breakout_pop, pad_pop, p.FromListConnector(Compressed_pad_connections),
-             p.StaticSynapse(weight=pad_to_one_neuron_weight, delay=1.))
+paddle_pop = p.Population(paddle_pop_size, p.IF_cond_exp(),
+                          label="paddle_pop")
+p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
+             p.StaticSynapse(weight=paddle_to_one_neuron_weight, delay=1.))
 
 # If a neuron fired then discharge all the other charged neurons
-p.Projection(pad_pop, pad_pop, p.FromListConnector(Inhibitory_lateral_pad_connections),
-             synapse_type=p.StaticSynapse(weight=-pad_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
+p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_pad_connections),
+             synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
 
 # Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
@@ -293,7 +275,7 @@ ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
 p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
              p.StaticSynapse(weight=weight))
 
-# Create the hidden population
+# Create the hidden populations
 hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
                           label="hidden_pop")
 # TODO: Update this to the new connections (not implemented yet tho :)) )
@@ -306,17 +288,11 @@ hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
 # Create the decision population
 decision_input_pop = p.Population(2, p.IF_cond_exp(),
                                   label="decision_input_pop")
-p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
-             p.StaticSynapse(weight=weight))
-
+# p.Projection(hidden_pop, decision_input_pop, p.FromListConnector(Decision_pop_connections),
+#              p.StaticSynapse(weight=weight))
 
 # Connect input Decision population to the game
 p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
-             p.StaticSynapse(weight=0.1))
-
-
-# TODO: temporary input needed to display the paddle - delete at some point
-p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
@@ -326,7 +302,7 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
              p.StaticSynapse(weight=0.1 * weight))
 
 # Setup recording
-pad_pop.record('spikes')
+paddle_pop.record('spikes')
 ball_pop.record('spikes')
 # decision_input_pop.record('spikes')
 spike_input.record('spikes')
@@ -367,7 +343,7 @@ p.run(runtime)
 # -----------------------------------------------------------------------------
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
-pad_pop_spikes = pad_pop.get_data('spikes')
+pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
 # decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 spike_input_spikes = spike_input.get_data('spikes')
