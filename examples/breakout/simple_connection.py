@@ -331,6 +331,9 @@ p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_dec
 #              p.StaticSynapse(weight=0.1))
 # p.FromListConnector([(0, 1, 1., 1.),
 #                      (1, 2, 1., 1.)]))
+p.Projection(decision_input_pop, breakout_pop, p.AllToAllConnector(),
+             p.StaticSynapse(weight=0.1))
+
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
