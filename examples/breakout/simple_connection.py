@@ -234,7 +234,7 @@ breakout_pop_size = X_RES * Y_RES
 weight = 0.1
 
 # based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
-paddle_neuron_size = 50 // 2
+paddle_neuron_size = 46 // 2
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Create Spiking Neural Network
@@ -256,7 +256,7 @@ key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 # (and enable paddle visualisation)
 random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=7),
                                   label="input_connect")
-p.Projection(random_spike_input, breakout_pop, p.OneToOneConnector(), p.StaticSynapse(weight=1.))
+p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(), p.StaticSynapse(weight=1.))
 
 [Connections_on, Connections_off] = subsample_connection(
     X_RESOLUTION / x_factor1, Y_RESOLUTION / y_factor1, 1, 1, weight,
@@ -268,7 +268,7 @@ p.Projection(random_spike_input, breakout_pop, p.OneToOneConnector(), p.StaticSy
 # and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
 # Triggers only the middle neuron of the pad
 # paddle_to_one_neuron_weight = 0.0035 - For 25 neurons per paddle
-paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
+paddle_to_one_neuron_weight = 0.09 / paddle_neuron_size
 Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
                                                              paddle_to_one_neuron_weight, Paddle_connections)
 
@@ -336,10 +336,10 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
 # Setup recording
 paddle_pop.record('spikes')
 ball_pop.record('spikes')
-left_hidden_pop.record('spikes')
-right_hidden_pop.record('spikes')
+# left_hidden_pop.record('spikes')
+# right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
-# spike_input.record('spikes')
+# random_spike_input.record('spikes')
 receive_reward_pop.record('all')
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -382,10 +382,10 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
-right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
+# left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
+# right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
-# spike_input_spikes = spike_input.get_data('spikes')
+# random_spike_input_spikes = random_spike_input.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
 
 Figure(
@@ -395,24 +395,24 @@ Figure(
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
-          yticks=True, markersize=0.2, xlim=(0, runtime)),
-
-    Panel(right_hidden_pop_spikes.segments[0].spiketrains,
-          yticks=True, markersize=0.2, xlim=(0, runtime)),
+    # Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    #
+    # Panel(right_hidden_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(spike_input_spikes.segments[0].spiketrains,
+    # Panel(random_spike_input_spikes.segments[0].spiketrains,
     #       yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
-    #       ylabel="gsyn excitatory (mV)",
-    #       data_labels=[receive_reward_pop.label],
-    #       yticks=True,
-    #       xlim=(0, runtime)
-    #       )
+    Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+          ylabel="gsyn excitatory (mV)",
+          data_labels=[receive_reward_pop.label],
+          yticks=True,
+          xlim=(0, runtime)
+          )
     # title="Simple Breakout Example"
 )
 

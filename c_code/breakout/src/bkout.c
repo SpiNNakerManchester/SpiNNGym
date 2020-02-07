@@ -125,7 +125,7 @@ int v = -MAX_BALL_SPEED;// * FACT;
 int x_bat = 32;
 
 // bat length in pixels
-int bat_len = 50;
+int bat_len = 46;
 
 int BRICK_WIDTH = 10;
 int BRICK_HEIGHT = 5;
