@@ -20,15 +20,15 @@ from spynnaker.pyNN.models.utility_models.spike_injector import \
 from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
     SpynnakerExternalDevicePluginManager as ex
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 #  Globals
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 vis_proc = None  # Visualiser process (global)
 
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 #  Helper Functions
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
@@ -138,7 +138,7 @@ def map_to_one_neuron_per_paddle(pop_size, no_paddle_neurons, syn_weight, paddle
     return connections
 
 
-def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons):
+def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons, syn_weight):
     lat_connections = []
 
     no_paddle_neurons = int(no_paddle_neurons)
@@ -155,8 +155,8 @@ def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons):
         for paddle_neuron in range(neuron - paddle_neurons_offset, neuron + paddle_neurons_offset + 1):
             if paddle_neuron != neuron and 0 <= paddle_neuron < pop_size:
                 # I used to calculate the weight based on the number of excitatory input connections
-                # new_weight = syn_weight * (no_pad_neurons - abs(neuron - paddle_neuron))
-                lat_connections.append((neuron, paddle_neuron, 1., 1.))
+                new_weight = syn_weight * (no_paddle_neurons - abs(neuron - paddle_neuron))
+                lat_connections.append((neuron, paddle_neuron, new_weight, 1.))
 
     return lat_connections
 
@@ -198,9 +198,9 @@ def generate_decision_connections(pop_size, decision_weight):
     return left_conn, right_conn
 
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Initialise Simulation and Parameters
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 # Game resolution
@@ -234,11 +234,11 @@ breakout_pop_size = X_RES * Y_RES
 weight = 0.1
 
 # based on the size of the bat in bkout.c --> pad_neuron_size =  bat_len // 2
-paddle_neuron_size = 25
+paddle_neuron_size = 50 // 2
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Create Spiking Neural Network
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 # Create breakout population and activate live output
@@ -254,7 +254,7 @@ key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
-random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=3),
+random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=7),
                                   label="input_connect")
 p.Projection(random_spike_input, breakout_pop, p.OneToOneConnector(), p.StaticSynapse(weight=1.))
 
@@ -267,13 +267,14 @@ p.Projection(random_spike_input, breakout_pop, p.OneToOneConnector(), p.StaticSy
 # Calculated using pad_neuron_size * weight = 5 // to fire
 # and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
 # Triggers only the middle neuron of the pad
-paddle_to_one_neuron_weight = 0.0035
+# paddle_to_one_neuron_weight = 0.0035 - For 25 neurons per paddle
+paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
 Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
                                                              paddle_to_one_neuron_weight, Paddle_connections)
-# TODO: FIX THIS...
-#  & refactor this into map_to_one_neuron_per_paddle function
+
 Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size,
-                                                                                     paddle_neuron_size)
+                                                                                     paddle_neuron_size,
+                                                                                     paddle_to_one_neuron_weight * 4)
 
 Compressed_ball_connections = compress_to_x_axis(Ball_connections, X_RES)
 
@@ -283,10 +284,9 @@ paddle_pop = p.Population(paddle_pop_size, p.IF_cond_exp(),
 p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
              p.StaticSynapse(weight=paddle_to_one_neuron_weight, delay=1.))
 
-# TODO: FIX IT
 # If a neuron fired then discharge all the other charged neurons
-# p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_paddle_connections),
-#              synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
+p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_paddle_connections),
+             synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
 
 # Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
@@ -342,9 +342,9 @@ decision_input_pop.record('spikes')
 # spike_input.record('spikes')
 receive_reward_pop.record('all')
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Configure Visualiser
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 print("UDP_PORT1: {}".format(UDP_PORT1))
 print("x_fact: {}, y_fact: {}".format(x_factor1, y_factor1))
@@ -365,18 +365,18 @@ d_conn.add_database_callback(functools.partial(
 p.external_devices.add_database_socket_address(
     "localhost", d_conn.local_port, None)
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Run Simulation
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 runtime = 1000 * 15
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 # Post-Process Results
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
