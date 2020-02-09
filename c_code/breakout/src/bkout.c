@@ -840,14 +840,19 @@ void timer_callback(uint unused, uint dummy)
 
 void mc_packet_received_callback(uint key, uint payload)
 {
+
+    io_printf(IO_BUF, "Key received: %u, %u\n", key, payload);
+
     use(payload);
     // Right
     if(key & KEY_RIGHT){
         right_key_count++;
+        io_printf(IO_BUF, "Moved right %u\n", right_key_count);
     }
     // Left
     else {
         left_key_count++;
+        io_printf(IO_BUF, "Moved left %u\n", left_key_count);
     }
 }
 //-------------------------------------------------------------------------------

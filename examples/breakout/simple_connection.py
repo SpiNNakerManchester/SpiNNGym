@@ -251,7 +251,6 @@ ex.activate_live_output_for(breakout_pop)
 key_input = p.Population(2, SpikeInjector, label="key_input")
 key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 
-
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=7),
@@ -262,35 +261,54 @@ p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(), p.StaticSy
     X_RESOLUTION / x_factor1, Y_RESOLUTION / y_factor1, 1, 1, weight,
     row_col_to_input_breakout)
 
-[Ball_connections, Paddle_connections] = separate_connections(breakout_pop_size - paddle_pop_size, Connections_on)
+[Ball_on_connections, Paddle_on_connections] = \
+    separate_connections(breakout_pop_size - paddle_pop_size, Connections_on)
+
+[Ball_off_connections, Paddle_off_connections] = \
+    separate_connections(breakout_pop_size - paddle_pop_size, Connections_off)
 
 # Calculated using pad_neuron_size * weight = 5 // to fire
 # and (pad_neuron_size - 1) * weight <= 4.75 // to not fire
 # Triggers only the middle neuron of the pad
 # paddle_to_one_neuron_weight = 0.0035 - For 25 neurons per paddle
-paddle_to_one_neuron_weight = 0.09 / paddle_neuron_size
-Compressed_paddle_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
-                                                             paddle_to_one_neuron_weight, Paddle_connections)
 
-Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size,
-                                                                                     paddle_neuron_size,
-                                                                                     paddle_to_one_neuron_weight * 4)
+# paddle_to_one_neuron_weight = 0.09 / paddle_neuron_size
+# Compressed_paddle_on_connections = map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
+#                                                                 paddle_to_one_neuron_weight, Paddle_on_connections)
+#
+# Compressed_paddle_off_connections = get_inhibitory_paddle_connections(paddle_pop_size, paddle_neuron_size,
+#                                                                       paddle_to_one_neuron_weight,
+#                                                                       Paddle_off_connections)
+# map_to_one_neuron_per_paddle(paddle_pop_size, paddle_neuron_size,
+#                                                              paddle_to_one_neuron_weight * 4, Paddle_off_connections)
 
-Compressed_ball_connections = compress_to_x_axis(Ball_connections, X_RES)
+# Inhibitory_lateral_paddle_connections = create_lateral_inhibitory_paddle_connections(paddle_pop_size,
+#                                                                                      paddle_neuron_size,
+#                                                                                      paddle_to_one_neuron_weight * 4)
+
 
 # Create the Pad position population
 paddle_pop = p.Population(paddle_pop_size, p.IF_cond_exp(),
                           label="paddle_pop")
-p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
-             p.StaticSynapse(weight=paddle_to_one_neuron_weight, delay=1.))
+
+p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_on_connections),
+             receptor_type="excitatory")
+p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_off_connections),
+             receptor_type="inhibitory")
+
+# p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
+#              p.StaticSynapse(weight=paddle_to_one_neuron_weight, delay=1.))
 
 # If a neuron fired then discharge all the other charged neurons
-p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_paddle_connections),
-             synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
+# p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Inhibitory_lateral_paddle_connections),
+#              synapse_type=p.StaticSynapse(weight=-paddle_to_one_neuron_weight, delay=1.), receptor_type='inhibitory')
 
 # Create the Ball position population
 ball_pop = p.Population(ball_pop_size, p.IF_cond_exp(),
                         label="ball_pop")
+
+Compressed_ball_connections = compress_to_x_axis(Ball_on_connections, X_RES)
+
 p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
              p.StaticSynapse(weight=weight))
 
@@ -302,10 +320,11 @@ right_hidden_pop = p.Population(hidden_pop_size, p.IF_cond_exp(),
 
 # Project the paddle population on left/right hidden populations
 # so that it charges the neurons without spiking
+paddle_presence_weight = 0.01
 p.Projection(paddle_pop, left_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(0.05))
+             p.StaticSynapse(paddle_presence_weight))
 p.Projection(paddle_pop, right_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(0.05))
+             p.StaticSynapse(paddle_presence_weight))
 
 [Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
     generate_ball_to_hidden_pop_connections(pop_size=X_RES, ball_presence_weight=0.07)
@@ -325,7 +344,6 @@ p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_dec
 # Connect input Decision population to the game
 p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
              p.StaticSynapse(weight=1.0))
-
 
 # Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
