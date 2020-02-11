@@ -172,7 +172,7 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
-def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight=0.05):
+def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight):
     left_connections = []
     right_connections = []
 
@@ -333,7 +333,7 @@ p.Projection(ball_pop, left_hidden_pop, p.FromListConnector(Ball_to_left_hidden_
 p.Projection(ball_pop, right_hidden_pop, p.FromListConnector(Ball_to_right_hidden_connections))
 
 [Left_decision_connections, Right_decision_connections] = \
-    generate_decision_connections(pop_size=X_RES, decision_weight=0.1)
+    generate_decision_connections(pop_size=X_RES, decision_weight=weight)
 
 # Create the decision population
 decision_input_pop = p.Population(2, p.IF_cond_exp(),
@@ -349,13 +349,13 @@ p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
                                   label="receive_rew_pop")
 p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
-             p.StaticSynapse(weight=0.1 * weight))
+             p.StaticSynapse(weight=weight))
 
 # Setup recording
 paddle_pop.record('spikes')
 ball_pop.record('spikes')
-# left_hidden_pop.record('spikes')
-# right_hidden_pop.record('spikes')
+left_hidden_pop.record('spikes')
+right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
 # random_spike_input.record('spikes')
 receive_reward_pop.record('all')
@@ -387,7 +387,7 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # ----------------------------------------------------------------------------------------------------------------------
 
-runtime = 1000 * 15
+runtime = 1000 * 20
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
@@ -400,8 +400,8 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-# left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
-# right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
+left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
+right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 # random_spike_input_spikes = random_spike_input.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
@@ -413,11 +413,11 @@ Figure(
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(left_hidden_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-    #
-    # Panel(right_hidden_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(right_hidden_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
@@ -438,6 +438,14 @@ plt.show()
 
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
+
+plt.figure(2)
+plt.plot(scores)
+plt.ylabel("score")
+plt.xlabel("machine_time_step")
+plt.title("Score Evolution")
+
+plt.show()
 
 # End simulation
 p.end()
