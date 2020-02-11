@@ -23,16 +23,12 @@ from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
     SpynnakerExternalDevicePluginManager as ex
 
 # ----------------------------------------------------------------------------------------------------------------------
-#  Globals
+#  Visualiser
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Visualiser process (global)
 vis_proc = None
 
-
-# ----------------------------------------------------------------------------------------------------------------------
-#  Helper Functions
-# ----------------------------------------------------------------------------------------------------------------------
 
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
