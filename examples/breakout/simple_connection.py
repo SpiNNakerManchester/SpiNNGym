@@ -354,8 +354,8 @@ p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
 # Setup recording
 paddle_pop.record('spikes')
 ball_pop.record('spikes')
-left_hidden_pop.record('spikes')
-right_hidden_pop.record('spikes')
+# left_hidden_pop.record('spikes')
+# right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
 # random_spike_input.record('spikes')
 receive_reward_pop.record('all')
@@ -400,8 +400,8 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
-right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
+# left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
+# right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 # random_spike_input_spikes = random_spike_input.get_data('spikes')
 receive_reward_pop_output = receive_reward_pop.get_data()
@@ -413,11 +413,11 @@ Figure(
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(right_hidden_pop_spikes.segments[0].spiketrains,
-          yticks=True, markersize=0.2, xlim=(0, runtime)),
-
-    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
-          yticks=True, markersize=0.2, xlim=(0, runtime)),
+    # Panel(right_hidden_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    #
+    # Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
@@ -443,7 +443,7 @@ plt.figure(2)
 plt.plot(scores)
 plt.ylabel("score")
 plt.xlabel("machine_time_step")
-plt.title("Score Evolution")
+plt.title("Score Evolution - Automated play")
 
 plt.show()
 

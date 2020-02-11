@@ -575,7 +575,6 @@ static void update_frame (uint32_t time)
                 out_of_play = OUT_OF_PLAY;
                 // Decrease score
                 number_of_lives--;
-//              TODO: Remove the no of lives, as we want to train it continuously
 //                if (!number_of_lives && bricking){
 //                    for(int i=0; i<SCORE_DOWN_EVENTS_PER_DEATH;i++) {
 //                        add_score_down_event();
@@ -583,7 +582,7 @@ static void update_frame (uint32_t time)
 //                    number_of_lives = NUMBER_OF_LIVES;
 //                }
 //                else {
-                    add_score_down_event();
+                add_score_down_event();
 //                }
                 if (PRINT_GAME_EVOLUTION) {
                 	io_printf(IO_BUF, "after reset x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
