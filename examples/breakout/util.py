@@ -105,6 +105,8 @@ def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons, sy
     if no_paddle_neurons % 2 == 0:
         paddle_neurons_offset -= 1
 
+    paddle_neurons_offset *= 2
+
     for neuron in range(0, pop_size):
         for paddle_neuron in range(neuron - paddle_neurons_offset, neuron + paddle_neurons_offset + 1):
             if paddle_neuron != neuron and 0 <= paddle_neuron < pop_size:
