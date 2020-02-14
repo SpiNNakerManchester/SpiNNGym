@@ -99,6 +99,22 @@ random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=7),
 p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(), p.StaticSynapse(weight=1.))
 
 # --------------------------------------------------------------------------------------
+# Reward & Punishment Population
+# --------------------------------------------------------------------------------------
+
+# n0: reward, n1: punishment
+reward_conn = [(0, 0, 2, 1)]
+punishment_conn = [(1, 0, 2, 1)]
+
+reward_pop = p.Population(1, p.IF_cond_exp(),
+                          label="reward_pop")
+punishment_pop = p.Population(1, p.IF_cond_exp(),
+                              label="punishment_pop")
+
+p.Projection(breakout_pop, reward_pop, p.FromListConnector(reward_conn))
+p.Projection(breakout_pop, punishment_pop, p.FromListConnector(punishment_conn))
+
+# --------------------------------------------------------------------------------------
 # ON/OFF Connections
 # --------------------------------------------------------------------------------------
 
@@ -138,6 +154,8 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
 # Hidden Populations
 # --------------------------------------------------------------------------------------
 
+# TODO: Modify for only on Hidden population
+
 left_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
                                label="left_hidden_pop")
 right_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
@@ -174,28 +192,16 @@ p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_dec
 p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
              p.StaticSynapse(weight=1.0))
 
-# --------------------------------------------------------------------------------------
-# Reward Population
-# --------------------------------------------------------------------------------------
-
-# Create population to receive reward signal from Breakout (n0: reward, n1: punishment)
-receive_reward_pop = p.Population(2, p.IF_cond_exp(),
-                                  label="receive_rew_pop")
-
-p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
-             p.StaticSynapse(weight=weight))
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Setup recording
 # ----------------------------------------------------------------------------------------------------------------------
 
 paddle_pop.record('spikes')
 ball_pop.record('spikes')
-# left_hidden_pop.record('spikes')
-# right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
-# random_spike_input.record('spikes')
-receive_reward_pop.record('all')
+random_spike_input.record('spikes')
+reward_pop.record('all')
+punishment_pop.record('all')
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Configure Visualiser
@@ -237,11 +243,10 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = paddle_pop.get_data('spikes')
 ball_pop_spikes = ball_pop.get_data('spikes')
-# left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
-# right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
-# random_spike_input_spikes = random_spike_input.get_data('spikes')
-receive_reward_pop_output = receive_reward_pop.get_data()
+random_spike_input_spikes = random_spike_input.get_data('spikes')
+reward_pop_output = reward_pop.get_data()
+punishment_pop_output = punishment_pop.get_data()
 
 Figure(
     Panel(pad_pop_spikes.segments[0].spiketrains,
@@ -250,21 +255,21 @@ Figure(
     Panel(ball_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(right_hidden_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-    #
-    # Panel(left_hidden_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(random_spike_input_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(random_spike_input_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+    Panel(reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
           ylabel="gsyn excitatory (mV)",
-          data_labels=[receive_reward_pop.label],
+          data_labels=[reward_pop.label],
+          yticks=True,
+          xlim=(0, runtime)
+          ),
+    Panel(punishment_pop_output.segments[0].filter(name='gsyn_exc')[0],
+          ylabel="gsyn excitatory (mV)",
+          data_labels=[punishment_pop.label],
           yticks=True,
           xlim=(0, runtime)
           )
