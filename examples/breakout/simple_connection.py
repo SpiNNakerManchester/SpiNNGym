@@ -78,6 +78,17 @@ Y_RES = int(Y_RESOLUTION / y_factor1)
 # Weights
 weight = 0.1
 
+cell_params = {
+    'cm': 0.3,
+    'i_offset': 0.0,
+    'tau_m': 10.0,
+    'tau_refrac': 4.0,
+    'tau_syn_E': 1.0,
+    'tau_syn_I': 1.0,
+    'v_reset': -70.0,
+    'v_rest': -65.0,
+    'v_thresh': -55.4}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Breakout Population && Spike Input
 # ----------------------------------------------------------------------------------------------------------------------
@@ -151,46 +162,79 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
              p.StaticSynapse(weight=weight))
 
 # --------------------------------------------------------------------------------------
-# Hidden Populations
+# Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-# TODO: Modify for only on Hidden population
+# Create STDP dynamics with neuromodulation
+synapse_dynamics = p.STDPMechanism(
+    timing_dependence=p.IzhikevichNeuromodulation(
+        tau_plus=10, tau_minus=12,
+        A_plus=1, A_minus=1,
+        tau_c=1000, tau_d=200),
+    weight_dependence=p.MultiplicativeWeightDependence(
+        w_min=0, w_max=20),
+    weight=0.0,
+    neuromodulation=True)
 
-left_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
-                               label="left_hidden_pop")
-right_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
-                                label="right_hidden_pop")
+hidden_pop = p.Population(X_RES, p.IF_curr_exp_izhikevich_neuromodulation,
+                          label="hidden_pop")
 
-# Project the paddle population on left/right hidden populations
-# so that it charges the neurons without spiking
-paddle_presence_weight = 0.01
-p.Projection(paddle_pop, left_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(paddle_presence_weight))
-p.Projection(paddle_pop, right_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(paddle_presence_weight))
+# Create Dopaminergic connections
+reward_hidden_projection = p.Projection(
+    reward_pop, hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=weight),
+    receptor_type='reward', label='reward synapses -> hidden')
+punishment_hidden_projection = p.Projection(
+    punishment_pop, hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=weight),
+    receptor_type='punishment', label='punishment synapses -> hidden')
 
-[Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
-    generate_ball_to_hidden_pop_connections(pop_size=X_RES, ball_presence_weight=0.07)
+# Create a plastic connection between Ball and Hidden neurons
+ball_plastic_projection = p.Projection(
+    ball_pop, hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=synapse_dynamics,
+    receptor_type='excitatory', label='Ball-Hidden projection')
 
-p.Projection(ball_pop, left_hidden_pop, p.FromListConnector(Ball_to_left_hidden_connections))
-p.Projection(ball_pop, right_hidden_pop, p.FromListConnector(Ball_to_right_hidden_connections))
+# Create a plastic connection between Paddle and Hidden neurons
+paddle_plastic_projection = p.Projection(
+    ball_pop, hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=synapse_dynamics,
+    receptor_type='excitatory', label='Paddle-Hidden projection')
 
 # --------------------------------------------------------------------------------------
-# Decision Population
+# Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-decision_input_pop = p.Population(2, p.IF_cond_exp(),
+# TODO: Stimulate the population?
+decision_input_pop = p.Population(2, p.IF_curr_exp_izhikevich_neuromodulation,
                                   label="decision_input_pop")
 
-[Left_decision_connections, Right_decision_connections] = \
-    generate_decision_connections(pop_size=X_RES, decision_weight=weight)
+# Create Dopaminergic connection
+reward_decision_projection = p.Projection(
+    reward_pop, decision_input_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=weight),
+    receptor_type='reward', label='reward synapses -> decision')
+punishment_decision_projection = p.Projection(
+    punishment_pop, decision_input_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=weight),
+    receptor_type='punishment', label='punishment synapses -> decision')
 
-p.Projection(left_hidden_pop, decision_input_pop, p.FromListConnector(Left_decision_connections))
-p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_decision_connections))
+# Create a plastic connection between Hidden and Decision neurons
+hidden_plastic_projection = p.Projection(
+    hidden_pop, decision_input_pop,
+    p.AllToAllConnector(),
+    synapse_type=synapse_dynamics,
+    receptor_type='excitatory', label='Hidden-Decision projection')
 
 # Connect input Decision population to the game
 p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
-             p.StaticSynapse(weight=1.0))
+             p.StaticSynapse(weight=1.))
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Setup recording
@@ -230,7 +274,7 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # ----------------------------------------------------------------------------------------------------------------------
 
-runtime = 1000 * 20
+runtime = 1000 * 60
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
@@ -280,6 +324,15 @@ plt.show()
 
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
+
+# TODO: methods to save and load weights
+ball_weights = ball_plastic_projection.get('weight', 'list')
+paddle_weights = paddle_plastic_projection.get('weight', 'list')
+hidden_weights = hidden_plastic_projection.get('weight', 'list')
+
+print("Ball -> Hidden weights: " + repr(ball_weights))
+print("Paddle -> Hidden weights: " + repr(paddle_weights))
+print("Hidden -> Decision weights: " + repr(hidden_weights))
 
 plt.figure(2)
 plt.plot(scores)
