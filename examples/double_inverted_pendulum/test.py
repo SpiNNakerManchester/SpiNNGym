@@ -3,7 +3,6 @@ import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import spinn_gym as gym
-from spinn_arm.python_models.arm import Arm
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 def get_scores(game_pop, simulator):
@@ -85,7 +84,7 @@ input_spikes = []
 rates = [0, 0]
 # rates = [0, 20]
 # rates = [0, 10]
-print 'rates = ', rates
+print('rates = ', rates)
 weight = 0.1
 label = '64 0.55'
 from_list_conn_left = [[0, 0, weight, 1], [6, 0, weight, 1], [3, 0, weight, 1], [11, 0, weight, 1]]
@@ -134,12 +133,12 @@ p.run(runtime)
 scores = []
 scores.append(get_scores(game_pop=pendulum, simulator=simulator))
 if reward_based:
-    print scores
+    print(scores)
 else:
     i = 0
-    print "cart  |  angle"
+    print("cart  |  angle")
     while i < len(scores[0]):
-        print "{:8}\t{:8}".format(scores[0][i], scores[0][i+1])
+        print("{:8}\t{:8}".format(scores[0][i], scores[0][i+1]))
         i += 2
 
 # spikes = []
@@ -185,5 +184,5 @@ Figure(
 )
 plt.show()
 
-print 'rates = ', rates
+print('rates = ', rates)
 p.end()

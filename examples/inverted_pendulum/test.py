@@ -58,7 +58,7 @@ null_pop.record(['spikes', 'v', 'gsyn_exc'])
 arm_collection = []
 # input_spikes = []
 rate = 5
-print 'rate = ', rate
+print('rate = ', rate)
 input_spikes = p.Population(force_increments, p.SpikeSourcePoisson(rate=rate))
 p.Projection(input_spikes, pendulum, p.AllToAllConnector(), p.StaticSynapse())
 weight = 0.1
@@ -109,12 +109,12 @@ p.run(runtime)
 scores = []
 scores.append(get_scores(game_pop=pendulum, simulator=simulator))
 if reward_based:
-    print scores
+    print(scores)
 else:
     i = 0
-    print "cart  \t\t|\t\t  angle"
+    print("cart  \t\t|\t\t  angle")
     while i < len(scores[0]):
-        print "{:8}\t{:8}".format(scores[0][i], scores[0][i+1])
+        print("{:8}\t{:8}".format(scores[0][i], scores[0][i+1]))
         i += 2
 
 spikes_n = null_pop.get_data('spikes').segments[0].spiketrains
@@ -138,5 +138,5 @@ Figure(
 )
 plt.show()
 
-print 'rate = ', rate
+print('rate = ', rate)
 p.end()
