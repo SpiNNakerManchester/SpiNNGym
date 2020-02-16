@@ -546,9 +546,9 @@ static void update_frame (uint32_t time)
                 }
 
                 // Increase score
-                if (!bricking){
+//                if (!bricking){
                     add_score_up_event();
-                }
+//                }
             }
 
             // lost ball
