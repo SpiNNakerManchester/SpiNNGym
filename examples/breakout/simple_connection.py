@@ -11,7 +11,7 @@ from pyNN.utility.plotting import Figure, Panel
 import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
-    compress_to_x_axis, generate_ball_to_hidden_pop_connections, generate_decision_connections
+    compress_to_x_axis, compress_to_y_axis
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -79,15 +79,16 @@ Y_RES = int(Y_RESOLUTION / y_factor1)
 weight = 0.1
 
 cell_params = {
-    'cm': 0.3,
+    'cm': 0.25,
     'i_offset': 0.0,
-    'tau_m': 10.0,
-    'tau_refrac': 4.0,
-    'tau_syn_E': 1.0,
-    'tau_syn_I': 1.0,
+    'tau_m': 20.0,
+    'tau_refrac': 2.0,
+    'tau_syn_E': 2.5,
+    'tau_syn_I': 2.5,
     'v_reset': -70.0,
     'v_rest': -65.0,
-    'v_thresh': -55.4}
+    'v_thresh': -50.0
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Breakout Population && Spike Input
@@ -150,15 +151,20 @@ p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_off_connection
              receptor_type="inhibitory")
 
 # --------------------------------------------------------------------------------------
-# Ball Position Population
+# Ball Positions Populations
 # --------------------------------------------------------------------------------------
 
-ball_pop = p.Population(X_RES, p.IF_cond_exp(),
-                        label="ball_pop")
+ball_x_pop = p.Population(X_RES, p.IF_cond_exp(),
+                          label="ball_x_pop")
+ball_y_pop = p.Population(Y_RES, p.IF_cond_exp(),
+                          label="ball_y_pop")
 
-Compressed_ball_connections = compress_to_x_axis(Ball_on_connections, X_RES)
+Ball_x_connections = compress_to_x_axis(Ball_on_connections, X_RES)
+Ball_y_connections = compress_to_y_axis(Ball_on_connections, Y_RES)
 
-p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connections),
+p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
+             p.StaticSynapse(weight=weight))
+p.Projection(breakout_pop, ball_y_pop, p.FromListConnector(Ball_y_connections),
              p.StaticSynapse(weight=weight))
 
 # --------------------------------------------------------------------------------------
@@ -168,16 +174,15 @@ p.Projection(breakout_pop, ball_pop, p.FromListConnector(Compressed_ball_connect
 # Create STDP dynamics with neuromodulation
 synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=10, tau_minus=12,
-        A_plus=1, A_minus=1,
-        tau_c=1000, tau_d=200),
-    weight_dependence=p.MultiplicativeWeightDependence(
-        w_min=0, w_max=20),
-    weight=0.0,
+        tau_plus=10., tau_minus=5.,
+        A_plus=.25, A_minus=.25,
+        tau_c=200., tau_d=20.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=5.),
+    weight=.5,
     neuromodulation=True)
 
 hidden_pop = p.Population(X_RES, p.IF_curr_exp_izhikevich_neuromodulation,
-                          label="hidden_pop")
+                          cell_params, label="hidden_pop")
 
 # Create Dopaminergic connections
 reward_hidden_projection = p.Projection(
@@ -192,15 +197,21 @@ punishment_hidden_projection = p.Projection(
     receptor_type='punishment', label='punishment synapses -> hidden')
 
 # Create a plastic connection between Ball and Hidden neurons
-ball_plastic_projection = p.Projection(
-    ball_pop, hidden_pop,
+ball_x_plastic_projection = p.Projection(
+    ball_x_pop, hidden_pop,
     p.AllToAllConnector(),
     synapse_type=synapse_dynamics,
-    receptor_type='excitatory', label='Ball-Hidden projection')
+    receptor_type='excitatory', label='Ball_x-Hidden projection')
+
+ball_y_plastic_projection = p.Projection(
+    ball_y_pop, hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=synapse_dynamics,
+    receptor_type='excitatory', label='Ball_y-Hidden projection')
 
 # Create a plastic connection between Paddle and Hidden neurons
 paddle_plastic_projection = p.Projection(
-    ball_pop, hidden_pop,
+    paddle_pop, hidden_pop,
     p.AllToAllConnector(),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Paddle-Hidden projection')
@@ -209,9 +220,9 @@ paddle_plastic_projection = p.Projection(
 # Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-# TODO: Stimulate the population?
+# TODO: Stimulate this population? Yes
 decision_input_pop = p.Population(2, p.IF_curr_exp_izhikevich_neuromodulation,
-                                  label="decision_input_pop")
+                                  cell_params, label="decision_input_pop")
 
 # Create Dopaminergic connection
 reward_decision_projection = p.Projection(
@@ -240,8 +251,10 @@ p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
 # Setup recording
 # ----------------------------------------------------------------------------------------------------------------------
 
-paddle_pop.record('spikes')
-ball_pop.record('spikes')
+# paddle_pop.record('spikes')
+# ball_x_pop.record('spikes')
+# ball_y_pop.record('spikes')
+hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
 random_spike_input.record('spikes')
 reward_pop.record('all')
@@ -274,6 +287,7 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # ----------------------------------------------------------------------------------------------------------------------
 
+# milliseconds * seconds * minutes * hours
 runtime = 1000 * 60
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
@@ -285,18 +299,26 @@ p.run(runtime)
 
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
-pad_pop_spikes = paddle_pop.get_data('spikes')
-ball_pop_spikes = ball_pop.get_data('spikes')
+# pad_pop_spikes = paddle_pop.get_data('spikes')
+# ball_x_pop_spikes = ball_x_pop.get_data('spikes')
+# ball_y_pop_spikes = ball_y_pop.get_data('spikes')
+hidden_pop_spikes = hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 random_spike_input_spikes = random_spike_input.get_data('spikes')
 reward_pop_output = reward_pop.get_data()
 punishment_pop_output = punishment_pop.get_data()
 
 Figure(
-    Panel(pad_pop_spikes.segments[0].spiketrains,
-          yticks=True, markersize=0.2, xlim=(0, runtime)),
+    # Panel(pad_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    #
+    # Panel(ball_x_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    #
+    # Panel(ball_y_pop_spikes.segments[0].spiketrains,
+    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(ball_pop_spikes.segments[0].spiketrains,
+    Panel(hidden_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
@@ -326,11 +348,13 @@ scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
 
 # TODO: methods to save and load weights
-ball_weights = ball_plastic_projection.get('weight', 'list')
+ball_x_weights = ball_x_plastic_projection.get('weight', 'list')
+ball_y_weights = ball_y_plastic_projection.get('weight', 'list')
 paddle_weights = paddle_plastic_projection.get('weight', 'list')
 hidden_weights = hidden_plastic_projection.get('weight', 'list')
 
-print("Ball -> Hidden weights: " + repr(ball_weights))
+print("Ball X -> Hidden weights: " + repr(ball_x_weights))
+print("Ball Y -> Hidden weights: " + repr(ball_y_weights))
 print("Paddle -> Hidden weights: " + repr(paddle_weights))
 print("Hidden -> Decision weights: " + repr(hidden_weights))
 

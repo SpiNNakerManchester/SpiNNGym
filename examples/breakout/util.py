@@ -128,6 +128,17 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
+def compress_to_y_axis(connections, y_resolution):
+    # Get connections of compressed BALL population to the Y axis
+    compressed_connections = []
+
+    for idx, val in enumerate(connections):
+        new_el_connection = (val[0], val[1] // y_resolution, val[2], val[3])
+        compressed_connections.append(new_el_connection)
+
+    return compressed_connections
+
+
 def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight):
     left_connections = []
     right_connections = []
