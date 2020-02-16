@@ -83,8 +83,8 @@ cell_params = {
     'i_offset': 0.0,
     'tau_m': 20.0,
     'tau_refrac': 2.0,
-    'tau_syn_E': 2.5,
-    'tau_syn_I': 2.5,
+    'tau_syn_E': 1.0,
+    'tau_syn_I': 1.0,
     'v_reset': -70.0,
     'v_rest': -65.0,
     'v_thresh': -50.0
