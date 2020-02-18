@@ -163,3 +163,10 @@ def generate_decision_connections(pop_size, decision_weight):
         right_conn.append((neuron, 1, decision_weight, 1.))
 
     return left_conn, right_conn
+
+
+def get_hidden_to_decision_connections(pop_size, weight):
+    # Connect all elements from one pop to 0 for left and 1 for right
+
+    return [(idx, 0, weight, 1.0) for idx in range(0, pop_size)], \
+           [(idx, 1, weight, 1.0) for idx in range(0, pop_size)]
