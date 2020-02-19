@@ -170,3 +170,13 @@ def get_hidden_to_decision_connections(pop_size, weight):
 
     return [(idx, 0, weight, 1.0) for idx in range(0, pop_size)], \
            [(idx, 1, weight, 1.0) for idx in range(0, pop_size)]
+
+
+def clean_connection(data):
+    clean_conn = []
+    for i in range(0, len(data.connections)):
+        for c in data.connections[i]:
+            new_c = (int(c[0]), int(c[1]), float(c[2]), float(c[3]))
+            clean_conn.append(new_c)
+
+    return clean_conn

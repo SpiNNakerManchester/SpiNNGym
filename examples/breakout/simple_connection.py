@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import functools
+import json
 import subprocess
 import sys
 
@@ -11,7 +12,7 @@ from pyNN.utility.plotting import Figure, Panel
 import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
-    compress_to_x_axis, compress_to_y_axis, get_hidden_to_decision_connections
+    compress_to_x_axis, compress_to_y_axis, get_hidden_to_decision_connections, clean_connection
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -54,12 +55,16 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # Initialise Simulation and Parameters
 # ----------------------------------------------------------------------------------------------------------------------
 
+# User controls
+SIMULATION_TIME = 1000 * 60 * 20
+RANDOM_SPIKE_INPUT = False
+LOAD_PREVIOUS_CONNECTIONS = True
+SAVE_CONNECTIONS = True
+FILENAME = 'connections.json'
+
 # Game resolution
 X_RESOLUTION = 160
 Y_RESOLUTION = 128
-
-# Random controls
-RANDOM_SPIKE_INPUT = False
 
 # UDP port to read spikes from
 UDP_PORT1 = 17886
@@ -93,6 +98,14 @@ cell_params = {
     'v_rest': -65.0,
     'v_thresh': -50.0
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Load previous data
+# ----------------------------------------------------------------------------------------------------------------------
+
+if LOAD_PREVIOUS_CONNECTIONS:
+    with open(FILENAME, "r") as f:
+        previous_connections = json.loads(f.read())
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Breakout Population && Spike Input
@@ -178,6 +191,7 @@ p.Projection(breakout_pop, ball_y_pop, p.FromListConnector(Ball_y_connections),
 
 hidden_pop_size = 500
 to_hidden_conn_probability = .1
+hidden_to_decision_weight = .5
 
 stim_pop_size = 100
 stim_conn_probability = .1
@@ -185,9 +199,6 @@ stim_rate = 4
 stim_weight = 1.
 
 dopaminergic_weight = 1.
-
-hidden_to_decision_weight = .5
-
 
 # Create STDP dynamics with neuromodulation
 synapse_dynamics = p.STDPMechanism(
@@ -225,15 +236,24 @@ punishment_left_hidden_projection = p.Projection(
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
     receptor_type='punishment', label='punishment synapses -> left hidden')
 
+if LOAD_PREVIOUS_CONNECTIONS:
+    prev_ball_x_left_conn = previous_connections[0]
+    prev_ball_y_left_conn = previous_connections[1]
+    prev_paddle_left_conn = previous_connections[2]
+
 # Create a plastic connection between Ball and Hidden neurons
 ball_x_left_plastic_projection = p.Projection(
     ball_x_pop, left_hidden_pop,
+    p.FromListConnector(prev_ball_x_left_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Left_Hidden projection')
 
 ball_y_left_plastic_projection = p.Projection(
     ball_y_pop, left_hidden_pop,
+    p.FromListConnector(prev_ball_y_left_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Ball_y-Left_Hidden projection')
@@ -241,6 +261,8 @@ ball_y_left_plastic_projection = p.Projection(
 # Create a plastic connection between Paddle and Hidden neurons
 paddle_left_plastic_projection = p.Projection(
     paddle_pop, left_hidden_pop,
+    p.FromListConnector(prev_paddle_left_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Paddle-Left_Hidden projection')
@@ -271,15 +293,24 @@ punishment_right_hidden_projection = p.Projection(
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
     receptor_type='punishment', label='punishment synapses -> right hidden')
 
+if LOAD_PREVIOUS_CONNECTIONS:
+    prev_ball_x_right_conn = previous_connections[3]
+    prev_ball_y_right_conn = previous_connections[4]
+    prev_paddle_right_conn = previous_connections[5]
+
 # Create a plastic connection between Ball and Hidden neurons
 ball_x_right_plastic_projection = p.Projection(
     ball_x_pop, right_hidden_pop,
+    p.FromListConnector(prev_ball_x_right_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Right_Hidden projection')
 
 ball_y_right_plastic_projection = p.Projection(
     ball_y_pop, right_hidden_pop,
+    p.FromListConnector(prev_ball_y_right_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Ball_y-Right_Hidden projection')
@@ -287,6 +318,8 @@ ball_y_right_plastic_projection = p.Projection(
 # Create a plastic connection between Paddle and Hidden neurons
 paddle_right_plastic_projection = p.Projection(
     paddle_pop, right_hidden_pop,
+    p.FromListConnector(prev_paddle_right_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
     p.FixedProbabilityConnector(to_hidden_conn_probability),
     synapse_type=synapse_dynamics,
     receptor_type='excitatory', label='Paddle-Right_Hidden projection')
@@ -348,14 +381,13 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # ----------------------------------------------------------------------------------------------------------------------
 
-# milliseconds * seconds * minutes * hours
-runtime = 1000 * 60 * 15
+runtime = SIMULATION_TIME
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Post-Process Results
+# Post-Process Results and Plots
 # ----------------------------------------------------------------------------------------------------------------------
 
 print("\nSimulation Complete - Extracting Data and Post-Processing")
@@ -414,34 +446,50 @@ Figure(
 
 plt.show()
 
+# Score over time plot
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
-
-# TODO: methods to save and load weights
-ball_x_left_weights = ball_x_left_plastic_projection.get('weight', 'list')
-ball_y_left_weights = ball_y_left_plastic_projection.get('weight', 'list')
-paddle_left_weights = paddle_left_plastic_projection.get('weight', 'list')
-ball_x_right_weights = ball_x_right_plastic_projection.get('weight', 'list')
-ball_y_right_weights = ball_y_right_plastic_projection.get('weight', 'list')
-paddle_right_weights = paddle_right_plastic_projection.get('weight', 'list')
-
-left_stim_connections = left_stim_projection.get('weight', 'list')
-right_stim_connections = right_stim_projection.get('weight', 'list')
-
-# print("Ball X -> Hidden weights: " + repr(ball_x_left_weights))
-# print("Ball Y -> Hidden weights: " + repr(ball_y_left_weights))
-# print("Paddle -> Hidden weights: " + repr(paddle_left_weights))
-# print("Hidden -> Decision weights: " + repr(hidden_weights))
 
 plt.figure(2)
 plt.plot(scores)
 plt.ylabel("score")
 plt.xlabel("machine_time_step")
-plt.title("Score Evolution - Automated play")
+plt.title("Score Evolution - Neuromodulated play")
 
 plt.show()
 
-# End simulation
+# ----------------------------------------------------------------------------------------------------------------------
+# Save Weights and Connections
+# ----------------------------------------------------------------------------------------------------------------------
+save_conn = []
+
+ball_x_left_conn = clean_connection(ball_x_left_plastic_projection.get('weight', 'list'))
+ball_y_left_conn = clean_connection(ball_y_left_plastic_projection.get('weight', 'list'))
+paddle_left_conn = clean_connection(paddle_left_plastic_projection.get('weight', 'list'))
+
+save_conn.append(ball_x_left_conn)
+save_conn.append(ball_y_left_conn)
+save_conn.append(paddle_left_conn)
+
+ball_x_right_conn = clean_connection(ball_x_right_plastic_projection.get('weight', 'list'))
+ball_y_right_conn = clean_connection(ball_y_right_plastic_projection.get('weight', 'list'))
+paddle_right_conn = clean_connection(paddle_right_plastic_projection.get('weight', 'list'))
+
+save_conn.append(ball_x_right_conn)
+save_conn.append(ball_y_right_conn)
+save_conn.append(paddle_right_conn)
+
+left_stim_connections = clean_connection(left_stim_projection.get('weight', 'list'))
+right_stim_connections = clean_connection(right_stim_projection.get('weight', 'list'))
+
+if SAVE_CONNECTIONS:
+    with open(FILENAME, "w") as f:
+        f.write(json.dumps(save_conn))
+
+# ----------------------------------------------------------------------------------------------------------------------
+# End Simulation
+# ----------------------------------------------------------------------------------------------------------------------
+
 p.end()
 vis_proc.terminate()
 print("Simulation Complete")
