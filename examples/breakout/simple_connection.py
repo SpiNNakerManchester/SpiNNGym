@@ -56,10 +56,11 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-SIMULATION_TIME = 1000 * 60 * 20
+SIMULATION_TIME = 1000 * 60 * 15
 RANDOM_SPIKE_INPUT = False
 LOAD_PREVIOUS_CONNECTIONS = True
-SAVE_CONNECTIONS = True
+SAVE_CONNECTIONS = True if sys.argv[1] == "Training" else False
+TESTING = True if sys.argv[1] == "Testing" else False
 FILENAME = 'connections.json'
 
 # Game resolution
@@ -193,9 +194,9 @@ hidden_pop_size = 500
 to_hidden_conn_probability = .1
 hidden_to_decision_weight = .5
 
-stim_pop_size = 100
+stim_pop_size = hidden_pop_size
 stim_conn_probability = .1
-stim_rate = 4
+stim_rate = 20
 stim_weight = 1.
 
 dopaminergic_weight = 1.
@@ -221,7 +222,7 @@ left_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neuromo
 left_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=stim_rate),
                                     label="left_stimulation_pop")
 left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
-                                    p.FixedProbabilityConnector(stim_conn_probability),
+                                    p.OneToOneConnector(),
                                     p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
@@ -278,7 +279,7 @@ right_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neurom
 right_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=stim_rate),
                                      label="right_stimulation_pop")
 right_stim_projection = p.Projection(right_stimulation_pop, right_hidden_pop,
-                                     p.FixedProbabilityConnector(stim_conn_probability),
+                                     p.OneToOneConnector(),
                                      p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
@@ -391,6 +392,7 @@ p.run(runtime)
 # ----------------------------------------------------------------------------------------------------------------------
 
 print("\nSimulation Complete - Extracting Data and Post-Processing")
+vis_proc.terminate()
 
 # pad_pop_spikes = paddle_pop.get_data('spikes')
 # ball_x_pop_spikes = ball_x_pop.get_data('spikes')
@@ -431,7 +433,7 @@ Figure(
           reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
           line_properties=dopaminergic_line_properties,
           ylabel="gsyn excitatory (mV)",
-          data_labels=[reward_pop.label, punishment_pop.label],
+          data_labels=[punishment_pop.label, reward_pop.label],
           yticks=True,
           xlim=(0, runtime)
           ),
@@ -444,7 +446,9 @@ Figure(
     # title="Simple Breakout Example"
 )
 
-plt.show()
+if TESTING:
+    plt.show()
+    print("Displayed first plot")
 
 # Score over time plot
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
@@ -456,11 +460,15 @@ plt.ylabel("score")
 plt.xlabel("machine_time_step")
 plt.title("Score Evolution - Neuromodulated play")
 
-plt.show()
+if TESTING:
+    plt.show()
+    print("Displayed second plot")
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Save Weights and Connections
 # ----------------------------------------------------------------------------------------------------------------------
+print("Extracting and Saving the connections")
 save_conn = []
 
 ball_x_left_conn = clean_connection(ball_x_left_plastic_projection.get('weight', 'list'))
@@ -479,17 +487,17 @@ save_conn.append(ball_x_right_conn)
 save_conn.append(ball_y_right_conn)
 save_conn.append(paddle_right_conn)
 
-left_stim_connections = clean_connection(left_stim_projection.get('weight', 'list'))
-right_stim_connections = clean_connection(right_stim_projection.get('weight', 'list'))
+# left_stim_connections = clean_connection(left_stim_projection.get('weight', 'list'))
+# right_stim_connections = clean_connection(right_stim_projection.get('weight', 'list'))
 
 if SAVE_CONNECTIONS:
     with open(FILENAME, "w") as f:
         f.write(json.dumps(save_conn))
+        print("Saved the weights and connections")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # End Simulation
 # ----------------------------------------------------------------------------------------------------------------------
-
+print("Completing the simulation")
 p.end()
-vis_proc.terminate()
-print("Simulation Complete")
+print("Simulation Completed")

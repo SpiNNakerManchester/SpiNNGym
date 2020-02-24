@@ -157,6 +157,7 @@ uint32_t move_count_r = 0;
 uint32_t move_count_l = 0;
 uint32_t score_change_count=0;
 int32_t current_score = 0;
+int32_t score_down_streak = 0;
 
 //ratio used in randomising initial x coordinate
 static uint32_t x_ratio = UINT32_MAX / GAME_WIDTH_MAX;
@@ -170,6 +171,7 @@ static inline void add_score_up_event()
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_UP), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score up\n");
   current_score++;
+  score_down_streak = 0;
 }
 
 static inline void add_score_down_event()
@@ -177,6 +179,12 @@ static inline void add_score_down_event()
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_DOWN), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score down\n");
   current_score--;
+  score_down_streak++;
+  if(score_down_streak >= 5) {
+    io_printf(IO_BUF, "The paddle and bricks were rested because of the score down streak\n");
+    current_number_of_bricks = 0;
+    x_bat = rand() % (GAME_WIDTH - bat_len);
+  }
 }
 
 // send packet containing pixel colour change
@@ -363,19 +371,27 @@ static void update_frame (uint32_t time)
     {
         // Draw bat pixels
         // io_printf(IO_BUF, "oxb:%d, xb:%d, bl:%d\n", old_xbat, x_bat, bat_len);
-        for (int i = x_bat; i < (x_bat + bat_len); i++)
-        {
-            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
+        for (int i = 0; i < GAME_WIDTH; ++i) {
+            // draw bat
+            if (i >= x_bat && i < (x_bat + bat_len)) {
+                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
+            } else {
+                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+            }
         }
+//        for (int i = x_bat; i < (x_bat + bat_len); i++)
+//        {
+//            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
+//        }
         // Remove pixels left over from old bat
-        if (x_bat > old_xbat)
-        {
-            set_pixel_col(old_xbat, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
-        }
-        else if (x_bat < old_xbat)
-        {
-            set_pixel_col(old_xbat + bat_len - 1, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
-        }
+//        if (x_bat > old_xbat)
+//        {
+//            set_pixel_col(old_xbat, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+//        }
+//        else if (x_bat < old_xbat)
+//        {
+//            set_pixel_col(old_xbat + bat_len - 1, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+//        }
 
         //only draw left edge of bat pixel
         // add_event(x_bat, GAME_HEIGHT-1, COLOUR_BAT);
