@@ -93,9 +93,6 @@ def map_to_one_neuron_per_paddle(pop_size, no_paddle_neurons, syn_weight, paddle
 def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons, syn_weight):
     lat_connections = []
 
-    no_paddle_neurons = int(no_paddle_neurons)
-    # just a precaution
-    no_paddle_neurons += 2
     paddle_neurons_offset = no_paddle_neurons // 2
 
     # If the no_pad_neurons is even
@@ -109,7 +106,7 @@ def create_lateral_inhibitory_paddle_connections(pop_size, no_paddle_neurons, sy
         for paddle_neuron in range(neuron - paddle_neurons_offset, neuron + paddle_neurons_offset + 1):
             if paddle_neuron != neuron and 0 <= paddle_neuron < pop_size:
                 # I used to calculate the weight based on the number of excitatory input connections
-                new_weight = -syn_weight * np.math.pi * (2 * paddle_neurons_offset + 1 - abs(neuron - paddle_neuron))
+                new_weight = syn_weight * 4 * (paddle_neurons_offset + 1 - abs(neuron - paddle_neuron))
                 lat_connections.append((neuron, paddle_neuron, new_weight, 1.))
 
     return lat_connections
