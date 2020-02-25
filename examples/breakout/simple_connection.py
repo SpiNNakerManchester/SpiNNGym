@@ -56,8 +56,8 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-SIMULATION_TIME = 1000 * 60 * 15
-RANDOM_SPIKE_INPUT = False
+SIMULATION_TIME = 1000 * 60 * 10
+RANDOM_SPIKE_INPUT = True
 LOAD_PREVIOUS_CONNECTIONS = True
 SAVE_CONNECTIONS = True if sys.argv[1] == "Training" else False
 TESTING = True if sys.argv[1] == "Testing" else False
@@ -125,7 +125,7 @@ key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 if RANDOM_SPIKE_INPUT:
-    random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=7),
+    random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=15),
                                       label="input_connect")
     p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(), p.StaticSynapse(weight=1.))
 
@@ -195,8 +195,8 @@ to_hidden_conn_probability = .1
 hidden_to_decision_weight = .5
 
 stim_pop_size = hidden_pop_size
-stim_conn_probability = .1
-stim_rate = 20
+left_stim_rate = 25
+right_stim_rate = left_stim_rate
 stim_weight = 1.
 
 dopaminergic_weight = 1.
@@ -204,7 +204,7 @@ dopaminergic_weight = 1.
 # Create STDP dynamics with neuromodulation
 synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=15., tau_minus=5.,
+        tau_plus=15., tau_minus=15.,
         A_plus=0.25, A_minus=0.25,
         tau_c=200., tau_d=20.),
     weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=5.),
@@ -219,7 +219,7 @@ left_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neuromo
                                cell_params, label="left_hidden_pop")
 
 # Stimulation population
-left_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=stim_rate),
+left_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=left_stim_rate),
                                     label="left_stimulation_pop")
 left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
                                     p.OneToOneConnector(),
@@ -276,7 +276,7 @@ right_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neurom
                                 cell_params, label="right_hidden_pop")
 
 # Stimulation population
-right_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=stim_rate),
+right_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=right_stim_rate),
                                      label="right_stimulation_pop")
 right_stim_projection = p.Projection(right_stimulation_pop, right_hidden_pop,
                                      p.OneToOneConnector(),
@@ -345,13 +345,13 @@ p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
 # Setup recording
 # ----------------------------------------------------------------------------------------------------------------------
 
-# paddle_pop.record('spikes')
-# ball_x_pop.record('spikes')
-# ball_y_pop.record('spikes')
+paddle_pop.record('spikes')
+ball_x_pop.record('spikes')
+ball_y_pop.record('spikes')
 left_hidden_pop.record('spikes')
 right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
-# random_spike_input.record('spikes')
+random_spike_input.record('spikes')
 reward_pop.record('all')
 punishment_pop.record('all')
 
@@ -394,13 +394,13 @@ p.run(runtime)
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 vis_proc.terminate()
 
-# pad_pop_spikes = paddle_pop.get_data('spikes')
-# ball_x_pop_spikes = ball_x_pop.get_data('spikes')
-# ball_y_pop_spikes = ball_y_pop.get_data('spikes')
+pad_pop_spikes = paddle_pop.get_data('spikes')
+ball_x_pop_spikes = ball_x_pop.get_data('spikes')
+ball_y_pop_spikes = ball_y_pop.get_data('spikes')
 left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
 right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
-# random_spike_input_spikes = random_spike_input.get_data('spikes')
+random_spike_input_spikes = random_spike_input.get_data('spikes')
 reward_pop_output = reward_pop.get_data()
 punishment_pop_output = punishment_pop.get_data()
 
@@ -408,26 +408,26 @@ dopaminergic_line_properties = [{'color': 'red', 'markersize': 5},
                                 {'color': 'blue', 'markersize': 2}]
 
 Figure(
-    # Panel(pad_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-    #
-    # Panel(ball_x_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
-    #
-    # Panel(ball_y_pop_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(pad_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+    Panel(ball_x_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(ball_y_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(right_hidden_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
+    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    # Panel(random_spike_input_spikes.segments[0].spiketrains,
-    #       yticks=True, markersize=0.2, xlim=(0, runtime)),
+    Panel(random_spike_input_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(punishment_pop_output.segments[0].filter(name='gsyn_exc')[0],
           reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
@@ -437,12 +437,6 @@ Figure(
           yticks=True,
           xlim=(0, runtime)
           ),
-    # Panel(punishment_pop_output.segments[0].filter(name='gsyn_exc')[0],
-    #       ylabel="gsyn excitatory (mV)",
-    #       data_labels=[punishment_pop.label],
-    #       yticks=True,
-    #       xlim=(0, runtime)
-    #       )
     # title="Simple Breakout Example"
 )
 
