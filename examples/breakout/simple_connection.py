@@ -58,7 +58,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
 # User controls
 TESTING_TIME = 1000 * 30
-TRAINING_TIME = 1000 * 60 * 5
+TRAINING_TIME = 1000 * 60 * 15
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
 RANDOM_SPIKE_INPUT = True
