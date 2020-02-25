@@ -57,8 +57,8 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-TESTING_TIME = 1000 * 30
-TRAINING_TIME = 1000 * 60 * 15
+TESTING_TIME = 1000 * 60
+TRAINING_TIME = 1000 * 60 * 10
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
 RANDOM_SPIKE_INPUT = True
@@ -129,7 +129,7 @@ key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 if RANDOM_SPIKE_INPUT:
-    random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=15),
+    random_spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
                                       label="input_connect")
     p.Projection(random_spike_input, breakout_pop, p.AllToAllConnector(), p.StaticSynapse(weight=1.))
 
@@ -207,7 +207,7 @@ to_hidden_conn_probability = .1
 hidden_to_decision_weight = .5
 
 stim_pop_size = hidden_pop_size
-left_stim_rate = 25
+left_stim_rate = 30
 right_stim_rate = left_stim_rate
 stim_weight = 1.
 
