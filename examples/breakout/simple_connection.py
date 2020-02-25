@@ -12,7 +12,8 @@ from pyNN.utility.plotting import Figure, Panel
 import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
-    compress_to_x_axis, compress_to_y_axis, get_hidden_to_decision_connections, clean_connection
+    compress_to_x_axis, compress_to_y_axis, get_hidden_to_decision_connections, clean_connection, \
+    map_to_one_neuron_per_paddle, create_lateral_inhibitory_paddle_connections
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -56,7 +57,10 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-SIMULATION_TIME = 1000 * 60 * 10
+TESTING_TIME = 1000 * 30
+TRAINING_TIME = 1000 * 60 * 5
+SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
+
 RANDOM_SPIKE_INPUT = True
 LOAD_PREVIOUS_CONNECTIONS = True
 SAVE_CONNECTIONS = True if sys.argv[1] == "Training" else False
@@ -160,13 +164,21 @@ p.Projection(breakout_pop, punishment_pop, p.FromListConnector(punishment_conn))
 # --------------------------------------------------------------------------------------
 # Paddle Population
 # --------------------------------------------------------------------------------------
+# based on the size of the bat in bkout.c
+paddle_neuron_size = 30 // x_factor1
+paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
+
+
+Compressed_paddle_connections = map_to_one_neuron_per_paddle(X_RES, paddle_neuron_size, paddle_to_one_neuron_weight,
+                                                             Paddle_on_connections)
+Lat_inh_connections = create_lateral_inhibitory_paddle_connections(X_RES, paddle_neuron_size,
+                                                                   paddle_to_one_neuron_weight)
 
 paddle_pop = p.Population(X_RES, p.IF_cond_exp(),
                           label="paddle_pop")
-
-p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_on_connections),
+p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
              receptor_type="excitatory")
-p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_off_connections),
+p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Lat_inh_connections),
              receptor_type="inhibitory")
 
 # --------------------------------------------------------------------------------------
@@ -457,7 +469,6 @@ plt.title("Score Evolution - Neuromodulated play")
 if TESTING:
     plt.show()
     print("Displayed second plot")
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Save Weights and Connections
