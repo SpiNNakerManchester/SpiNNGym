@@ -123,6 +123,7 @@ int v = -MAX_BALL_SPEED;// * FACT;
 
 // bat LHS x position
 int x_bat = 32;
+bool ALWAYS_SEND_BAT = true;
 
 // bat length in pixels
 int bat_len = 30;
@@ -367,7 +368,7 @@ static void update_frame (uint32_t time)
     right_key_count = 0;
 
     // If bat's moved
-    if (old_xbat != x_bat)
+    if (old_xbat != x_bat || (ALWAYS_SEND_BAT && !out_of_play))
     {
         // Draw bat pixels
         // io_printf(IO_BUF, "oxb:%d, xb:%d, bl:%d\n", old_xbat, x_bat, bat_len);
