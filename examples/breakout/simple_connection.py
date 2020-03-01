@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import functools
+import json
 import subprocess
 import sys
 
@@ -11,7 +12,7 @@ from pyNN.utility.plotting import Figure, Panel
 import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
-    compress_to_x_axis, generate_ball_to_hidden_pop_connections, generate_decision_connections
+    compress_to_x_axis, generate_ball_to_hidden_pop_connections, generate_decision_connections, clean_connection
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -53,6 +54,10 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 # Initialise Simulation and Parameters
 # ----------------------------------------------------------------------------------------------------------------------
+
+# User Controls
+SAVE_CONNECTIONS = False
+FILENAME = "connections.json"
 
 # Game resolution
 X_RESOLUTION = 160
@@ -146,16 +151,16 @@ right_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
 # Project the paddle population on left/right hidden populations
 # so that it charges the neurons without spiking
 paddle_presence_weight = 0.01
-p.Projection(paddle_pop, left_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(paddle_presence_weight))
-p.Projection(paddle_pop, right_hidden_pop, p.OneToOneConnector(),
-             p.StaticSynapse(paddle_presence_weight))
+paddle_left_projection = p.Projection(paddle_pop, left_hidden_pop, p.OneToOneConnector(),
+                                      p.StaticSynapse(paddle_presence_weight))
+paddle_right_projection = p.Projection(paddle_pop, right_hidden_pop, p.OneToOneConnector(),
+                                       p.StaticSynapse(paddle_presence_weight))
 
 [Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
     generate_ball_to_hidden_pop_connections(pop_size=X_RES, ball_presence_weight=0.07)
 
-p.Projection(ball_pop, left_hidden_pop, p.FromListConnector(Ball_to_left_hidden_connections))
-p.Projection(ball_pop, right_hidden_pop, p.FromListConnector(Ball_to_right_hidden_connections))
+ball_left_projection = p.Projection(ball_pop, left_hidden_pop, p.FromListConnector(Ball_to_left_hidden_connections))
+ball_right_projection = p.Projection(ball_pop, right_hidden_pop, p.FromListConnector(Ball_to_right_hidden_connections))
 
 # --------------------------------------------------------------------------------------
 # Decision Population
@@ -167,8 +172,10 @@ decision_input_pop = p.Population(2, p.IF_cond_exp(),
 [Left_decision_connections, Right_decision_connections] = \
     generate_decision_connections(pop_size=X_RES, decision_weight=weight)
 
-p.Projection(left_hidden_pop, decision_input_pop, p.FromListConnector(Left_decision_connections))
-p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(Right_decision_connections))
+left_decision_projection = p.Projection(left_hidden_pop, decision_input_pop,
+                                        p.FromListConnector(Left_decision_connections))
+right_decision_projection = p.Projection(right_hidden_pop, decision_input_pop,
+                                         p.FromListConnector(Right_decision_connections))
 
 # Connect input Decision population to the game
 p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
@@ -283,6 +290,21 @@ plt.xlabel("machine_time_step")
 plt.title("Score Evolution - Automated play")
 
 plt.show()
+
+if SAVE_CONNECTIONS:
+    print("Saving Connections")
+
+    extracted_conn = [clean_connection(ball_left_projection.get('weight', 'list')),
+                      clean_connection(paddle_left_projection.get('weight', 'list')),
+                      clean_connection(ball_right_projection.get('weight', 'list')),
+                      clean_connection(paddle_right_projection.get('weight', 'list')),
+                      clean_connection(left_decision_projection.get('weight', 'list')),
+                      clean_connection(right_decision_projection.get('weight', 'list'))]
+
+    with open(FILENAME, "w") as f:
+        f.write(json.dumps(extracted_conn))
+        print("Done")
+
 
 # End simulation
 p.end()

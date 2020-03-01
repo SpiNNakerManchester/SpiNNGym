@@ -152,3 +152,13 @@ def generate_decision_connections(pop_size, decision_weight):
         right_conn.append((neuron, 1, decision_weight, 1.))
 
     return left_conn, right_conn
+
+
+def clean_connection(data):
+    clean_conn = []
+    for i in range(0, len(data.connections)):
+        for c in data.connections[i]:
+            new_c = (int(c[0]), int(c[1]), float(c[2]), float(c[3]))
+            clean_conn.append(new_c)
+
+    return clean_conn
