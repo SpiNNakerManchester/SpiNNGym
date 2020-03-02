@@ -97,8 +97,8 @@ cell_params = {
     'i_offset': 0.0,
     'tau_m': 20.0,
     'tau_refrac': 2.0,
-    'tau_syn_E': 1.0,
-    'tau_syn_I': 1.0,
+    'tau_syn_E': 2.5,
+    'tau_syn_I': 2.5,
     'v_reset': -70.0,
     'v_rest': -65.0,
     'v_thresh': -50.0
@@ -164,6 +164,7 @@ p.Projection(breakout_pop, punishment_pop, p.FromListConnector(punishment_conn))
 # --------------------------------------------------------------------------------------
 # Paddle Population
 # --------------------------------------------------------------------------------------
+
 # based on the size of the bat in bkout.c
 paddle_neuron_size = 30 // x_factor1
 paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
@@ -201,24 +202,23 @@ p.Projection(breakout_pop, ball_y_pop, p.FromListConnector(Ball_y_connections),
 # Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_pop_size = 500
-to_hidden_conn_probability = .1
+hidden_pop_size = 150
 
 stim_pop_size = hidden_pop_size
-left_stim_rate = 35
+left_stim_rate = 15
 right_stim_rate = left_stim_rate
 stim_weight = 1.
 
-dopaminergic_weight = 1.
+dopaminergic_weight = .1
 
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=15., tau_minus=15.,
-        A_plus=0.25, A_minus=0.25,
-        tau_c=200., tau_d=20.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=5.),
-    weight=0,
+        tau_plus=15., tau_minus=5.,
+        A_plus=0.1, A_minus=0.1,
+        tau_c=150., tau_d=10.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.),
+    weight=0.1,
     neuromodulation=True)
 
 # --------------------------------------------------------------------------------------
@@ -257,7 +257,7 @@ ball_x_left_plastic_projection = p.Projection(
     ball_x_pop, left_hidden_pop,
     p.FromListConnector(prev_ball_x_left_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Left_Hidden projection')
 
@@ -265,7 +265,7 @@ ball_y_left_plastic_projection = p.Projection(
     ball_y_pop, left_hidden_pop,
     p.FromListConnector(prev_ball_y_left_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_y-Left_Hidden projection')
 
@@ -274,7 +274,7 @@ paddle_left_plastic_projection = p.Projection(
     paddle_pop, left_hidden_pop,
     p.FromListConnector(prev_paddle_left_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Paddle-Left_Hidden projection')
 
@@ -314,7 +314,7 @@ ball_x_right_plastic_projection = p.Projection(
     ball_x_pop, right_hidden_pop,
     p.FromListConnector(prev_ball_x_right_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Right_Hidden projection')
 
@@ -322,7 +322,7 @@ ball_y_right_plastic_projection = p.Projection(
     ball_y_pop, right_hidden_pop,
     p.FromListConnector(prev_ball_y_right_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_y-Right_Hidden projection')
 
@@ -331,7 +331,7 @@ paddle_right_plastic_projection = p.Projection(
     paddle_pop, right_hidden_pop,
     p.FromListConnector(prev_paddle_right_conn) if LOAD_PREVIOUS_CONNECTIONS
     else
-    p.FixedProbabilityConnector(to_hidden_conn_probability),
+    p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Paddle-Right_Hidden projection')
 
@@ -340,18 +340,26 @@ paddle_right_plastic_projection = p.Projection(
 # --------------------------------------------------------------------------------------
 
 hidden_to_decision_weight = 0.5
+decision_stim_rate = left_stim_rate
 
 decision_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=10., tau_minus=10.,
-        A_plus=0.05, A_minus=0.05,
-        tau_c=200., tau_d=20.),
+        tau_plus=15., tau_minus=5.,
+        A_plus=0.01, A_minus=0.01,
+        tau_c=10., tau_d=5.),
     weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=1.),
-    weight=0.5,
+    weight=0.1,
     neuromodulation=True)
 
 decision_input_pop = p.Population(2, p.IF_curr_exp_izhikevich_neuromodulation,
                                   label="decision_input_pop")
+
+# Stimulation population
+decision_stimulation_pop = p.Population(2, p.SpikeSourcePoisson(rate=decision_stim_rate),
+                                        label="decision_stimulation_pop")
+decision_stim_projection = p.Projection(decision_stimulation_pop, decision_input_pop,
+                                        p.OneToOneConnector(),
+                                        p.StaticSynapse(weight=5.))
 
 # Create Dopaminergic connections
 reward_decision_projection = p.Projection(
