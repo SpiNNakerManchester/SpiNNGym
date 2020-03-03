@@ -12,7 +12,8 @@ from pyNN.utility.plotting import Figure, Panel
 import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
-    compress_to_x_axis, get_hidden_to_decision_connections, clean_connection
+    compress_to_x_axis, get_hidden_to_decision_connections, clean_connection, map_to_one_neuron_per_paddle, \
+    create_lateral_inhibitory_paddle_connections
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -57,7 +58,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
 # User controls
 TESTING_TIME = 1000 * 20
-TRAINING_TIME = 1000 * 60 * 1
+TRAINING_TIME = 1000 * 60 * 10
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
 RANDOM_SPIKE_INPUT = False
@@ -152,12 +153,20 @@ p.Projection(breakout_pop, punishment_pop, p.FromListConnector(punishment_conn))
 # Paddle Population
 # --------------------------------------------------------------------------------------
 
+# based on the size of the bat in bkout.c
+paddle_neuron_size = 30 // x_factor1
+paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
+
+Compressed_paddle_connections = map_to_one_neuron_per_paddle(X_RES, paddle_neuron_size, paddle_to_one_neuron_weight,
+                                                             Paddle_on_connections)
+Lat_inh_connections = create_lateral_inhibitory_paddle_connections(X_RES, paddle_neuron_size,
+                                                                   paddle_to_one_neuron_weight)
+
 paddle_pop = p.Population(X_RES, p.IF_cond_exp(),
                           label="paddle_pop")
-
-p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_on_connections),
+p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Compressed_paddle_connections),
              receptor_type="excitatory")
-p.Projection(breakout_pop, paddle_pop, p.FromListConnector(Paddle_off_connections),
+p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Lat_inh_connections),
              receptor_type="inhibitory")
 
 # --------------------------------------------------------------------------------------
@@ -189,11 +198,11 @@ dopaminergic_weight = .1
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=15., tau_minus=5.,
-        A_plus=0.1, A_minus=0.1,
-        tau_c=150., tau_d=10.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.),
-    weight=0.1,
+        tau_plus=20., tau_minus=20.,
+        A_plus=0.01, A_minus=0.01,
+        tau_c=2000., tau_d=100.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.5),
+    weight=.25,
     neuromodulation=True)
 
 # --------------------------------------------------------------------------------------
@@ -211,17 +220,16 @@ left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
                                     p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-# TODO: uncomment at some point
-# reward_left_hidden_projection = p.Projection(
-#     reward_pop, left_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='reward', label='reward synapses -> left hidden')
-# punishment_left_hidden_projection = p.Projection(
-#     punishment_pop, left_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='punishment', label='punishment synapses -> left hidden')
+reward_left_hidden_projection = p.Projection(
+    punishment_pop, left_hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+    receptor_type='reward', label='reward synapses -> left hidden')
+punishment_left_hidden_projection = p.Projection(
+    reward_pop, left_hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+    receptor_type='punishment', label='punishment synapses -> left hidden')
 
 if LOAD_PREVIOUS_CONNECTIONS:
     prev_ball_x_left_conn = previous_connections[0]
@@ -260,17 +268,16 @@ right_stim_projection = p.Projection(right_stimulation_pop, right_hidden_pop,
                                      p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-# TODO: uncomment at some point
-# reward_right_hidden_projection = p.Projection(
-#     reward_pop, right_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='reward', label='reward synapses -> right hidden')
-# punishment_right_hidden_projection = p.Projection(
-#     punishment_pop, right_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='punishment', label='punishment synapses -> right hidden')
+reward_right_hidden_projection = p.Projection(
+    reward_pop, right_hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+    receptor_type='reward', label='reward synapses -> right hidden')
+punishment_right_hidden_projection = p.Projection(
+    punishment_pop, right_hidden_pop,
+    p.AllToAllConnector(),
+    synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+    receptor_type='punishment', label='punishment synapses -> right hidden')
 
 if LOAD_PREVIOUS_CONNECTIONS:
     prev_ball_x_right_conn = previous_connections[2]
@@ -298,15 +305,18 @@ paddle_right_plastic_projection = p.Projection(
 # Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_to_decision_weight = 0.1
+# For the decision neuron to spike it needs at least 4 input spikes
+hidden_to_decision_weight = 0.02125
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
 [left_decision_conn, right_decision_conn] = get_hidden_to_decision_connections(hidden_pop_size,
                                                                                weight=hidden_to_decision_weight)
 
-# TODO: connect hidden populations to the decision population
-#       and decide on the weight as well
+p.Projection(left_hidden_pop, decision_input_pop, p.FromListConnector(left_decision_conn),
+             p.StaticSynapse(weight=hidden_to_decision_weight))
+p.Projection(right_hidden_pop, decision_input_pop, p.FromListConnector(right_decision_conn),
+             p.StaticSynapse(weight=hidden_to_decision_weight))
 
 # Connect input decision population to the game
 p.Projection(decision_input_pop, breakout_pop, p.OneToOneConnector(),
