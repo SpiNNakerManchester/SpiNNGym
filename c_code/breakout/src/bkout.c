@@ -640,11 +640,11 @@ static void update_frame (uint32_t time)
                     send_ball_on_top_event();
                 }
 
-                if (x < ((x_bat + bat_len) / 2)) {
+                if (x < x_bat) {
                     send_ball_on_left_event();
                 }
 
-                if (x > ((x_bat + bat_len) / 2)) {
+                if (x > (x_bat + bat_len)) {
                     send_ball_on_right_event();
                 }
             }

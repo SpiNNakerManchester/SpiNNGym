@@ -58,7 +58,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
 # User controls
 TESTING_TIME = 1000 * 20
-TRAINING_TIME = 1000 * 60 * 10
+TRAINING_TIME = 1000 * 60 * 5
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
 RANDOM_SPIKE_INPUT = False
@@ -189,7 +189,7 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 # Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_pop_size = 100
+hidden_pop_size = 200
 
 left_stim_rate = 1
 right_stim_rate = left_stim_rate
@@ -203,7 +203,7 @@ hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
         tau_plus=60., tau_minus=60.,
         A_plus=0.25, A_minus=0.25,
-        tau_c=200., tau_d=20.),
+        tau_c=300., tau_d=20.),
     weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3),
     weight=.5,
     neuromodulation=True)
@@ -319,7 +319,7 @@ paddle_right_plastic_projection = p.Projection(
 # --------------------------------------------------------------------------------------
 
 # For the decision neuron to spike it needs at least 4 input spikes
-hidden_to_decision_weight = 0.085 / 2
+hidden_to_decision_weight = 0.085 / 4
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
