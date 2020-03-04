@@ -171,21 +171,21 @@ static inline void add_score_up_event()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_UP), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score up\n");
-  current_score++;
-  score_down_streak = 0;
+//  current_score++;
+//  score_down_streak = 0;
 }
 
 static inline void add_score_down_event()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_DOWN), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score down\n");
-  current_score--;
-  score_down_streak++;
-  if(score_down_streak >= 5) {
-    io_printf(IO_BUF, "The paddle and bricks were rested because of the score down streak\n");
-    current_number_of_bricks = 0;
-    x_bat = rand() % (GAME_WIDTH - bat_len);
-  }
+//  current_score--;
+//  score_down_streak++;
+//  if(score_down_streak >= 5) {
+//    io_printf(IO_BUF, "The paddle and bricks were rested because of the score down streak\n");
+//    current_number_of_bricks = 0;
+//    x_bat = rand() % (GAME_WIDTH - bat_len);
+//  }
 }
 
 // send packet containing pixel colour change
@@ -372,14 +372,14 @@ static void update_frame (uint32_t time)
     {
         // Draw bat pixels
         // io_printf(IO_BUF, "oxb:%d, xb:%d, bl:%d\n", old_xbat, x_bat, bat_len);
-        for (int i = 0; i < GAME_WIDTH; ++i) {
-            // draw bat
-            if (i >= x_bat && i < (x_bat + bat_len)) {
-                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
-            } else {
-                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
-            }
-        }
+//        for (int i = 0; i < GAME_WIDTH; ++i) {
+//            // draw bat
+//            if (i >= x_bat && i < (x_bat + bat_len)) {
+//                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
+//            } else {
+//                set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+//            }
+//        }
 //        for (int i = x_bat; i < (x_bat + bat_len); i++)
 //        {
 //            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
@@ -456,25 +456,32 @@ static void update_frame (uint32_t time)
                 if (brick_direction[0]){
                     u = -u;
                     brick_direction[0] = false;
-                    add_score_up_event();
+//                    add_score_up_event();
+                    current_score++;
                     // io_printf(IO_BUF, "ob1\n");
                 }
                 if (brick_direction[1]){
                     u = -u;
                     brick_direction[1] = false;
-                    add_score_up_event();
+//                    add_score_up_event();
+                    current_score++;
+
                     // io_printf(IO_BUF, "ob2\n");
                 }
                 if (brick_direction[2]){
                     v = -v;
                     brick_direction[2] = false;
-                    add_score_up_event();
+//                    add_score_up_event();
+                    current_score++;
+
                     // io_printf(IO_BUF, "ob3\n");
                 }
                 if (brick_direction[3]){
                     v = -v;
                     brick_direction[3] = false;
-                    add_score_up_event();
+//                    add_score_up_event();
+                    current_score++;
+
                     // io_printf(IO_BUF, "ob4\n");
                 }
             }
@@ -497,22 +504,30 @@ static void update_frame (uint32_t time)
                     if (brick_direction[0]){
                         u = -u;
                         brick_direction[0] = false;
-                        add_score_up_event();
+//                        add_score_up_event();
+                        current_score++;
+
                     }
                     if (brick_direction[1]){
                         u = -u;
                         brick_direction[1] = false;
-                        add_score_up_event();
+//                        add_score_up_event();
+                        current_score++;
+
                     }
                     if (brick_direction[2]){
                         v = -v;
                         brick_direction[2] = false;
-                        add_score_up_event();
+//                        add_score_up_event();
+                        current_score++;
+
                     }
                     if (brick_direction[3]){
                         v = -v;
                         brick_direction[3] = false;
-                        add_score_up_event();
+//                        add_score_up_event();
+                        current_score++;
+
                     }
                 }
             }
@@ -564,7 +579,7 @@ static void update_frame (uint32_t time)
 
                 // Increase score
 //                if (!bricking){
-                    add_score_up_event();
+//                    add_score_up_event();
 //                }
             }
 
@@ -599,7 +614,8 @@ static void update_frame (uint32_t time)
 //                    number_of_lives = NUMBER_OF_LIVES;
 //                }
 //                else {
-                add_score_down_event();
+//                add_score_down_event();
+                  current_score--;
 //                }
                 if (PRINT_GAME_EVOLUTION) {
                 	io_printf(IO_BUF, "after reset x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
@@ -611,6 +627,24 @@ static void update_frame (uint32_t time)
     //            io_printf(IO_BUF, "else x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
                 if (get_pixel_col(x, y) != COLOUR_BAT){
                     set_pixel_col(x, y, COLOUR_BALL, false);
+                }
+
+                // draw bat
+                if (ALWAYS_SEND_BAT && !out_of_play) {
+                    for (int i = 0; i < GAME_WIDTH; ++i) {
+                        if (i >= x_bat && i < (x_bat + bat_len)) {
+                            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
+                        } else {
+                            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+                        }
+                    }
+                }
+
+                // NEW REWARD SYSTEM
+                if (x_bat <= x && x <= (x_bat + bat_len)) {
+                    add_score_up_event();
+                } else {
+                    add_score_down_event();
                 }
             }
         }

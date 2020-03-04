@@ -62,7 +62,7 @@ TRAINING_TIME = 1000 * 60 * 10
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
 RANDOM_SPIKE_INPUT = False
-LOAD_PREVIOUS_CONNECTIONS = False
+LOAD_PREVIOUS_CONNECTIONS = True
 SAVE_CONNECTIONS = True if sys.argv[1] == "Training" else False
 TESTING = True if sys.argv[1] == "Testing" else False
 FILENAME = 'connections.json'
@@ -185,24 +185,23 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 # Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_pop_size = 100
+hidden_pop_size = 200
 
-left_stim_rate = 1
+left_stim_rate = 0.5
 right_stim_rate = left_stim_rate
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
 
 dopaminergic_weight = .1
 
-# TODO
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=20., tau_minus=20.,
-        A_plus=0.01, A_minus=0.01,
-        tau_c=2000., tau_d=100.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.5),
-    weight=.25,
+        tau_plus=60., tau_minus=60.,
+        A_plus=0.25, A_minus=0.25,
+        tau_c=200., tau_d=20.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3),
+    weight=.5,
     neuromodulation=True)
 
 # --------------------------------------------------------------------------------------
@@ -221,12 +220,12 @@ left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
 
 # Create Dopaminergic connections
 reward_left_hidden_projection = p.Projection(
-    punishment_pop, left_hidden_pop,
+    reward_pop, left_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
     receptor_type='reward', label='reward synapses -> left hidden')
 punishment_left_hidden_projection = p.Projection(
-    reward_pop, left_hidden_pop,
+    punishment_pop, left_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
     receptor_type='punishment', label='punishment synapses -> left hidden')
@@ -306,7 +305,7 @@ paddle_right_plastic_projection = p.Projection(
 # --------------------------------------------------------------------------------------
 
 # For the decision neuron to spike it needs at least 4 input spikes
-hidden_to_decision_weight = 0.02125
+hidden_to_decision_weight = 0.085
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
