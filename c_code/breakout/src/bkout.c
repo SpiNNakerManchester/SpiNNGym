@@ -167,26 +167,21 @@ static uint32_t x_ratio = UINT32_MAX / GAME_WIDTH_MAX;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void add_score_up_event()
+static inline void send_ball_on_top_event()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_UP), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "Score up\n");
-//  current_score++;
-//  score_down_streak = 0;
 }
 
-static inline void add_score_down_event()
+static inline void send_ball_on_left_event()
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_DOWN), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "Score down\n");
-//  current_score--;
-//  score_down_streak++;
-//  if(score_down_streak >= 5) {
-//    io_printf(IO_BUF, "The paddle and bricks were rested because of the score down streak\n");
-//    current_number_of_bricks = 0;
-//    x_bat = rand() % (GAME_WIDTH - bat_len);
-//  }
 }
+
+static inline void send_ball_on_right_event()
+{
+  spin1_send_mc_packet(key | (SPECIAL_EVENT_MAX), 0, NO_PAYLOAD);
+}
+
 
 // send packet containing pixel colour change
 void add_event(int i, int j, colour_t col, bool bricked)
@@ -456,14 +451,14 @@ static void update_frame (uint32_t time)
                 if (brick_direction[0]){
                     u = -u;
                     brick_direction[0] = false;
-//                    add_score_up_event();
+//                    send_ball_on_top_event();
                     current_score++;
                     // io_printf(IO_BUF, "ob1\n");
                 }
                 if (brick_direction[1]){
                     u = -u;
                     brick_direction[1] = false;
-//                    add_score_up_event();
+//                    send_ball_on_top_event();
                     current_score++;
 
                     // io_printf(IO_BUF, "ob2\n");
@@ -471,7 +466,7 @@ static void update_frame (uint32_t time)
                 if (brick_direction[2]){
                     v = -v;
                     brick_direction[2] = false;
-//                    add_score_up_event();
+//                    send_ball_on_top_event();
                     current_score++;
 
                     // io_printf(IO_BUF, "ob3\n");
@@ -479,7 +474,7 @@ static void update_frame (uint32_t time)
                 if (brick_direction[3]){
                     v = -v;
                     brick_direction[3] = false;
-//                    add_score_up_event();
+//                    send_ball_on_top_event();
                     current_score++;
 
                     // io_printf(IO_BUF, "ob4\n");
@@ -504,28 +499,28 @@ static void update_frame (uint32_t time)
                     if (brick_direction[0]){
                         u = -u;
                         brick_direction[0] = false;
-//                        add_score_up_event();
+//                        send_ball_on_top_event();
                         current_score++;
 
                     }
                     if (brick_direction[1]){
                         u = -u;
                         brick_direction[1] = false;
-//                        add_score_up_event();
+//                        send_ball_on_top_event();
                         current_score++;
 
                     }
                     if (brick_direction[2]){
                         v = -v;
                         brick_direction[2] = false;
-//                        add_score_up_event();
+//                        send_ball_on_top_event();
                         current_score++;
 
                     }
                     if (brick_direction[3]){
                         v = -v;
                         brick_direction[3] = false;
-//                        add_score_up_event();
+//                        send_ball_on_top_event();
                         current_score++;
 
                     }
@@ -579,7 +574,7 @@ static void update_frame (uint32_t time)
 
                 // Increase score
 //                if (!bricking){
-//                    add_score_up_event();
+//                    send_ball_on_top_event();
 //                }
             }
 
@@ -609,12 +604,12 @@ static void update_frame (uint32_t time)
                 number_of_lives--;
 //                if (!number_of_lives && bricking){
 //                    for(int i=0; i<SCORE_DOWN_EVENTS_PER_DEATH;i++) {
-//                        add_score_down_event();
+//                        send_ball_on_left_event();
 //                    }
 //                    number_of_lives = NUMBER_OF_LIVES;
 //                }
 //                else {
-//                add_score_down_event();
+//                send_ball_on_left_event();
                   current_score--;
 //                }
                 if (PRINT_GAME_EVOLUTION) {
@@ -642,9 +637,15 @@ static void update_frame (uint32_t time)
 
                 // NEW REWARD SYSTEM
                 if (x_bat <= x && x <= (x_bat + bat_len)) {
-                    add_score_up_event();
-                } else {
-                    add_score_down_event();
+                    send_ball_on_top_event();
+                }
+
+                if (x < ((x_bat + bat_len) / 2)) {
+                    send_ball_on_left_event();
+                }
+
+                if (x > ((x_bat + bat_len) / 2)) {
+                    send_ball_on_right_event();
                 }
             }
         }

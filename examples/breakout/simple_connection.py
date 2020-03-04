@@ -127,15 +127,19 @@ if RANDOM_SPIKE_INPUT:
 
 # n0: reward, n1: punishment
 reward_conn = [(0, 0, 2, 1)]
-punishment_conn = [(1, 0, 2, 1)]
+punishment_ball_on_left_conn = [(1, 0, 2, 1)]
+punishment_ball_on_right_conn = [(2, 0, 2, 1)]
 
 reward_pop = p.Population(1, p.IF_cond_exp(),
                           label="reward_pop")
-punishment_pop = p.Population(1, p.IF_cond_exp(),
-                              label="punishment_pop")
+ball_on_left_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
+                                             label="punishment_pop")
+ball_on_right_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
+                                              label="new_dopaminergic_pop")
 
 p.Projection(breakout_pop, reward_pop, p.FromListConnector(reward_conn))
-p.Projection(breakout_pop, punishment_pop, p.FromListConnector(punishment_conn))
+p.Projection(breakout_pop, ball_on_left_dopaminergic_pop, p.FromListConnector(punishment_ball_on_left_conn))
+p.Projection(breakout_pop, ball_on_right_dopaminergic_pop, p.FromListConnector(punishment_ball_on_right_conn))
 
 # --------------------------------------------------------------------------------------
 # ON/OFF Connections
@@ -185,9 +189,9 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 # Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_pop_size = 200
+hidden_pop_size = 100
 
-left_stim_rate = 0.5
+left_stim_rate = 1
 right_stim_rate = left_stim_rate
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
@@ -219,16 +223,21 @@ left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
                                     p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-reward_left_hidden_projection = p.Projection(
-    reward_pop, left_hidden_pop,
+# p.Projection(
+#     reward_pop, left_hidden_pop,
+#     p.AllToAllConnector(),
+#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+#     receptor_type='reward', label='reward synapses -> left hidden')
+p.Projection(
+    ball_on_left_dopaminergic_pop, left_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-    receptor_type='reward', label='reward synapses -> left hidden')
-punishment_left_hidden_projection = p.Projection(
-    punishment_pop, left_hidden_pop,
+    receptor_type='reward', label='reward ball on left synapses -> left hidden')
+p.Projection(
+    ball_on_right_dopaminergic_pop, left_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-    receptor_type='punishment', label='punishment synapses -> left hidden')
+    receptor_type='punishment', label='punish ball on right synapses -> left hidden')
 
 if LOAD_PREVIOUS_CONNECTIONS:
     prev_ball_x_left_conn = previous_connections[0]
@@ -267,16 +276,21 @@ right_stim_projection = p.Projection(right_stimulation_pop, right_hidden_pop,
                                      p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-reward_right_hidden_projection = p.Projection(
-    reward_pop, right_hidden_pop,
+# p.Projection(
+#     reward_pop, right_hidden_pop,
+#     p.AllToAllConnector(),
+#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
+#     receptor_type='reward', label='reward synapses -> right hidden')
+p.Projection(
+    ball_on_left_dopaminergic_pop, right_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-    receptor_type='reward', label='reward synapses -> right hidden')
-punishment_right_hidden_projection = p.Projection(
-    punishment_pop, right_hidden_pop,
+    receptor_type='punishment', label='punish ball on left synapses -> right hidden')
+p.Projection(
+    ball_on_right_dopaminergic_pop, right_hidden_pop,
     p.AllToAllConnector(),
     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-    receptor_type='punishment', label='punishment synapses -> right hidden')
+    receptor_type='reward', label='reward ball on right synapses -> right hidden')
 
 if LOAD_PREVIOUS_CONNECTIONS:
     prev_ball_x_right_conn = previous_connections[2]
@@ -305,7 +319,7 @@ paddle_right_plastic_projection = p.Projection(
 # --------------------------------------------------------------------------------------
 
 # For the decision neuron to spike it needs at least 4 input spikes
-hidden_to_decision_weight = 0.085
+hidden_to_decision_weight = 0.085 / 2
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
@@ -333,7 +347,8 @@ decision_input_pop.record('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input.record('spikes')
 reward_pop.record('all')
-punishment_pop.record('all')
+ball_on_left_dopaminergic_pop.record('all')
+ball_on_right_dopaminergic_pop.record('all')
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Configure Visualiser
@@ -382,10 +397,12 @@ decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input_spikes = random_spike_input.get_data('spikes')
 reward_pop_output = reward_pop.get_data()
-punishment_pop_output = punishment_pop.get_data()
+punishment_ball_on_left_pop_output = ball_on_left_dopaminergic_pop.get_data()
+punishment_ball_on_right_pop_output = ball_on_right_dopaminergic_pop.get_data()
 
-dopaminergic_line_properties = [{'color': 'red', 'markersize': 5},
-                                {'color': 'blue', 'markersize': 2}]
+dopaminergic_line_properties = [{'color': 'red', 'markersize': 15},
+                                {'color': 'blue', 'markersize': 10},
+                                {'color': 'orange', 'markersize': 5}]
 
 Figure(
     Panel(pad_pop_spikes.segments[0].spiketrains,
@@ -406,11 +423,12 @@ Figure(
     # Panel(random_spike_input_spikes.segments[0].spiketrains,
     #       yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(punishment_pop_output.segments[0].filter(name='gsyn_exc')[0],
+    Panel(punishment_ball_on_left_pop_output.segments[0].filter(name='gsyn_exc')[0],
           reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+          punishment_ball_on_right_pop_output.segments[0].filter(name='gsyn_exc')[0],
           line_properties=dopaminergic_line_properties,
           ylabel="gsyn excitatory (mV)",
-          data_labels=[punishment_pop.label, reward_pop.label],
+          data_labels=[ball_on_left_dopaminergic_pop.label, reward_pop.label, ball_on_right_dopaminergic_pop.label],
           yticks=True,
           xticks=True,
           xlim=(0, runtime)
