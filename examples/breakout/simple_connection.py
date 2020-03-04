@@ -191,7 +191,7 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 
 hidden_pop_size = 200
 
-left_stim_rate = 1
+left_stim_rate = 0 if TESTING else 1
 right_stim_rate = left_stim_rate
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
@@ -318,8 +318,8 @@ paddle_right_plastic_projection = p.Projection(
 # Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-# For the decision neuron to spike it needs at least 4 input spikes
-hidden_to_decision_weight = 0.085 / 4
+# For the decision neuron to spike it needs at least 2 input spikes
+hidden_to_decision_weight = 0.085 / 2
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
