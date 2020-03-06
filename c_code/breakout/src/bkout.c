@@ -191,6 +191,10 @@ void add_event(int i, int j, colour_t col, bool bricked)
     const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);
     // const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + colour_bit)) + (j << colour_bit) + colour_bit);
 
+    if (((i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit) == 0) {
+        io_printf(IO_BUF, "Fuck :))");
+    }
+
     spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
 }
 

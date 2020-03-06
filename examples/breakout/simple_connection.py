@@ -198,6 +198,7 @@ stim_weight = 5.
 
 dopaminergic_weight = .1
 
+# TODO: decrease the eligibility trace time constant
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
