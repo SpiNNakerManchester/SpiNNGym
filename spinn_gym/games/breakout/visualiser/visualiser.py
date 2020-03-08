@@ -1,4 +1,3 @@
-
 from spinnman.connections.udp_packet_connections import SCAMPConnection
 from spinnman.utilities.utility_functions import reprogram_tag
 from spinnman.exceptions import SpinnmanIOException
@@ -78,7 +77,6 @@ class Visualiser(object):
 
         self.value_mask = (1 << (x_bits + y_bits + self.colour_bits)) - 1
 
-
         self.y_res = int(128 / y_factor)
         self.x_res = int(160 / x_factor)
         self.BRICK_WIDTH = int(self.x_res / 5)
@@ -88,7 +86,6 @@ class Visualiser(object):
         self.bat_width = int(32 / x_factor)
         self.fps = fps
         self.scale = scale
-
 
         print("\n\nVisualiser Initialised With Parameters:")
         print("\tx_factor".format(self.x_factor))
@@ -104,7 +101,6 @@ class Visualiser(object):
         print("\tBrick Width".format(self.BRICK_WIDTH))
         print("\tBrick Height".format(self.BRICK_HEIGHT))
 
-
         # Open socket to receive datagrams
         self.connection = SCAMPConnection(remote_host=machine_address)
         reprogram_tag(self.connection, tag, strip=True)
@@ -112,7 +108,7 @@ class Visualiser(object):
         # Make awesome CRT palette
         cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
-#         plt.ion()
+        #         plt.ion()
         # Create image plot to display game screen
         self.fig = plt.figure("BreakOut", figsize=(8, 6))
         self.axis = plt.subplot(1, 1, 1)
@@ -143,7 +139,7 @@ class Visualiser(object):
         self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
         filename = os.path.join(os.getcwd(), "breakout_output_%s.m4v" %
-                    datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S"))
+                                datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S"))
         # print filename
         self.video_writer = cv2.VideoWriter(
             filename,
@@ -151,9 +147,9 @@ class Visualiser(object):
             self.video_shape,
             isColor=True)
         self.video_writer.open(filename,
-            fourcc, self.fps,
-            self.video_shape,
-            isColor=True)
+                               fourcc, self.fps,
+                               self.video_shape,
+                               isColor=True)
 
     # ------------------------------------------------------------------------
     # Public methods
@@ -161,19 +157,19 @@ class Visualiser(object):
     def show(self):
         # Play animation
         interval = (1000. / self.fps)
-#         self.animation = animation.FuncAnimation(self.fig, self._update,
-#                                                  interval=interval,
-#                                                  blit=False)
+        #         self.animation = animation.FuncAnimation(self.fig, self._update,
+        #                                                  interval=interval,
+        #                                                  blit=False)
         # Show animated plot (blocking)
         try:
             plt.ion()
             plt.show()
             plt.draw()
-#             plt.pause(0.001)
+            #             plt.pause(0.001)
             print("Visualiser displayed")
-#             self.fig.canvas.draw()
-#             self.
-#             plt.draw()
+        #             self.fig.canvas.draw()
+        #             self.
+        #             plt.draw()
         except:
             pass
 
@@ -209,8 +205,7 @@ class Visualiser(object):
 
                 # Create mask to select vision (rather than special event) packets
                 # Extract coordinates
-                'const uint32_t spike_key = ' \
-                    'key | (SPECIAL_EVENT_MAX + (i << (game_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);'
+                'const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (game_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);'
 
                 vision_payload = payload_value[
                                      vision_event_mask] - SpecialEvent.max
@@ -220,29 +215,33 @@ class Visualiser(object):
                 c = (vision_payload & self.colour_mask)
                 b = (vision_payload & self.bricked_mask) >> 1
 
-#                 '''if y.any() == self.y_res-1:
-#                     if c[np.where(y==self.y_res-1)].any()==1:
-#                         #add remaining bat pixels to image
-#                         x_pos=x[np.where(y==self.y_res-1)]
-#                         for i in range(1,self.bat_width):
-#                             np.hstack((y,self.y_res-1))
-#                             np.hstack((c,1))
-#                             np.hstack((x,x_pos+i))'''
+                #                 '''if y.any() == self.y_res-1:
+                #                     if c[np.where(y==self.y_res-1)].any()==1:
+                #                         #add remaining bat pixels to image
+                #                         x_pos=x[np.where(y==self.y_res-1)]
+                #                         for i in range(1,self.bat_width):
+                #                             np.hstack((y,self.y_res-1))
+                #                             np.hstack((c,1))
+                #                             np.hstack((x,x_pos+i))'''
 
                 # Set valid pixels
                 try:
                     for x1, y1, c1, b1 in zip(x, y, c, b):
                         # self.image_data[:] = 0
 
-#                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+                        #                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+
+                        # Fixes x out of bounds
+                        if x1 == self.x_res or y1 == self.y_res:
+                            print("Just skipped an out of bounds: x=", x1, " and y=", y1)
+                            continue
 
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
 
                         elif b1 == 1:
-                            self.image_data[y1:(y1 + self.BRICK_HEIGHT),
-                            x1:(x1 + self.BRICK_WIDTH)] = c1 #*
-                            #np.random.randint(2, 6) # to show individual bricks
+                            self.image_data[y1:(y1 + self.BRICK_HEIGHT), x1:(x1 + self.BRICK_WIDTH)] = c1  # *
+                            # np.random.randint(2, 6) # to show individual bricks
 
                     # if c>0:
                     # self.video_data[:] = 0
@@ -250,9 +249,9 @@ class Visualiser(object):
                     # else:
                     #     self.video_data[y, x, :] = VIDEO_RED
                 except IndexError as e:
-                    print("Packet contains invalid pixels:",
-                          vision_payload, "X:", x, "  Y:", y, " c:", c, " b:",
-                          b)
+                    print("NEW Packet contains invalid pixels:",
+                          vision_payload, "X:", x, "  Y:", y, " c:", c, " b:", b, " X1:",
+                          x1, " Y1:", y1, " c1:", c1, " b1:", b1)
                     # self.image_data[:-1, :] = 0
 
                 # Create masks to select score events and count them
@@ -308,7 +307,7 @@ class Visualiser(object):
         # **YUCK** score_text must be returned whether it has
         # been updated or not to prevent overdraw
         # self.first_update = False
-#         print("redrawing...")
+        #         print("redrawing...")
         plt.draw()
         plt.pause(0.01)
         return [self.image, self.score_text]
@@ -349,8 +348,8 @@ if __name__ == "__main__":
 
     refresh_time = 0.001
     while True:
-#         print("updating...")
+        #         print("updating...")
         score = vis._update(None)
         time.sleep(refresh_time)
-        
+
     print("visualiser gets to here?")

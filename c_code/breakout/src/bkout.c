@@ -192,7 +192,7 @@ void add_event(int i, int j, colour_t col, bool bricked)
     // const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << (y_bits + colour_bit)) + (j << colour_bit) + colour_bit);
 
     if (((i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit) == 0) {
-        io_printf(IO_BUF, "Fuck :))");
+        io_printf(IO_BUF, "This is also used for one of the dopamine signals :)) ", i, " ", j, " ", bricked, " ", colour_bit);
     }
 
     spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
@@ -620,7 +620,7 @@ static void update_frame (uint32_t time)
                 	io_printf(IO_BUF, "after reset x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
                 }
             }
-            // draw ball
+            // draw ball && bat
             else
             {
     //            io_printf(IO_BUF, "else x=%d, y=%d, u=%d, v=%d\n", x, y, u, v);
@@ -629,26 +629,35 @@ static void update_frame (uint32_t time)
                 }
 
                 // draw bat
+                int bat_offset = 4;
                 if (ALWAYS_SEND_BAT && !out_of_play) {
-                    for (int i = 0; i < GAME_WIDTH; ++i) {
-                        if (i >= x_bat && i < (x_bat + bat_len)) {
+                    for (int i = x_bat; i < (x_bat + bat_len); ++i) {
+                        if (0 <= i && i < GAME_WIDTH) {
                             set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BAT, false);
-                        } else {
+                        }
+                    }
+                    for (int i = x_bat - bat_offset; i < x_bat; ++i) {
+                        if (0 <= i && i < GAME_WIDTH) {
+                            set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
+                        }
+                    }
+                    for (int i = (x_bat + bat_len); i < (x_bat + bat_len + bat_offset); ++i) {
+                        if (0 <= i && i < GAME_WIDTH) {
                             set_pixel_col(i, GAME_HEIGHT-1, COLOUR_BACKGROUND, false);
                         }
                     }
                 }
 
                 // NEW REWARD SYSTEM
-                if (x_bat <= x && x <= (x_bat + bat_len)) {
+                if ((x_bat + bat_len / 4) <= x && x < (x_bat + bat_len * 3 / 4)) {
                     send_ball_on_top_event();
                 }
 
-                if (x < x_bat) {
+                if (x < (x_bat + bat_len / 4)) {
                     send_ball_on_left_event();
                 }
 
-                if (x > (x_bat + bat_len)) {
+                if (x >= (x_bat + bat_len * 3 / 4)) {
                     send_ball_on_right_event();
                 }
             }

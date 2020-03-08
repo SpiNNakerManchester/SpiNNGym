@@ -191,8 +191,7 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 
 hidden_pop_size = 200
 
-left_stim_rate = 0 if TESTING else 1
-right_stim_rate = left_stim_rate
+stim_rate = 0 if TESTING else 1
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
 
@@ -204,10 +203,16 @@ hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
         tau_plus=60., tau_minus=60.,
         A_plus=0.25, A_minus=0.25,
-        tau_c=300., tau_d=20.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3),
+        tau_c=80., tau_d=20.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.5),
     weight=.5,
     neuromodulation=True)
+
+# --------------------------------------------------------------------------------------
+# Stimulation Population
+# --------------------------------------------------------------------------------------
+stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=stim_rate),
+                               label="left_stimulation_pop")
 
 # --------------------------------------------------------------------------------------
 # Left Hidden Population
@@ -216,10 +221,8 @@ hidden_synapse_dynamics = p.STDPMechanism(
 left_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neuromodulation,
                                label="left_hidden_pop")
 
-# Stimulation population
-left_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=left_stim_rate),
-                                    label="left_stimulation_pop")
-left_stim_projection = p.Projection(left_stimulation_pop, left_hidden_pop,
+# Stimulate Left Hidden pop
+left_stim_projection = p.Projection(stimulation_pop, left_hidden_pop,
                                     p.OneToOneConnector(),
                                     p.StaticSynapse(weight=stim_weight))
 
@@ -269,10 +272,8 @@ paddle_left_plastic_projection = p.Projection(
 right_hidden_pop = p.Population(hidden_pop_size, p.IF_curr_exp_izhikevich_neuromodulation,
                                 label="right_hidden_pop")
 
-# Stimulation population
-right_stimulation_pop = p.Population(stim_pop_size, p.SpikeSourcePoisson(rate=right_stim_rate),
-                                     label="right_stimulation_pop")
-right_stim_projection = p.Projection(right_stimulation_pop, right_hidden_pop,
+# Stimulate Right Hidden pop
+right_stim_projection = p.Projection(stimulation_pop, right_hidden_pop,
                                      p.OneToOneConnector(),
                                      p.StaticSynapse(weight=stim_weight))
 
@@ -320,7 +321,7 @@ paddle_right_plastic_projection = p.Projection(
 # --------------------------------------------------------------------------------------
 
 # For the decision neuron to spike it needs at least 2 input spikes
-hidden_to_decision_weight = 0.085 / 2
+hidden_to_decision_weight = 0.085
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
