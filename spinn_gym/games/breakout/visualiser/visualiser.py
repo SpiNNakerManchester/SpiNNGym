@@ -118,10 +118,10 @@ class Visualiser(object):
                                       cmap=cmap, vmin=0.0, vmax=5.0)
 
         # Draw score using textbox
-        self.score_text = self.axis.text(0.5, 1.0, "0", color=BRIGHT_GREEN,
-                                         transform=self.axis.transAxes,
-                                         horizontalalignment="right",
-                                         verticalalignment="top")
+        # self.score_text = self.axis.text(0.5, 1.0, "0", color=BRIGHT_GREEN,
+        #                                  transform=self.axis.transAxes,
+        #                                  horizontalalignment="right",
+        #                                  verticalalignment="top")
         # Hook key listeners
         self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
         self.fig.canvas.mpl_connect("key_release_event", self._on_key_release)
@@ -255,29 +255,29 @@ class Visualiser(object):
                     # self.image_data[:-1, :] = 0
 
                 # Create masks to select score events and count them
-                num_score_up_events = np.sum(
-                    payload_value == SpecialEvent.score_up)
-                num_score_down_events = np.sum(
-                    payload_value == SpecialEvent.score_down)
-
-                # If any score events occurred
-                if num_score_up_events > 0 or num_score_down_events > 0:
-                    # Apply to score count
-                    self.score += num_score_up_events
-                    self.score -= num_score_down_events
-
-                    # Update displayed score count
-                    self.score_text.set_text("%u" % self.score)
-
-                if self.score > 0:
-                    # print("pos score %d"%self.score)
-                    self.video_data[0:1, :, :] = [100, 255, 255]
-                elif self.score < 0:
-                    # print("neg score %d"%self.score)
-                    self.video_data[0:1, :, :] = [255, 100, 255]
-                else:
-                    # print("score 0")
-                    self.video_data[0:1, :, :] = [200, 200, 200]
+                # num_score_up_events = np.sum(
+                #     payload_value == SpecialEvent.score_up)
+                # num_score_down_events = np.sum(
+                #     payload_value == SpecialEvent.score_down)
+                #
+                # # If any score events occurred
+                # if num_score_up_events > 0 or num_score_down_events > 0:
+                #     # Apply to score count
+                #     self.score += num_score_up_events
+                #     self.score -= num_score_down_events
+                #
+                #     # Update displayed score count
+                #     self.score_text.set_text("%u" % self.score)
+                #
+                # if self.score > 0:
+                #     # print("pos score %d"%self.score)
+                #     self.video_data[0:1, :, :] = [100, 255, 255]
+                # elif self.score < 0:
+                #     # print("neg score %d"%self.score)
+                #     self.video_data[0:1, :, :] = [255, 100, 255]
+                # else:
+                #     # print("score 0")
+                #     self.video_data[0:1, :, :] = [200, 200, 200]
 
         # Set image data
         try:
@@ -310,7 +310,7 @@ class Visualiser(object):
         #         print("redrawing...")
         plt.draw()
         plt.pause(0.01)
-        return [self.image, self.score_text]
+        return self.image
 
     def _on_key_press(self, event):
         # Send appropriate bits
