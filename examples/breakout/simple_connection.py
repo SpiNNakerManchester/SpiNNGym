@@ -57,7 +57,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-TESTING_TIME = 1000 * 20
+TESTING_TIME = 1000 * 30
 TRAINING_TIME = 1000 * 60 * 5
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
@@ -191,13 +191,12 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 
 hidden_pop_size = 200
 
-stim_rate = 0 if TESTING else 1
+stim_rate = 0.5 if TESTING else 1
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
 
 dopaminergic_weight = .1
 
-# TODO: decrease the eligibility trace time constant
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
