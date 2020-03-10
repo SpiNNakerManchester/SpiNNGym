@@ -30,7 +30,7 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
 
 
 def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
-                         weight, coord_map_func):
+                         weight, delay, coord_map_func):
     # subY_BITS=int(np.ceil(np.log2(y_res/subsamp_factor)))
     connection_list_on = []
     connection_list_off = []
@@ -45,13 +45,13 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
             # ON channels
             subsampidx = sj * sx_res + si
             connection_list_on.append((coord_map_func(j, i, 1, row_bits),
-                                       subsampidx, weight, 1.))
+                                       subsampidx, weight, delay))
 
             # OFF channels only on segment borders
             # if((j+1)%(y_res/subsamp_factor)==0 or
             # (i+1)%(x_res/subsamp_factor)==0 or j==0 or i==0):
             connection_list_off.append((coord_map_func(j, i, 0, row_bits),
-                                        subsampidx, weight, 1.))
+                                        subsampidx, weight, delay))
 
     return connection_list_on, connection_list_off
 

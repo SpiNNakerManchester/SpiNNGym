@@ -78,7 +78,7 @@ UDP_PORT2 = UDP_PORT1 + 1
 # Setup pyNN simulation
 p.setup(timestep=1.0)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 64)
-p.set_number_of_neurons_per_core(p.IF_curr_exp_izhikevich_neuromodulation, 32)
+p.set_number_of_neurons_per_core(p.IF_curr_exp_izhikevich_neuromodulation, 16)
 
 # Game resolution sampling factors
 x_factor1 = 2
@@ -126,18 +126,18 @@ if RANDOM_SPIKE_INPUT:
 # --------------------------------------------------------------------------------------
 
 # n0: reward, n1: punishment
-reward_conn = [(0, 0, 2, 1)]
-punishment_ball_on_left_conn = [(1, 0, 2, 1)]
-punishment_ball_on_right_conn = [(2, 0, 2, 1)]
+# reward_conn = [(0, 0, 2, 1)]
+punishment_ball_on_left_conn = [(1, 0, 2, 10)]
+punishment_ball_on_right_conn = [(0, 0, 2, 10)]
 
-reward_pop = p.Population(1, p.IF_cond_exp(),
-                          label="reward_pop")
+# reward_pop = p.Population(1, p.IF_cond_exp(),
+#                           label="reward_pop")
 ball_on_left_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
                                              label="punishment_pop")
 ball_on_right_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
                                               label="new_dopaminergic_pop")
 
-p.Projection(breakout_pop, reward_pop, p.FromListConnector(reward_conn))
+# p.Projection(breakout_pop, reward_pop, p.FromListConnector(reward_conn))
 p.Projection(breakout_pop, ball_on_left_dopaminergic_pop, p.FromListConnector(punishment_ball_on_left_conn))
 p.Projection(breakout_pop, ball_on_right_dopaminergic_pop, p.FromListConnector(punishment_ball_on_right_conn))
 
@@ -145,7 +145,7 @@ p.Projection(breakout_pop, ball_on_right_dopaminergic_pop, p.FromListConnector(p
 # ON/OFF Connections
 # --------------------------------------------------------------------------------------
 
-[Connections_on, Connections_off] = subsample_connection(X_RES, Y_RES, 1, 1, weight, row_col_to_input_breakout)
+[Connections_on, Connections_off] = subsample_connection(X_RES, Y_RES, 1, 1, weight, 1, row_col_to_input_breakout)
 
 [Ball_on_connections, Paddle_on_connections] = \
     separate_connections(X_RES * Y_RES - X_RES, Connections_on)
@@ -189,7 +189,7 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 # Hidden Populations && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-hidden_pop_size = 200
+hidden_pop_size = 150
 
 stim_rate = 0.5 if TESTING else 1
 stim_pop_size = hidden_pop_size
@@ -200,10 +200,10 @@ dopaminergic_weight = .1
 # Create STDP dynamics with neuromodulation
 hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
-        tau_plus=60., tau_minus=60.,
+        tau_plus=30., tau_minus=30.,
         A_plus=0.25, A_minus=0.25,
-        tau_c=80., tau_d=20.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.5),
+        tau_c=50., tau_d=30.),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3.0),
     weight=.5,
     neuromodulation=True)
 
@@ -319,8 +319,8 @@ paddle_right_plastic_projection = p.Projection(
 # Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-# For the decision neuron to spike it needs at least 2 input spikes
-hidden_to_decision_weight = 0.085
+# For the decision neuron to spike it needs at least 4 input spikes
+hidden_to_decision_weight = 0.085 / 4
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
 
@@ -347,7 +347,7 @@ right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input.record('spikes')
-reward_pop.record('all')
+# reward_pop.record('all')
 ball_on_left_dopaminergic_pop.record('all')
 ball_on_right_dopaminergic_pop.record('all')
 
@@ -397,7 +397,7 @@ right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input_spikes = random_spike_input.get_data('spikes')
-reward_pop_output = reward_pop.get_data()
+# reward_pop_output = reward_pop.get_data()
 punishment_ball_on_left_pop_output = ball_on_left_dopaminergic_pop.get_data()
 punishment_ball_on_right_pop_output = ball_on_right_dopaminergic_pop.get_data()
 
@@ -425,11 +425,11 @@ Figure(
     #       yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(punishment_ball_on_left_pop_output.segments[0].filter(name='gsyn_exc')[0],
-          reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
+          # reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
           punishment_ball_on_right_pop_output.segments[0].filter(name='gsyn_exc')[0],
           line_properties=dopaminergic_line_properties,
           ylabel="gsyn excitatory (mV)",
-          data_labels=[ball_on_left_dopaminergic_pop.label, reward_pop.label, ball_on_right_dopaminergic_pop.label],
+          data_labels=[ball_on_left_dopaminergic_pop.label, ball_on_right_dopaminergic_pop.label],
           yticks=True,
           xticks=True,
           xlim=(0, runtime)

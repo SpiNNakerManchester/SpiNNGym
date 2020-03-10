@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 FILENAME = "connections.json"
-hidden_pop_size = 200
+hidden_pop_size = 150
 X_RES = 80
 Y_RES = 64
 

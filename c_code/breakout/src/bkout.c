@@ -179,7 +179,7 @@ static inline void send_ball_on_left_event()
 
 static inline void send_ball_on_right_event()
 {
-  spin1_send_mc_packet(key | (SPECIAL_EVENT_MAX), 0, NO_PAYLOAD);
+  spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_UP), 0, NO_PAYLOAD);
 }
 
 
@@ -649,15 +649,15 @@ static void update_frame (uint32_t time)
                 }
 
                 // NEW REWARD SYSTEM
-                if ((x_bat + bat_len / 4) <= x && x < (x_bat + bat_len * 3 / 4)) {
-                    send_ball_on_top_event();
-                }
+//                if ((x_bat + bat_len / 2) <= x && x <= (x_bat + bat_len / 2)) {
+//                    send_ball_on_top_event();
+//                }
 
-                if (x < (x_bat + bat_len / 4)) {
+                if (x < (x_bat + bat_len / 2)) {
                     send_ball_on_left_event();
                 }
 
-                if (x >= (x_bat + bat_len * 3 / 4)) {
+                if (x > (x_bat + bat_len / 2)) {
                     send_ball_on_right_event();
                 }
             }
