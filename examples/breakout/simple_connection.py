@@ -77,7 +77,7 @@ UDP_PORT2 = UDP_PORT1 + 1
 
 # Setup pyNN simulation
 p.setup(timestep=1.0)
-p.set_number_of_neurons_per_core(p.IF_cond_exp, 64)
+p.set_number_of_neurons_per_core(p.IF_cond_exp, 32)
 p.set_number_of_neurons_per_core(p.IF_curr_exp_izhikevich_neuromodulation, 16)
 
 # Game resolution sampling factors
@@ -148,10 +148,10 @@ p.Projection(breakout_pop, ball_on_right_dopaminergic_pop, p.FromListConnector(p
 [Connections_on, Connections_off] = subsample_connection(X_RES, Y_RES, 1, 1, weight, 1, row_col_to_input_breakout)
 
 [Ball_on_connections, Paddle_on_connections] = \
-    separate_connections(X_RES * Y_RES - X_RES, Connections_on)
+    separate_connections(X_RES * Y_RES - X_RES, 3., Connections_on)
 
 [Ball_off_connections, Paddle_off_connections] = \
-    separate_connections(X_RES * Y_RES - X_RES, Connections_off)
+    separate_connections(X_RES * Y_RES - X_RES, 3., Connections_off)
 
 # --------------------------------------------------------------------------------------
 # Paddle Population
@@ -191,7 +191,7 @@ p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
 
 hidden_pop_size = 150
 
-stim_rate = 0.5 if TESTING else 1
+stim_rate = 0.5 if TESTING else 3
 stim_pop_size = hidden_pop_size
 stim_weight = 5.
 

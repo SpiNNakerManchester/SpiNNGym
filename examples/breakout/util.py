@@ -56,14 +56,15 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
     return connection_list_on, connection_list_off
 
 
-def separate_connections(ball_population_size, connections_on):
+def separate_connections(ball_population_size, ball_delay, connections_on):
     # Separates the ball and pad connections in different populations
     paddle_list = []
     ball_list = []
 
     for idx, val in enumerate(connections_on):
         if idx < ball_population_size:
-            ball_list.append(val)
+            new_el_connection = (val[0], val[1], val[2], ball_delay)
+            ball_list.append(new_el_connection)
         else:
             index_in_paddle_pop = idx - ball_population_size
             new_el_connection = (val[0], index_in_paddle_pop, val[2], val[3])
