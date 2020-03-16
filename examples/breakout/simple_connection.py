@@ -202,7 +202,7 @@ hidden_synapse_dynamics = p.STDPMechanism(
     timing_dependence=p.IzhikevichNeuromodulation(
         tau_plus=30., tau_minus=30.,
         A_plus=0.25, A_minus=0.25,
-        tau_c=50., tau_d=30.),
+        tau_c=30., tau_d=10.),
     weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3.0),
     weight=.5,
     neuromodulation=True)
