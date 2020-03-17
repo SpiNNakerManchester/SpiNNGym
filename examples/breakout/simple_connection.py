@@ -231,7 +231,7 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # ----------------------------------------------------------------------------------------------------------------------
 
-runtime = 1000 * 20
+runtime = 1000 * 120
 simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
