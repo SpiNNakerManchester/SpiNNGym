@@ -13,7 +13,7 @@ import spinn_gym as gym
 import spynnaker8 as p
 from examples.breakout.util import get_scores, row_col_to_input_breakout, subsample_connection, separate_connections, \
     compress_to_x_axis, get_hidden_to_decision_connections, clean_connection, map_to_one_neuron_per_paddle, \
-    create_lateral_inhibitory_paddle_connections
+    create_lateral_inhibitory_paddle_connections, compress_to_y_axis
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spinn_front_end_common.utilities.globals_variables import get_simulator
@@ -164,7 +164,7 @@ paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
 Compressed_paddle_connections = map_to_one_neuron_per_paddle(X_RES, paddle_neuron_size, paddle_to_one_neuron_weight,
                                                              Paddle_on_connections)
 Lat_inh_connections = create_lateral_inhibitory_paddle_connections(X_RES, paddle_neuron_size,
-                                                                   paddle_to_one_neuron_weight)
+                                                                   paddle_to_one_neuron_weight / 2)
 
 paddle_pop = p.Population(X_RES, p.IF_cond_exp(),
                           label="paddle_pop")
@@ -179,10 +179,15 @@ p.Projection(paddle_pop, paddle_pop, p.FromListConnector(Lat_inh_connections),
 
 ball_x_pop = p.Population(X_RES, p.IF_cond_exp(),
                           label="ball_x_pop")
+ball_y_pop = p.Population(Y_RES, p.IF_cond_exp(),
+                          label="ball_y_pop")
 
 Ball_x_connections = compress_to_x_axis(Ball_on_connections, X_RES)
+Ball_y_connections = compress_to_y_axis(Ball_on_connections, Y_RES)
 
 p.Projection(breakout_pop, ball_x_pop, p.FromListConnector(Ball_x_connections),
+             p.StaticSynapse(weight=weight))
+p.Projection(breakout_pop, ball_y_pop, p.FromListConnector(Ball_y_connections),
              p.StaticSynapse(weight=weight))
 
 # --------------------------------------------------------------------------------------
@@ -203,7 +208,7 @@ hidden_synapse_dynamics = p.STDPMechanism(
         tau_plus=30., tau_minus=30.,
         A_plus=0.25, A_minus=0.25,
         tau_c=30., tau_d=10.),
-    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=3.0),
+    weight_dependence=p.MultiplicativeWeightDependence(w_min=0, w_max=2.0),
     weight=.5,
     neuromodulation=True)
 
@@ -244,9 +249,10 @@ p.Projection(
 
 if LOAD_PREVIOUS_CONNECTIONS:
     prev_ball_x_left_conn = previous_connections[0]
-    prev_paddle_left_conn = previous_connections[1]
+    prev_ball_y_left_conn = previous_connections[1]
+    prev_paddle_left_conn = previous_connections[2]
 
-# Create a plastic connection between Ball and Hidden neurons
+# Create a plastic connection between Ball X and Hidden neurons
 ball_x_left_plastic_projection = p.Projection(
     ball_x_pop, left_hidden_pop,
     p.FromListConnector(prev_ball_x_left_conn) if LOAD_PREVIOUS_CONNECTIONS
@@ -254,6 +260,15 @@ ball_x_left_plastic_projection = p.Projection(
     p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Left_Hidden projection')
+
+# Create a plastic connection between Ball Y and Hidden neurons
+ball_y_left_plastic_projection = p.Projection(
+    ball_y_pop, left_hidden_pop,
+    p.FromListConnector(prev_ball_y_left_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
+    p.AllToAllConnector(),
+    synapse_type=hidden_synapse_dynamics,
+    receptor_type='excitatory', label='Ball_y-Left_Hidden projection')
 
 # Create a plastic connection between Paddle and Hidden neurons
 paddle_left_plastic_projection = p.Projection(
@@ -294,10 +309,11 @@ p.Projection(
     receptor_type='reward', label='reward ball on right synapses -> right hidden')
 
 if LOAD_PREVIOUS_CONNECTIONS:
-    prev_ball_x_right_conn = previous_connections[2]
-    prev_paddle_right_conn = previous_connections[3]
+    prev_ball_x_right_conn = previous_connections[3]
+    prev_ball_y_right_conn = previous_connections[4]
+    prev_paddle_right_conn = previous_connections[5]
 
-# Create a plastic connection between Ball and Hidden neurons
+# Create a plastic connection between Ball X and Hidden neurons
 ball_x_right_plastic_projection = p.Projection(
     ball_x_pop, right_hidden_pop,
     p.FromListConnector(prev_ball_x_right_conn) if LOAD_PREVIOUS_CONNECTIONS
@@ -305,6 +321,15 @@ ball_x_right_plastic_projection = p.Projection(
     p.AllToAllConnector(),
     synapse_type=hidden_synapse_dynamics,
     receptor_type='excitatory', label='Ball_x-Right_Hidden projection')
+
+# Create a plastic connection between Ball Y and Hidden neurons
+ball_y_right_plastic_projection = p.Projection(
+    ball_y_pop, right_hidden_pop,
+    p.FromListConnector(prev_ball_y_right_conn) if LOAD_PREVIOUS_CONNECTIONS
+    else
+    p.AllToAllConnector(),
+    synapse_type=hidden_synapse_dynamics,
+    receptor_type='excitatory', label='Ball_y-Right_Hidden projection')
 
 # Create a plastic connection between Paddle and Hidden neurons
 paddle_right_plastic_projection = p.Projection(
@@ -319,7 +344,7 @@ paddle_right_plastic_projection = p.Projection(
 # Decision Population && Neuromodulation
 # --------------------------------------------------------------------------------------
 
-# For the decision neuron to spike it needs at least 4 input spikes
+# For the decision neuron to spike it needs at least 4 input spikes at the same time
 hidden_to_decision_weight = 0.085 / 4
 
 decision_input_pop = p.Population(2, p.IF_cond_exp, label="decision_input_pop")
@@ -462,15 +487,19 @@ print("Extracting and Saving the connections")
 save_conn = []
 
 ball_x_left_conn = clean_connection(ball_x_left_plastic_projection.get('weight', 'list'))
+ball_y_left_conn = clean_connection(ball_y_left_plastic_projection.get('weight', 'list'))
 paddle_left_conn = clean_connection(paddle_left_plastic_projection.get('weight', 'list'))
 
 save_conn.append(ball_x_left_conn)
+save_conn.append(ball_y_left_conn)
 save_conn.append(paddle_left_conn)
 
 ball_x_right_conn = clean_connection(ball_x_right_plastic_projection.get('weight', 'list'))
+ball_y_right_conn = clean_connection(ball_y_right_plastic_projection.get('weight', 'list'))
 paddle_right_conn = clean_connection(paddle_right_plastic_projection.get('weight', 'list'))
 
 save_conn.append(ball_x_right_conn)
+save_conn.append(ball_y_right_conn)
 save_conn.append(paddle_right_conn)
 
 if SAVE_CONNECTIONS:
