@@ -275,7 +275,7 @@ Figure(
           yticks=True,
           xlim=(0, runtime)
           )
-    # title="Simple Breakout Example"
+    # title="Automated Breakout Play"
 )
 
 plt.show()
