@@ -126,12 +126,9 @@ if RANDOM_SPIKE_INPUT:
 # --------------------------------------------------------------------------------------
 
 # n0: reward, n1: punishment
-# reward_conn = [(0, 0, 2, 1)]
 punishment_ball_on_left_conn = [(1, 0, 2, 10)]
 punishment_ball_on_right_conn = [(0, 0, 2, 10)]
 
-# reward_pop = p.Population(1, p.IF_cond_exp(),
-#                           label="reward_pop")
 ball_on_left_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
                                              label="punishment_pop")
 ball_on_right_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
@@ -231,11 +228,6 @@ left_stim_projection = p.Projection(stimulation_pop, left_hidden_pop,
                                     p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-# p.Projection(
-#     reward_pop, left_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='reward', label='reward synapses -> left hidden')
 p.Projection(
     ball_on_left_dopaminergic_pop, left_hidden_pop,
     p.AllToAllConnector(),
@@ -292,11 +284,6 @@ right_stim_projection = p.Projection(stimulation_pop, right_hidden_pop,
                                      p.StaticSynapse(weight=stim_weight))
 
 # Create Dopaminergic connections
-# p.Projection(
-#     reward_pop, right_hidden_pop,
-#     p.AllToAllConnector(),
-#     synapse_type=p.StaticSynapse(weight=dopaminergic_weight),
-#     receptor_type='reward', label='reward synapses -> right hidden')
 p.Projection(
     ball_on_left_dopaminergic_pop, right_hidden_pop,
     p.AllToAllConnector(),
@@ -372,7 +359,6 @@ right_hidden_pop.record('spikes')
 decision_input_pop.record('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input.record('spikes')
-# reward_pop.record('all')
 ball_on_left_dopaminergic_pop.record('all')
 ball_on_right_dopaminergic_pop.record('all')
 
@@ -422,7 +408,6 @@ right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = decision_input_pop.get_data('spikes')
 if RANDOM_SPIKE_INPUT:
     random_spike_input_spikes = random_spike_input.get_data('spikes')
-# reward_pop_output = reward_pop.get_data()
 punishment_ball_on_left_pop_output = ball_on_left_dopaminergic_pop.get_data()
 punishment_ball_on_right_pop_output = ball_on_right_dopaminergic_pop.get_data()
 
@@ -459,7 +444,6 @@ Figure(
           xticks=True,
           xlim=(0, runtime)
           ),
-    # title="Simple Breakout Example"
 )
 
 if TESTING:
