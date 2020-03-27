@@ -33,7 +33,7 @@
 #define PRINT_GAME_EVOLUTION true
 
 #define NUMBER_OF_LIVES 5
-#define SCORE_DOWN_EVENTS_PER_DEATH 5
+#define SCORE_DOWN_EVENTS_PER_DEATH 1
 
 #define BRICKS_PER_ROW  5
 #define BRICKS_PER_COLUMN  2
@@ -115,7 +115,7 @@ int y_factor = 1;
 int bricking = 2;
 
 // ball position and velocity scale factor
-int FACT = 16;
+int FACT = 12;
 
 // ball velocity
 int u = MAX_BALL_SPEED;// * FACT;
@@ -125,7 +125,7 @@ int v = -MAX_BALL_SPEED;// * FACT;
 int x_bat = 32;
 
 // bat length in pixels
-int bat_len = 24;
+int bat_len = 36;
 
 int BRICK_WIDTH = 10;
 int BRICK_HEIGHT = 5;
