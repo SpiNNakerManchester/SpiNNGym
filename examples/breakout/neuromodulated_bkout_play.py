@@ -57,7 +57,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 # ----------------------------------------------------------------------------------------------------------------------
 
 # User controls
-TESTING_TIME = 1000 * 30
+TESTING_TIME = 1000 * 15
 TRAINING_TIME = 1000 * 60 * 5
 SIMULATION_TIME = TRAINING_TIME if sys.argv[1] == "Training" else TESTING_TIME
 
@@ -130,9 +130,9 @@ punishment_ball_on_left_conn = [(1, 0, 2, 10)]
 punishment_ball_on_right_conn = [(0, 0, 2, 10)]
 
 ball_on_left_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
-                                             label="punishment_pop")
+                                             label="left_dopaminergic_signals")
 ball_on_right_dopaminergic_pop = p.Population(1, p.IF_cond_exp(),
-                                              label="new_dopaminergic_pop")
+                                              label="right_dopaminergic_signals")
 
 p.Projection(breakout_pop, ball_on_left_dopaminergic_pop, p.FromListConnector(punishment_ball_on_left_conn))
 p.Projection(breakout_pop, ball_on_right_dopaminergic_pop, p.FromListConnector(punishment_ball_on_right_conn))
@@ -390,19 +390,24 @@ dopaminergic_line_properties = [{'color': 'red', 'markersize': 15},
                                 {'color': 'orange', 'markersize': 5}]
 
 Figure(
-    Panel(pad_pop_spikes.segments[0].spiketrains,
+    Panel(ball_x_pop_spikes.segments[0].spiketrains,
+          data_labels=["Ball X Population"],
           yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
-    Panel(ball_x_pop_spikes.segments[0].spiketrains,
+    Panel(pad_pop_spikes.segments[0].spiketrains,
+          data_labels=["Paddle Population"],
           yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(right_hidden_pop_spikes.segments[0].spiketrains,
+          data_labels=["Right Hidden Population"],
           yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+          data_labels=["Left Hidden Population"],
           yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,
+          data_labels=["Decision Population"],
           yticks=True, xticks=True, markersize=0.2, xlim=(0, runtime)),
 
     # Panel(random_spike_input_spikes.segments[0].spiketrains,
