@@ -30,27 +30,35 @@ ball_x_right_conn = previous_connections[2]
 paddle_right_conn = previous_connections[3]
 
 fig, axs = plt.subplots(1, 2)
-fig.suptitle("Weights to Left Hidden")
+fig.suptitle("Synaptic Weights to Left Hidden")
 
-axs[0].set_title("Ball X")
+axs[0].set_title("Ball X Synapses")
+axs[0].set_xlabel("Ball neuron index")
+axs[0].set_ylabel("Left hidden neuron index")
 axs0 = axs[0].matshow(ndimage.rotate(prepare_conn_for_plotting(ball_x_left_conn, (X_RES, hidden_pop_size)), 90))
 fig.colorbar(axs0, ax=axs[0])
 
-axs[1].set_title("Paddle X")
+axs[1].set_title("Paddle X Synapses")
+axs[1].set_xlabel("Paddle neuron index")
+axs[1].set_ylabel("Left hidden neuron index")
 axs1 = axs[1].matshow(ndimage.rotate(prepare_conn_for_plotting(paddle_left_conn, (X_RES, hidden_pop_size)), 90))
 fig.colorbar(axs1, ax=axs[1])
 
 plt.show()
 
 fig, axs = plt.subplots(1, 2)
-fig.suptitle("Weights to Right Hidden")
+fig.suptitle("Synaptic Weights to Right Hidden")
 
-axs[0].set_title("Ball X")
-axs0 = axs[0].matshow(prepare_conn_for_plotting(ball_x_right_conn, (X_RES, hidden_pop_size)))
+axs[0].set_title("Ball X Synapses")
+axs[0].set_xlabel("Ball neuron index")
+axs[0].set_ylabel("Right hidden neuron index")
+axs0 = axs[0].matshow(ndimage.rotate(prepare_conn_for_plotting(ball_x_right_conn, (X_RES, hidden_pop_size)), 90))
 fig.colorbar(axs0, ax=axs[0])
 
-axs[1].set_title("Paddle X")
-axs1 = axs[1].matshow(prepare_conn_for_plotting(paddle_right_conn, (X_RES, hidden_pop_size)))
+axs[1].set_title("Paddle X Synapses")
+axs[1].set_xlabel("Paddle neuron index")
+axs[1].set_ylabel("Right hidden neuron index")
+axs1 = axs[1].matshow(ndimage.rotate(prepare_conn_for_plotting(paddle_right_conn, (X_RES, hidden_pop_size)), 90))
 fig.colorbar(axs1, ax=axs[1])
 
 plt.show()
