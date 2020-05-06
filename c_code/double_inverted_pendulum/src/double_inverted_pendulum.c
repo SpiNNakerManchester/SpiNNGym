@@ -9,6 +9,7 @@
 
 // Common includes
 #include <debug.h>
+#include <sincos.h>
 
 // Front end common includes
 #include <data_specification.h>
@@ -219,10 +220,10 @@ void resume_callback() {
 
 static bool initialize(uint32_t *timer_period)
 {
-    io_printf(IO_BUF, "Initialise bandit: started\n");
+    io_printf(IO_BUF, "Initialise double inverted pendulum: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
-    address_t address = data_specification_get_data_address();
+    data_specification_metadata_t *address = data_specification_get_data_address();
 
     // Read the header
     if (!data_specification_read_header(address))
@@ -238,26 +239,27 @@ static bool initialize(uint32_t *timer_period)
     */
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
-    APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, _time, 1, NULL))
+    		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+			&infinite_run, &_time, 1, 0))
     {
       return false;
     }
     io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
 
 
-    // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_PENDULUM, address);
-    key = breakout_region[0];
+    // Read pendulum region
+    address_t pendulum_region = data_specification_get_region(REGION_PENDULUM, address);
+    key = pendulum_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
     //get recording region
-    address_t recording_address = data_specification_get_region(
-                                       REGION_RECORDING,address);
+    void *recording_region = data_specification_get_region(
+            REGION_RECORDING, address);
+
     // Setup recording
     uint32_t recording_flags = 0;
-    if (!recording_initialize(recording_address, &recording_flags))
+    if (!recording_initialize(&recording_region, &recording_flags))
     {
        rt_error(RTE_SWERR);
        return false;
@@ -275,7 +277,7 @@ static bool initialize(uint32_t *timer_period)
     pole_angle = (pole_angle / 180.0f) * M_PI;
     half_pole_length_accum.u = pend_region[4];
     pole_angle_accum.u = pend_region[5];
-    pole2_angle = 0.1;pole_angle_accum.a;
+    pole2_angle = 0.1; // pole_angle_accum.a;  // TODO: not sure what intended here
     pole2_angle = (pole2_angle / 180.0f) * M_PI;
     reward_based = pend_region[6];
     force_increment = pend_region[7]; // (float)pend_region[5] / (float)0xffff;
@@ -488,7 +490,7 @@ float rand021(){
 
 float norm_dist(float mean, float stdev){
     accum norm_dist;
-    norm_dist = gaussian_dist_variate(mars_kiss64_simp, NULL);
+    norm_dist = gaussian_dist_variate(mars_kiss64_seed, NULL);
     norm_dist = (norm_dist * stdev) + mean;
     return (float)norm_dist;
 }

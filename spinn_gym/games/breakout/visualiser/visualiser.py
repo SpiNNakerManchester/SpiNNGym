@@ -91,18 +91,18 @@ class Visualiser(object):
 
 
         print("\n\nVisualiser Initialised With Parameters:")
-        print("\tx_factor".format(self.x_factor))
-        print("\ty_factor".format(self.y_factor))
-        print("\tx_res".format(self.x_res))
-        print("\ty_res".format(self.y_res))
-        print("\tx_bits".format(x_bits))
-        print("\ty_bits".format(y_bits))
-        print("\tx_mask".format(self.x_mask))
-        print("\ty_mask".format(self.y_mask))
-        print("\tv_mask".format(self.value_mask))
-        print("\tbat width".format(self.bat_width))
-        print("\tBrick Width".format(self.BRICK_WIDTH))
-        print("\tBrick Height".format(self.BRICK_HEIGHT))
+        print("\tx_factor {}".format(self.x_factor))
+        print("\ty_factor {}".format(self.y_factor))
+        print("\tx_res {}".format(self.x_res))
+        print("\ty_res {}".format(self.y_res))
+        print("\tx_bits {}".format(x_bits))
+        print("\ty_bits {}".format(y_bits))
+        print("\tx_mask {}".format(self.x_mask))
+        print("\ty_mask {}".format(self.y_mask))
+        print("\tv_mask {}".format(self.value_mask))
+        print("\tbat width {}".format(self.bat_width))
+        print("\tBrick Width {}".format(self.BRICK_WIDTH))
+        print("\tBrick Height {}".format(self.BRICK_HEIGHT))
 
 
         # Open socket to receive datagrams
@@ -319,10 +319,11 @@ class Visualiser(object):
             print("Left key pressed!\n")
             self.input_state = InputState.left
         elif event.key == "right":
+            print("Right key pressed!\n")
             self.input_state = InputState.right
 
     def _on_key_release(self, event):
-        print("Right key pressed!\n")
+        print("Key released!\n")
         # If either key is released set state to idle
         if event.key == "left" or event.key == "right":
             self.input_state = InputState.idle
@@ -352,5 +353,5 @@ if __name__ == "__main__":
 #         print("updating...")
         score = vis._update(None)
         time.sleep(refresh_time)
-        
+
     print("visualiser gets to here?")

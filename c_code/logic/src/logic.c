@@ -144,7 +144,7 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "Initialise logic: started\n");
 
     // Get the address this core's DTCM data starts at from SRAM
-    address_t address = data_specification_get_data_address();
+    data_specification_metadata_t *address = data_specification_get_data_address();
 
     // Read the header
     if (!data_specification_read_header(address))
@@ -160,8 +160,8 @@ static bool initialize(uint32_t *timer_period)
     */
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
-    APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, _time, 1, NULL))
+    		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+			&infinite_run, &_time, 1, 0))
     {
       return false;
     }
@@ -169,17 +169,18 @@ static bool initialize(uint32_t *timer_period)
 
 
     // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_LOGIC, address);
-    key = breakout_region[0];
+    address_t logic_address_region = data_specification_get_region(REGION_LOGIC, address);
+    key = logic_address_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
     //get recording region
-    address_t recording_address = data_specification_get_region(
-                                       REGION_RECORDING,address);
+    void *recording_region = data_specification_get_region(
+            REGION_RECORDING, address);
+
     // Setup recording
     uint32_t recording_flags = 0;
-    if (!recording_initialize(recording_address, &recording_flags))
+    if (!recording_initialize(&recording_region, &recording_flags))
     {
        rt_error(RTE_SWERR);
        return false;
@@ -239,7 +240,7 @@ static bool initialize(uint32_t *timer_period)
     return true;
 }
 
-bool was_it_correct(){
+void was_it_correct(){  // TODO: probably rename this function?
     int choice = -1;
     if (output_choice[0] > output_choice[1]){
         choice = 0;
@@ -254,6 +255,7 @@ bool was_it_correct(){
 //    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
     output_choice[0] = 0;
     output_choice[1] = 0;
+
 }
 
 float rand021(){
