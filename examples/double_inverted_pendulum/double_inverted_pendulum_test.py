@@ -139,7 +139,7 @@ else:
     i = 0
     print("cart  |  angle")
     while i < len(scores[0]):
-        print("{:8}\t{:8}".format(scores[0][i], scores[0][i+1]))
+        print("{}\t{}".format(scores[0][i], scores[0][i+1]))
         i += 2
 
 # spikes = []

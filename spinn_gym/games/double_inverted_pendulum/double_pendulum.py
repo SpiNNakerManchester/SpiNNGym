@@ -221,7 +221,7 @@ class DoublePendulum(ApplicationVertex,
             # sdram=SDRAMResource(
             #     self.PENDULUM_REGION_BYTES +
             #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -394,7 +394,7 @@ class DoublePendulum(ApplicationVertex,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
         data = data_values#.read_all()
 
         numpy_format = list()
