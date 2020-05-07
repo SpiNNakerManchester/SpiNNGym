@@ -69,16 +69,16 @@ p.run(runtime)
 
 scores = get_scores(recall_pop=recall_pop, simulator=simulator)
 
-print scores
+print(scores)
 
 i = 0
-print "score  \t\t|\t\t  trials"
+print("score  \t\t|\t\t  trials")
 while i < len(scores):
-    print "{:8}\t{:8}".format(scores[i][0], scores[i+1][0])
+    print("{:8}\t{:8}".format(scores[i][0], scores[i+1][0]))
     i += 2
 
 accuracy = float(scores[len(scores)-2][0]) / float(scores[len(scores)-1][0])
-print "Accuracy:", accuracy
+print("Accuracy:", accuracy)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out = readout_pop.get_data('spikes').segments[0].spiketrains

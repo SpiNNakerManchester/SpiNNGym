@@ -411,3 +411,5 @@ class Recall(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")

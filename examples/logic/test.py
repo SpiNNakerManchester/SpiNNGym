@@ -38,9 +38,9 @@ output_pop2 = p.Population(2, p.IF_cond_exp())
 random_seed = []
 for j in range(4):
     random_seed.append(np.random.randint(0xffff))
-    
+
 logic_model = gym.Logic(truth_table=truth_table,
-                        input_sequence=input_sequence, 
+                        input_sequence=input_sequence,
                         stochastic=0,
                         rand_seed=random_seed)
 logic_pop = p.Population(input_size, logic_model)
@@ -63,7 +63,7 @@ p.run(runtime)
 
 scores = get_scores(logic_pop=logic_pop, simulator=simulator)
 
-print scores
+print(scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out1 = output_pop1.get_data('spikes').segments[0].spiketrains

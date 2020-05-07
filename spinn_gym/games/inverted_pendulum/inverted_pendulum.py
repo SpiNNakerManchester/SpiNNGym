@@ -9,7 +9,6 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
@@ -49,7 +48,8 @@ from spinn_front_end_common.abstract_models\
    import AbstractProvidesNKeysForPartition
 
 # Pendulum imports
-from inverted_pendulum_machine_vertex import PendulumMachineVertex
+from spinn_gym.games.inverted_pendulum.inverted_pendulum_machine_vertex \
+    import PendulumMachineVertex
 
 import numpy
 
@@ -391,3 +391,5 @@ class Pendulum(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")

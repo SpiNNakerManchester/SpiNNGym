@@ -14,7 +14,6 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
@@ -58,7 +57,8 @@ from spinn_front_end_common.abstract_models\
    import AbstractProvidesNKeysForPartition
 
 # Pendulum imports
-from double_pendulum_vertex import DoublePendulumMachineVertex
+from spinn_gym.games.double_inverted_pendulum.double_pendulum_vertex \
+    import DoublePendulumMachineVertex
 
 import numpy
 
@@ -245,16 +245,14 @@ class DoublePendulum(ApplicationVertex,
                    "time_scale_factor": "TimeScaleFactor",
                    "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags",
-                                     "n_machine_time_steps"}
+                                     "graph_mapper", "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
                                     time_scale_factor, graph_mapper,
-                                    routing_info, tags, n_machine_time_steps):
+                                    routing_info, tags):
         vertex = placement.vertex
         vertex_slice = graph_mapper.get_slice(vertex)
 
@@ -332,7 +330,7 @@ class DoublePendulum(ApplicationVertex,
     # ------------------------------------------------------------------------
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
-        return "double_pendulum.aplx"
+        return "double_inverted_pendulum.aplx"
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
@@ -407,3 +405,5 @@ class DoublePendulum(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")

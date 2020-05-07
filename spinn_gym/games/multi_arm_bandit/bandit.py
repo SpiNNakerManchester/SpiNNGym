@@ -1,4 +1,3 @@
-from __future__ import print_function
 # PACMAN imports
 # from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
 #     PopulationSettableChangeRequiresMapping
@@ -8,7 +7,8 @@ from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 
 from pacman.executor.injection_decorator import inject_items
 from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-from pacman.model.decorators.overrides import overrides
+# from pacman.model.decorators.overrides import overrides
+from spinn_utilities.overrides import overrides
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
@@ -402,3 +402,5 @@ class Bandit(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")

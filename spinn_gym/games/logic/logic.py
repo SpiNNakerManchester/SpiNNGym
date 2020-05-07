@@ -58,7 +58,7 @@ from spinn_front_end_common.abstract_models\
    import AbstractProvidesNKeysForPartition
 
 # Logic imports
-from logic_machine_vertex import LogicMachineVertex
+from spinn_gym.games.logic.logic_machine_vertex import LogicMachineVertex
 
 import numpy
 
@@ -176,7 +176,7 @@ class Logic(ApplicationVertex,
             try:
                 raise Bad_Table('table and input sequence are not compatible')
             except Bad_Table as e:
-                print "ERROR: ", e
+                print("ERROR: ", e)
 
         self._n_neurons = self._no_inputs
         self._rand_seed = rand_seed
@@ -407,3 +407,5 @@ class Logic(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")

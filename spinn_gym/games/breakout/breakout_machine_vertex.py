@@ -1,8 +1,8 @@
 from enum import Enum
 
 # PACMAN imports
-from pacman.model.decorators.overrides import overrides
-
+# from pacman.model.decorators.overrides import overrides
+from spinn_utilities.overrides import overrides
 
 # SpinnFrontEndCommon imports
 from pacman.model.graphs.machine import MachineVertex

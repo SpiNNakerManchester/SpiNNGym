@@ -618,8 +618,8 @@ static bool initialize(uint32_t *timer_period)
     }
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, ds_regions),
-    APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-    &infinite_run, &_time, SDP, DMA))
+    		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+			&infinite_run, &_time, SDP, DMA))
     {
         return false;
     }
@@ -634,8 +634,8 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "\tKey=%08x\n", key);
 
     //get recording region
-    address_t recording_address = data_specification_get_region(
-                                       REGION_RECORDING, ds_regions);
+    void *recording_region = data_specification_get_region(
+        REGION_RECORDING, ds_regions);
 
     // Read param region to initialise game parameters
     address_t param_region = data_specification_get_region(REGION_PARAM, ds_regions);
@@ -724,7 +724,7 @@ static bool initialize(uint32_t *timer_period)
 
     // Setup recording
     uint32_t recording_flags = 0;
-    if (!recording_initialize(recording_address, &recording_flags))
+    if (!recording_initialize(&recording_region, &recording_flags))
     {
         rt_error(RTE_SWERR);
         return false;
