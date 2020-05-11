@@ -185,7 +185,7 @@ void resume_callback() {
 
 static bool initialize(uint32_t *timer_period, bool first)
 {
-//	io_printf(IO_BUF, "Init inverted pendulum\n");
+	io_printf(IO_BUF, "Init inverted pendulum\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     data_specification_metadata_t *address = data_specification_get_data_address();

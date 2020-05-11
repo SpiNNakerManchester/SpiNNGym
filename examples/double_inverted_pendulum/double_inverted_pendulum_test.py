@@ -70,7 +70,7 @@ input_model = gym.DoublePendulum(encoding=encoding,
 
 pendulum_pop_size = input_model.neurons()
 pendulum = p.Population(pendulum_pop_size, input_model)
-null_pop = p.Population(4*number_of_bins, p.IF_cond_exp(), label='null')
+null_pop = p.Population(6*number_of_bins, p.IF_cond_exp(), label='null')
 p.Projection(pendulum, null_pop, p.OneToOneConnector(), p.StaticSynapse(weight=0.09))
 null_pop.record(['spikes', 'v', 'gsyn_exc'])
 # null_pop.record(['spikes', 'v'])
