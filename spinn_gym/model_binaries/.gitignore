@@ -1,0 +1,3 @@
+# Ignore aplx and dict files as sPyNNaker does
+*.aplx
+*.dict
