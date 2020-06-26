@@ -1,12 +1,12 @@
 
 from spinnman.connections.udp_packet_connections import SCAMPConnection
 from spinnman.utilities.utility_functions import reprogram_tag
-from spinnman.exceptions import SpinnmanIOException
+# from spinnman.exceptions import SpinnmanIOException
 
 import enum
 import numpy as np
 
-import matplotlib.animation as animation
+# import matplotlib.animation as animation
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
 import datetime
@@ -53,8 +53,8 @@ class Visualiser(object):
     # How many bits are used to represent colour and brick
     colour_bits = 2
 
-    def __init__(self, machine_address, tag, key_input_connection=None, scale=4,
-                 x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
+    def __init__(self, machine_address, tag, key_input_connection=None,
+                 scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
         # Reset input state
         self.input_state = InputState.idle
 
@@ -110,7 +110,8 @@ class Visualiser(object):
         reprogram_tag(self.connection, tag, strip=True)
 
         # Make awesome CRT palette
-        cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
+        cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED,
+                                   BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
 #         plt.ion()
         # Create image plot to display game screen
@@ -160,7 +161,7 @@ class Visualiser(object):
     # ------------------------------------------------------------------------
     def show(self):
         # Play animation
-        interval = (1000. / self.fps)
+#         interval = (1000. / self.fps)
 #         self.animation = animation.FuncAnimation(self.fig, self._update,
 #                                                  interval=interval,
 #                                                  blit=False)
@@ -210,7 +211,9 @@ class Visualiser(object):
                 # Create mask to select vision (rather than special event) packets
                 # Extract coordinates
                 'const uint32_t spike_key = ' \
-                    'key | (SPECIAL_EVENT_MAX + (i << (game_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);'
+                    'key | (SPECIAL_EVENT_MAX + ' \
+                    '(i << (game_bits + 2)) + (j << 2) + ' \
+                    '(bricked<<1) + colour_bit);'
 
                 vision_payload = payload_value[
                                      vision_event_mask] - SpecialEvent.max
@@ -234,7 +237,8 @@ class Visualiser(object):
                     for x1, y1, c1, b1 in zip(x, y, c, b):
                         # self.image_data[:] = 0
 
-#                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
+#                         print("valid pixels = x:{}\ty:{}\tc:{}\tb:{}").format(
+#                             x, y, c, b)
 
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
@@ -252,7 +256,7 @@ class Visualiser(object):
                 except IndexError as e:
                     print("Packet contains invalid pixels:",
                           vision_payload, "X:", x, "  Y:", y, " c:", c, " b:",
-                          b)
+                          b, e)
                     # self.image_data[:-1, :] = 0
 
                 # Create masks to select score events and count them
