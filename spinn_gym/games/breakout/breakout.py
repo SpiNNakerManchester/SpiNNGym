@@ -390,3 +390,15 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         #return formatted_data
         return output_data
 
+    def describe(self):
+        """ Return description of cell type
+
+        """
+
+        # More could be added to this if necessary
+        context = {
+            "name": self._label,
+            "n_neurons": self._n_neurons,
+        }
+
+        return context

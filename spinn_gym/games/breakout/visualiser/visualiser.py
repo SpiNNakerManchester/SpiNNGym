@@ -8,6 +8,7 @@ import numpy as np
 
 import matplotlib.animation as animation
 import matplotlib.colors as col
+import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import datetime
 import time
@@ -78,7 +79,6 @@ class Visualiser(object):
 
         self.value_mask = (1 << (x_bits + y_bits + self.colour_bits)) - 1
 
-
         self.y_res = int(128 / y_factor)
         self.x_res = int(160 / x_factor)
         self.BRICK_WIDTH = int(self.x_res / 5)
@@ -89,37 +89,35 @@ class Visualiser(object):
         self.fps = fps
         self.scale = scale
 
-
         print("\n\nVisualiser Initialised With Parameters:")
-        print("\tx_factor".format(self.x_factor))
-        print("\ty_factor".format(self.y_factor))
-        print("\tx_res".format(self.x_res))
-        print("\ty_res".format(self.y_res))
-        print("\tx_bits".format(x_bits))
-        print("\ty_bits".format(y_bits))
-        print("\tx_mask".format(self.x_mask))
-        print("\ty_mask".format(self.y_mask))
-        print("\tv_mask".format(self.value_mask))
-        print("\tbat width".format(self.bat_width))
-        print("\tBrick Width".format(self.BRICK_WIDTH))
-        print("\tBrick Height".format(self.BRICK_HEIGHT))
-
+        print("\tx_factor {}".format(self.x_factor))
+        print("\ty_factor {}".format(self.y_factor))
+        print("\tx_res {}".format(self.x_res))
+        print("\ty_res {}".format(self.y_res))
+        print("\tx_bits {}".format(x_bits))
+        print("\ty_bits {}".format(y_bits))
+        print("\tx_mask {}".format(self.x_mask))
+        print("\ty_mask {}".format(self.y_mask))
+        print("\tv_mask {}".format(self.value_mask))
+        print("\tbat width {}".format(self.bat_width))
+        print("\tBrick Width {}".format(self.BRICK_WIDTH))
+        print("\tBrick Height {}".format(self.BRICK_HEIGHT))
 
         # Open socket to receive datagrams
         self.connection = SCAMPConnection(remote_host=machine_address)
         reprogram_tag(self.connection, tag, strip=True)
 
         # Make awesome CRT palette
-        cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
+        self.cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
-#         plt.ion()
         # Create image plot to display game screen
-        self.fig = plt.figure("BreakOut", figsize=(8, 6))
-        self.axis = plt.subplot(1, 1, 1)
-        # self.ion = plt.ion()
+        self.fig = plt.figure("Breakout", figsize=(8, 6))
+        self.gs = gridspec.GridSpec(ncols=1, nrows=1, figure=self.fig)
+        self.axis = self.fig.add_subplot(self.gs[0, 0])
+        self.fig.set_tight_layout(True)
         self.image_data = np.zeros((self.y_res, self.x_res))
         self.image = self.axis.imshow(self.image_data, interpolation="nearest",
-                                      cmap=cmap, vmin=0.0, vmax=5.0)
+                                      cmap=self.cmap, vmin=0.0, vmax=5.0)
 
         # Draw score using textbox
         self.score_text = self.axis.text(0.5, 1.0, "0", color=BRIGHT_GREEN,
@@ -167,11 +165,11 @@ class Visualiser(object):
         # Show animated plot (blocking)
         try:
             plt.ion()
-            plt.show()
-            plt.draw()
+#             plt.show()
+#             plt.draw()
 #             plt.pause(0.001)
             print("Visualiser displayed")
-#             self.fig.canvas.draw()
+            self.fig.canvas.draw()
 #             self.
 #             plt.draw()
         except:
@@ -186,10 +184,13 @@ class Visualiser(object):
     def _update(self, frame):
         # print "trying to update interval = ", (1000. / self.fps)
 
+        self.axis.clear()
+
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
             self.key_input_connection.send_spike("key_input", self.input_state)
 
+        ind = 0
         # Read all datagrams received during last frame
         message_received = False
         while True:
@@ -240,9 +241,9 @@ class Visualiser(object):
                             self.image_data[y1, x1] = c1
 
                         elif b1 == 1:
-                            self.image_data[y1:(y1 + self.BRICK_HEIGHT),
-                            x1:(x1 + self.BRICK_WIDTH)] = c1 #*
-                            #np.random.randint(2, 6) # to show individual bricks
+                            self.image_data[
+                                y1:(y1 + self.BRICK_HEIGHT),
+                                x1:(x1 + self.BRICK_WIDTH)] = c1 * 2 # to show individual bricks
 
                     # if c>0:
                     # self.video_data[:] = 0
@@ -280,6 +281,9 @@ class Visualiser(object):
                     # print("score 0")
                     self.video_data[0:1, :, :] = [200, 200, 200]
 
+
+        self.axis.clear()
+
         # Set image data
         try:
             self.image.set_array(self.image_data)
@@ -308,9 +312,24 @@ class Visualiser(object):
         # **YUCK** score_text must be returned whether it has
         # been updated or not to prevent overdraw
         # self.first_update = False
-#         print("redrawing...")
-        plt.draw()
-        plt.pause(0.01)
+#        print("redrawing...")
+        self.axis.clear()
+        self.score_text.set_text("%u" % self.score)
+        self.image.set_array(self.image_data)
+        self.image = self.axis.imshow(self.image_data, interpolation="nearest",
+                                      cmap=self.cmap, vmin=0.0, vmax=5.0)
+        self.score_text = self.axis.text(0.5, 1.0, "%u" % self.score, color=BRIGHT_GREEN,
+                                         transform=self.axis.transAxes,
+                                         horizontalalignment="right",
+                                         verticalalignment="top")
+        self.axis.grid(False)
+        self.axis.set_xticklabels([])
+        self.axis.set_yticklabels([])
+        self.axis.axes.get_xaxis().set_visible(False)
+
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
         return [self.image, self.score_text]
 
     def _on_key_press(self, event):
@@ -352,5 +371,5 @@ if __name__ == "__main__":
 #         print("updating...")
         score = vis._update(None)
         time.sleep(refresh_time)
-        
+
     print("visualiser gets to here?")
