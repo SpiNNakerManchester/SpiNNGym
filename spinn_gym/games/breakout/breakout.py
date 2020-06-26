@@ -39,16 +39,11 @@ from spinn_front_end_common.utilities import constants as \
 
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
+# from spynnaker.pyNN.models.common import NeuronRecorder
+# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
@@ -84,16 +79,17 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
                                routing_infos, synapse_information, machine_time_step):
 
-        super(Breakout, self).get_connections_from_machine(transceiver, placement, edge,
-                                                           graph_mapper, routing_infos,
-                                                           synapse_information,
-                                                           machine_time_step)
+        super(Breakout, self).get_connections_from_machine(
+            transceiver, placement, edge, graph_mapper, routing_infos,
+            synapse_information, machine_time_step)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Breakout, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
+    def add_pre_run_connection_holder(self, connection_holder,
+                                      projection_edge, synapse_information):
+        super(Breakout, self).add_pre_run_connection_holder(
+            connection_holder, projection_edge, synapse_information)
 
     # def get_binary_start_type(self):
     #     super(Breakout, self).get_binary_start_type()
@@ -200,8 +196,8 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         # Breakout has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
 
-#    def get_max_atoms_per_core(self):
- #       return self.n_atoms
+#     def get_max_atoms_per_core(self):
+#         return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -223,7 +219,9 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        return BreakoutMachineVertex(resources_required, constraints, self._label)
+        print("create breakout machine vertex, resources ", resources_required)
+        return BreakoutMachineVertex(resources_required, constraints,
+                                     self._label)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -251,7 +249,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags, n_machine_time_steps):
         vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
+#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Breakout Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -354,8 +352,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def clear_recording(
             self, variable, buffer_manager, placements, graph_mapper):
         self._clear_recording_region(
-            buffer_manager, placements, graph_mapper,
-            0)
+            buffer_manager, placements, graph_mapper, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -368,7 +365,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a=1
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
@@ -393,4 +390,4 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         return output_data
 
     def reset_ring_buffer_shifts(self):
-        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")
+        pass

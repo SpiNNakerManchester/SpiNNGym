@@ -1,38 +1,30 @@
 from __future__ import print_function
-import spynnaker8 as p
-import spinn_gym as gym
-from spynnaker.pyNN.connections.\
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spinn_front_end_common.utilities.globals_variables import get_simulator
-from spinn_front_end_common.utilities.database.database_connection \
-    import DatabaseConnection
 
-import pylab
+# non-SpiNNaker imports
 import matplotlib.pyplot as plt
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
-from spynnaker import plot_utils
-import threading
-import time
-from multiprocessing.pool import ThreadPool
-import socket
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
-import matplotlib.pyplot as plt
 import functools
-
 import subprocess
 import sys
 
+# SpiNNaker imports
+from spinn_front_end_common.utilities.globals_variables import get_simulator
+from spinn_front_end_common.utilities.database.database_connection \
+    import DatabaseConnection
+from spynnaker.pyNN.connections.\
+    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
+from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
+    SpynnakerExternalDevicePluginManager as ex
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
-
+import spynnaker8 as p
+import spinn_gym as gym
 
 # -----------------------------------------------------------------------------
 #  Globals
 # -----------------------------------------------------------------------------
-vis_proc = None # Visuliser process (global)
+vis_proc = None # Visualiser process (global)
 
 # -----------------------------------------------------------------------------
 #  Helper Functions
@@ -40,7 +32,7 @@ vis_proc = None # Visuliser process (global)
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
-    
+
     print("Calling \'start_visualiser\'")
 
     # Calling visualiser - must be done as process rather than on thread due to
@@ -82,10 +74,8 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
 
     return idx
 
-
 def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                          weight, coord_map_func):
-
     # subY_BITS=int(np.ceil(np.log2(y_res/subsamp_factor)))
     connection_list_on = []
     connection_list_off = []
@@ -110,8 +100,6 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
 
     return connection_list_on, connection_list_off
 
-
-
 # -----------------------------------------------------------------------------
 # Initialise Simulation and Parameters
 # -----------------------------------------------------------------------------
@@ -133,11 +121,9 @@ x_factor1 = 2
 y_factor1 = x_factor1
 bricking = 1
 
-
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
 # -----------------------------------------------------------------------------
-
 
 # Create breakout population and activate live output
 b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
@@ -155,7 +141,7 @@ p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
-                            label="input_connect")
+                           label="input_connect")
 p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
@@ -167,22 +153,20 @@ weight = 0.1
 # Create population of neurons to receive input from Breakout
 receive_pop_size = int(X_RESOLUTION/x_factor1) * int(Y_RESOLUTION/y_factor1)
 receive_pop = p.Population(receive_pop_size, p.IF_cond_exp(),
-                             label="receive_pop")
+                           label="receive_pop")
 p.Projection(breakout_pop, receive_pop, p.FromListConnector(Connections_on),
              p.StaticSynapse(weight=weight))
 
 # Create population to receive reward signal from Breakout (n0: rew, n1: pun)
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
-                             label="receive_rew_pop")
-p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(), 
+                                  label="receive_rew_pop")
+p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
              p.StaticSynapse(weight=0.1 * weight))
-       
 
 # Setup recording
 spike_input.record('spikes')
 receive_pop.record('spikes')
 receive_reward_pop.record('all')
-
 
 # -----------------------------------------------------------------------------
 # Configure Visualiser
@@ -205,7 +189,6 @@ d_conn.add_database_callback(functools.partial(
 
 p.external_devices.add_database_socket_address(
      "localhost", d_conn.local_port, None)
-
 
 # -----------------------------------------------------------------------------
 # Run Simulation
@@ -232,12 +215,13 @@ Figure(
     Panel(receive_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
     Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
-          ylabel="gsyn excitatory (mV)", 
-          data_labels=[receive_reward_pop.label], 
-          yticks=True, 
+          ylabel="gsyn excitatory (mV)",
+          data_labels=[receive_reward_pop.label],
+          yticks=True,
           xlim=(0, runtime)
-          )
-    # title="Simple Breakout Example"
+          ),
+    title="Simple Breakout Example",
+    annotations="Simulated with {}".format(p.name())
 )
 
 plt.show()
@@ -245,10 +229,7 @@ plt.show()
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
 
-
 # End simulation
 p.end()
 vis_proc.terminate()
 print("Simulation Complete")
-
-

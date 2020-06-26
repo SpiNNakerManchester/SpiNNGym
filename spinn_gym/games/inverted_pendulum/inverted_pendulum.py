@@ -29,16 +29,11 @@ from spinn_front_end_common.utilities import constants as \
 
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
+# from spynnaker.pyNN.models.common import NeuronRecorder
+# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
@@ -97,8 +92,8 @@ class Pendulum(ApplicationVertex,
     def get_synapse_id_by_target(self, target):
         return 0
 
-    PENDULUM_REGION_BYTES = 24
-    DATA_REGION_BYTES = 80
+    PENDULUM_REGION_BYTES = 4
+    DATA_REGION_BYTES = 15 * 4
     MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7 # 1 week
 
     # parameters expected by PyNN
@@ -242,7 +237,7 @@ class Pendulum(ApplicationVertex,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags):
         vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
+#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Pendulum Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -367,7 +362,7 @@ class Pendulum(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a = 1
+        print("set_recording")
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):

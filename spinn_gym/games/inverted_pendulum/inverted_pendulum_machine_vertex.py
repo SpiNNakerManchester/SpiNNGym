@@ -2,15 +2,15 @@ from enum import Enum
 
 # PACMAN imports
 # from pacman.model.decorators.overrides import overrides
-from spinn_utilities.overrides import overrides
+# from spinn_utilities.overrides import overrides
 
 
 # SpinnFrontEndCommon imports
 from pacman.model.graphs.machine import MachineVertex
-from spinn_front_end_common.interface.provenance \
-    .provides_provenance_data_from_machine_impl \
-    import ProvidesProvenanceDataFromMachineImpl
-from spinn_front_end_common.utilities import helpful_functions, constants
+# from spinn_front_end_common.interface.provenance \
+#     .provides_provenance_data_from_machine_impl \
+#     import ProvidesProvenanceDataFromMachineImpl
+from spinn_front_end_common.utilities import helpful_functions  #, constants
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
 from spinn_front_end_common.interface.buffer_management.buffer_models import (

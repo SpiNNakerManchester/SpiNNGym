@@ -12,7 +12,7 @@ CURRENT_DIR := $(dir $(MAKEFILE_PATH))
 EXTRA_SRC_DIR := $(abspath $(CURRENT_DIR))/src
 SOURCE_DIRS += $(EXTRA_SRC_DIR)
 APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../spinn_gym/model_binaries/)/
-CFLAGS += -I$(NEURAL_MODELLING_DIRS)/src
 
 include $(SPINN_DIRS)/make/local.mk
 
+CFLAGS += -I$(NEURAL_MODELLING_DIRS)/src

@@ -1,9 +1,8 @@
 //
-//  bkout.c
-//  BreakOut
+//  band.c
+//  (Multi-Arm) Bandit
 //
-//  Created by Steve Furber on 26/08/2016.
-//  Copyright © 2016 Steve Furber. All rights reserved.
+//  Copyright © 2019 Adam Perrett. All rights reserved.
 //
 // Standard includes
 #include <stdbool.h>
@@ -165,9 +164,9 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
 
 
-    // Read breakout region
-    address_t breakout_region = data_specification_get_region(REGION_BANDIT, address);
-    key = breakout_region[0];
+    // Read bandit region
+    address_t bandit_region = data_specification_get_region(REGION_BANDIT, address);
+    key = bandit_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 

@@ -14,7 +14,7 @@ from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.constant_sdram import ConstantSDRAM
+# from pacman.model.resources.constant_sdram import ConstantSDRAM
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
 from spinn_front_end_common.interface.buffer_management \
@@ -39,16 +39,12 @@ from spinn_front_end_common.utilities import constants as \
 
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
+# from spynnaker.pyNN.models.common import NeuronRecorder
+# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
@@ -127,8 +123,8 @@ class Logic(ApplicationVertex,
     def get_synapse_id_by_target(self, target):
         return 0
 
-    LOGIC_REGION_BYTES = 200
-    DATA_REGION_BYTES = 200
+    LOGIC_REGION_BYTES = 4
+    BASE_DATA_REGION_BYTES = 9 * 4
     MAX_SIM_DURATION = 1000 * 60 * 60 * 24  # 1 day
 
     # parameters expected by PyNN
@@ -258,7 +254,7 @@ class Logic(ApplicationVertex,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags):
         vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
+#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Logic Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -278,7 +274,9 @@ class Logic(ApplicationVertex,
             recording_utilities.get_recording_header_size(1))
         spec.reserve_memory_region(
             region=LogicMachineVertex._LOGIC_REGIONS.DATA.value,
-            size=self.DATA_REGION_BYTES, label='LogicArms')
+            size=self.BASE_DATA_REGION_BYTES+(self._no_inputs*4)+(
+                len(self._truth_table)*4),
+            label='LogicArms')
 
         # Write setup region
         spec.comment("\nWriting setup region:\n")
@@ -383,7 +381,7 @@ class Logic(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a = 1
+        print("set_recording")
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):

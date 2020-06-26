@@ -1,11 +1,10 @@
 import spynnaker8 as p
-from spynnaker.pyNN.connections. \
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
+# from spynnaker.pyNN.connections. \
+#     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
+# from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
+#     SpynnakerExternalDevicePluginManager as ex
 import spinn_gym as gym
 
-import pylab
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +15,8 @@ def get_scores(recall_pop, simulator):
     b_vertex = recall_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.graph_mapper, simulator.buffer_manager, simulator.machine_time_step)
+        simulator.graph_mapper, simulator.buffer_manager,
+        simulator.machine_time_step)
 
     return scores.tolist()
 
@@ -59,8 +59,10 @@ readout_pop.record('spikes')
 
 i2a = p.Projection(input_pop, recall_pop, p.AllToAllConnector())
 
-# test_rec = p.Projection(recall_pop, recall_pop, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
-i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
+# test_rec = p.Projection(recall_pop, recall_pop, p.AllToAllConnector(),
+#                         p.StaticSynapse(weight=0.1, delay=0.5))
+i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(),
+                    p.StaticSynapse(weight=0.1, delay=0.5))
 
 simulator = get_simulator()
 

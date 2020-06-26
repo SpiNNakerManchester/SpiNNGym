@@ -1,9 +1,8 @@
 //
-//  bkout.c
-//  BreakOut
+//  store_recall.c
+//  Store & Recall game
 //
-//  Created by Steve Furber on 26/08/2016.
-//  Copyright © 2016 Steve Furber. All rights reserved.
+//  Copyright © 2019 Adam Perrett. All rights reserved.
 //
 // Standard includes
 #include <stdbool.h>

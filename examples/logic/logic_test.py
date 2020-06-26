@@ -1,11 +1,10 @@
 import spynnaker8 as p
-from spynnaker.pyNN.connections.\
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
+# from spynnaker.pyNN.connections.\
+#     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
+# from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
+#     SpynnakerExternalDevicePluginManager as ex
 import spinn_gym as gym
 
-import pylab
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +14,8 @@ def get_scores(logic_pop,simulator):
     b_vertex = logic_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.graph_mapper, simulator.buffer_manager, simulator.machine_time_step)
+        simulator.graph_mapper, simulator.buffer_manager,
+        simulator.machine_time_step)
 
     return scores.tolist()
 
@@ -30,7 +30,8 @@ model_input = [0, 1]
 
 input_size = len(input_sequence)
 rate = 20
-input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=[rate*model_input[0], rate*model_input[1]]))
+input_pop = p.Population(input_size, p.SpikeSourcePoisson(
+    rate=[rate*model_input[0], rate*model_input[1]]))
 
 output_pop1 = p.Population(2, p.IF_cond_exp())
 output_pop2 = p.Population(2, p.IF_cond_exp())
@@ -52,9 +53,12 @@ output_pop2.record('spikes')
 
 i2a = p.Projection(input_pop, logic_pop, p.AllToAllConnector())
 
-# test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
-i2o1 = p.Projection(logic_pop, output_pop1, p.AllToAllConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
-i2o2 = p.Projection(logic_pop, output_pop2, p.OneToOneConnector(), p.StaticSynapse(weight=0.1, delay=0.5))
+# test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(),
+#                     p.StaticSynapse(weight=0.1, delay=0.5))
+i2o1 = p.Projection(logic_pop, output_pop1, p.AllToAllConnector(),
+                    p.StaticSynapse(weight=0.1, delay=0.5))
+i2o2 = p.Projection(logic_pop, output_pop2, p.OneToOneConnector(),
+                    p.StaticSynapse(weight=0.1, delay=0.5))
 
 simulator = get_simulator()
 
