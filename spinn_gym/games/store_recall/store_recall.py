@@ -1,15 +1,11 @@
 from __future__ import print_function
-# PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
 
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-# from pacman.model.decorators.overrides import overrides
 from spinn_utilities.overrides import overrides
+
+# PACMAN imports
+from pacman.executor.injection_decorator import inject_items
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
@@ -17,12 +13,12 @@ from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
+from data_specification.enums.data_type import DataType
 
 # SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
+from spinn_front_end_common.interface.buffer_management \
+    import recording_utilities
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
@@ -32,43 +28,29 @@ from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-# sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-# from spynnaker.pyNN.models.common import NeuronRecorder
-# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
-from spynnaker.pyNN.utilities import constants
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
-
 from spinn_front_end_common.abstract_models \
     .abstract_provides_n_keys_for_partition \
     import AbstractProvidesNKeysForPartition
 
+# sPyNNaker imports
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.common import AbstractNeuronRecordable
+from spynnaker.pyNN.utilities import constants
+from spynnaker.pyNN.models.common.simple_population_settable \
+    import SimplePopulationSettable
+
 # Recall imports
-from spinn_gym.games.store_recall.store_recall_machine_vertex import RecallMachineVertex
+from spinn_gym.games.store_recall.store_recall_machine_vertex import \
+    RecallMachineVertex
 
 import numpy
 
-from data_specification.enums.data_type import DataType
-
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
-
-# ----------------------------------------------------------------------------
-# Recall
-# ----------------------------------------------------------------------------
-# **HACK** for Projection to connect a synapse type is required
-# class RecallSynapseType(object):
-#     def get_synapse_id_by_target(self, target):
-#         return 0
 
 
 class Bad_Table(Exception):
@@ -82,36 +64,27 @@ class Bad_Table(Exception):
 # ----------------------------------------------------------------------------
 # Recall
 # ----------------------------------------------------------------------------
-class Recall(ApplicationVertex,
-             AbstractGeneratesDataSpecification,
+class Recall(ApplicationVertex, AbstractGeneratesDataSpecification,
              AbstractHasAssociatedBinary,
              AbstractProvidesOutgoingPartitionConstraints,
-             AbstractAcceptsIncomingSynapses,
-             AbstractNeuronRecordable,
-             SimplePopulationSettable,
-             AbstractProvidesNKeysForPartition
-             # AbstractBinaryUsesSimulationRun
-             ):
+             AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+             SimplePopulationSettable, AbstractProvidesNKeysForPartition):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                                     routing_infos, synapse_information, machine_time_step):
+    def get_connections_from_machine(
+            self, transceiver, placement, edge, graph_mapper,
+            routing_infos, synapse_information, machine_time_step):
 
-        super(Recall, self).get_connections_from_machine(transceiver, placement, edge,
-                                                        graph_mapper, routing_infos,
-                                                        synapse_information,
-                                                        machine_time_step)
+        super(Recall, self).get_connections_from_machine(
+            transceiver, placement, edge, graph_mapper, routing_infos,
+            synapse_information, machine_time_step)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Recall, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
-
-    # def get_binary_start_type(self):
-    #     super(Recall, self).get_binary_start_type()
-    #
-    # def requires_mapping(self):
-    #     pass
+    def add_pre_run_connection_holder(
+            self, connection_holder, projection_edge, synapse_information):
+        super(Recall, self).add_pre_run_connection_holder(
+            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass
@@ -142,11 +115,9 @@ class Recall(ApplicationVertex,
         'label': "Recall",
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
-        'random_seed': [numpy.random.randint(10000), numpy.random.randint(10000),
-                        numpy.random.randint(10000), numpy.random.randint(10000)]}
-
-    # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = RecallSynapseType()
+        'random_seed': [
+            numpy.random.randint(10000), numpy.random.randint(10000),
+            numpy.random.randint(10000), numpy.random.randint(10000)]}
 
     def __init__(self,
                  rate_on=default_parameters['rate_on'],
@@ -159,7 +130,8 @@ class Recall(ApplicationVertex,
                  reward=default_parameters['reward'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
+                 incoming_spike_buffer_size=default_parameters[
+                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -200,19 +172,12 @@ class Recall(ApplicationVertex,
             self._incoming_spike_buffer_size = config.getint(
                 "Simulation", "incoming_spike_buffer_size")
 
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
-
     def neurons(self):
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
         # Recall has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
-
-    #    def get_max_atoms_per_core(self):
-    #       return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -221,9 +186,6 @@ class Recall(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            # sdram=SDRAMResource(
-            #     self.RECALL_REGION_BYTES +
-            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
@@ -234,7 +196,8 @@ class Recall(ApplicationVertex,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        return RecallMachineVertex(resources_required, constraints, self._label)
+        return RecallMachineVertex(
+            resources_required, constraints, self._label)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -259,7 +222,6 @@ class Recall(ApplicationVertex,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags, n_machine_time_steps):
         vertex = placement.vertex
-#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Recall Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -272,7 +234,6 @@ class Recall(ApplicationVertex,
         spec.reserve_memory_region(
             region=RecallMachineVertex._RECALL_REGIONS.RECALL.value,
             size=self.RECALL_REGION_BYTES, label='RecallParams')
-        # vertex.reserve_provenance_data_region(spec)
         # reserve recording region
         spec.reserve_memory_region(
             RecallMachineVertex._RECALL_REGIONS.RECORDING.value,
@@ -381,11 +342,11 @@ class Recall(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        print("set_recording")
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
+        return 10000  # 10 seconds hard coded in store_recall.c
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
@@ -394,17 +355,15 @@ class Recall(ApplicationVertex,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        # data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
-        data_values, _ = buffer_manager.get_data_by_placement(placement,0)
-        data = data_values#.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data = data_values
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
 
-        # return formatted_data
         return output_data
 
     def reset_ring_buffer_shifts(self):
-        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")
+        pass

@@ -1,15 +1,13 @@
 from __future__ import print_function
-# PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
 
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-# from pacman.model.decorators.overrides import overrides
 from spinn_utilities.overrides import overrides
+
+from data_specification.enums.data_type import DataType
+
+# PACMAN imports
+from pacman.executor.injection_decorator import inject_items
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
@@ -17,12 +15,10 @@ from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
+# SpinnFrontEndCommon imports
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
-
-# SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
@@ -32,36 +28,24 @@ from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-# from spynnaker.pyNN.models.common import NeuronRecorder
-# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
 # Breakout imports
-from spinn_gym.games.breakout.breakout_machine_vertex import BreakoutMachineVertex
+from spinn_gym.games.breakout.breakout_machine_vertex import \
+    BreakoutMachineVertex
 
 import numpy
-
-from data_specification.enums.data_type import DataType
-
-# ----------------------------------------------------------------------------
-# Breakout
-# ----------------------------------------------------------------------------
-# **HACK** for Projection to connect a synapse type is required
-# class BreakoutSynapseType(object):
-#     def get_synapse_id_by_target(self, target):
-#         return 0
 
 
 # ----------------------------------------------------------------------------
@@ -70,14 +54,13 @@ from data_specification.enums.data_type import DataType
 class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                AbstractHasAssociatedBinary,
                AbstractProvidesOutgoingPartitionConstraints,
-               AbstractAcceptsIncomingSynapses,
-               AbstractNeuronRecordable,
+               AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
                SimplePopulationSettable
-               # AbstractBinaryUsesSimulationRun
                ):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                               routing_infos, synapse_information, machine_time_step):
+    def get_connections_from_machine(
+            self, transceiver, placement, edge, graph_mapper,
+            routing_infos, synapse_information, machine_time_step):
 
         super(Breakout, self).get_connections_from_machine(
             transceiver, placement, edge, graph_mapper, routing_infos,
@@ -90,12 +73,6 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                                       projection_edge, synapse_information):
         super(Breakout, self).add_pre_run_connection_holder(
             connection_holder, projection_edge, synapse_information)
-
-    # def get_binary_start_type(self):
-    #     super(Breakout, self).get_binary_start_type()
-    #
-    # def requires_mapping(self):
-    #     pass
 
     def clear_connection_cache(self):
         pass
@@ -115,9 +92,6 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                  numpy.random.randint(10000),
                  numpy.random.randint(10000),
                  numpy.random.randint(10000)]
-
-    # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = BreakoutSynapseType()
 
     # parameters expected by PyNN
     default_parameters = {
@@ -165,7 +139,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         # print "# height bits =", self._height_bits
         # print "# neurons =", self._n_neurons
 
-        #used to define size of recording region
+        # Define size of recording region
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
 
         # Superclasses
@@ -183,21 +157,12 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
             self._incoming_spike_buffer_size = config.getint(
                                     "Simulation", "incoming_spike_buffer_size")
 
-
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
-
     def neurons(self):
-        print('breakout neurons: ', self._n_neurons)
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
         # Breakout has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
-
-#     def get_max_atoms_per_core(self):
-#         return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -206,10 +171,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-#             sdram=SDRAMResource(
-#                 self.BREAKOUT_REGION_BYTES +
-#                 front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram = VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -249,7 +211,6 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags, n_machine_time_steps):
         vertex = placement.vertex
-#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Breakout Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -262,8 +223,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.reserve_memory_region(
             region=BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value,
             size=self.BREAKOUT_REGION_BYTES, label='BreakoutKey')
-        # vertex.reserve_provenance_data_region(spec)
-        #reserve recording region
+        # Reserve recording region
         spec.reserve_memory_region(
             BreakoutMachineVertex._BREAKOUT_REGIONS.RECORDING.value,
             recording_utilities.get_recording_header_size(1))
@@ -286,7 +246,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
-        #Write recording region for score
+        # Write recording region for score
         spec.comment("\nWriting breakout recording region:\n")
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.RECORDING.value)
@@ -294,8 +254,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_array(recording_utilities.get_recording_header_array(
             [self._recording_size], ip_tags=ip_tags))
 
-
-        spec.comment("\nWriting arm param region:\n")
+        spec.comment("\nWriting breakout param region:\n")
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.PARAMS.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
@@ -369,7 +328,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
-        return 10000 #10 seconds hard coded in bkout.c
+        return 10000  # 10 seconds hard coded in bkout.c
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
@@ -378,15 +337,14 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_by_placement(placement,0)
-        data = data_values #.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data = data_values
 
-        numpy_format=list()
-        numpy_format.append(("Score",numpy.int32))
+        numpy_format = list()
+        numpy_format.append(("Score", numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
 
-        #return formatted_data
         return output_data
 
     def reset_ring_buffer_shifts(self):

@@ -1,20 +1,15 @@
 from enum import Enum
 
 # PACMAN imports
-# from pacman.model.decorators.overrides import overrides
-# from spinn_utilities.overrides import overrides
-
+from pacman.model.graphs.machine import MachineVertex
 
 # SpinnFrontEndCommon imports
-from pacman.model.graphs.machine import MachineVertex
-# from spinn_front_end_common.interface.provenance \
-#     .provides_provenance_data_from_machine_impl \
-#     import ProvidesProvenanceDataFromMachineImpl
-from spinn_front_end_common.utilities import helpful_functions  # , constants
+from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
-from spinn_front_end_common.interface.buffer_management.buffer_models import (
-    AbstractReceiveBuffersToHost)
+from spinn_front_end_common.interface.buffer_management.buffer_models import \
+    AbstractReceiveBuffersToHost
+
 
 # ----------------------------------------------------------------------------
 # LogicMachineVertex
@@ -31,8 +26,6 @@ class LogicMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
         # Superclasses
         MachineVertex.__init__(self, label,
                                constraints=constraints)
-        # ProvidesProvenanceDataFromMachineImpl.__init__(
-        #     self, self._BREAKOUT_REGIONS.PROVENANCE.value, 0)
         self._resource_required = resources_required
 
     @property
@@ -44,7 +37,7 @@ class LogicMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
 
     def get_n_timesteps_in_buffer_space(self, buffer_space, machine_time_step):
         return recording_utilities.get_n_timesteps_in_buffer_space(
-            buffer_space, [0])  # this could be completely wrong - test the value used
+            buffer_space, [0])  # this could be completely wrong - test
 
     def get_recorded_region_ids(self):
         return [0]

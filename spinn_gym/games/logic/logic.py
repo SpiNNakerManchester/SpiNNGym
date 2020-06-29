@@ -1,28 +1,22 @@
-# PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
-
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-# from pacman.model.decorators.overrides import overrides
 from spinn_utilities.overrides import overrides
+
+# PACMAN imports
+from pacman.executor.injection_decorator import inject_items
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-# from pacman.model.resources.constant_sdram import ConstantSDRAM
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
+from data_specification.enums.data_type import DataType
 
 # SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
+from spinn_front_end_common.interface.buffer_management \
+    import recording_utilities
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
@@ -32,43 +26,28 @@ from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-
-# sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-# from spynnaker.pyNN.models.common import NeuronRecorder
-# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
-from spynnaker.pyNN.utilities import constants
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
-
 from spinn_front_end_common.abstract_models\
    .abstract_provides_n_keys_for_partition \
    import AbstractProvidesNKeysForPartition
+
+# sPyNNaker imports
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.common import AbstractNeuronRecordable
+from spynnaker.pyNN.utilities import constants
+from spynnaker.pyNN.models.common.simple_population_settable \
+    import SimplePopulationSettable
 
 # Logic imports
 from spinn_gym.games.logic.logic_machine_vertex import LogicMachineVertex
 
 import numpy
 
-from data_specification.enums.data_type import DataType
-
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
-# ----------------------------------------------------------------------------
-# Logic
-# ----------------------------------------------------------------------------
-# **HACK** for Projection to connect a synapse type is required
-# class LogicSynapseType(object):
-#     def get_synapse_id_by_target(self, target):
-#         return 0
 
 
 class Bad_Table(Exception):
@@ -78,46 +57,38 @@ class Bad_Table(Exception):
     def __str__(self):
         return repr(self.value)
 
+
 # ----------------------------------------------------------------------------
 # Logic
 # ----------------------------------------------------------------------------
-class Logic(ApplicationVertex,
-                AbstractGeneratesDataSpecification,
-                AbstractHasAssociatedBinary,
-                AbstractProvidesOutgoingPartitionConstraints,
-                AbstractAcceptsIncomingSynapses,
-                AbstractNeuronRecordable,
-                SimplePopulationSettable,
-                AbstractProvidesNKeysForPartition
-                # AbstractBinaryUsesSimulationRun
-                ):
+class Logic(ApplicationVertex, AbstractGeneratesDataSpecification,
+            AbstractHasAssociatedBinary,
+            AbstractProvidesOutgoingPartitionConstraints,
+            AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+            SimplePopulationSettable, AbstractProvidesNKeysForPartition):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                                     routing_infos, synapse_information, machine_time_step):
+    def get_connections_from_machine(
+            self, transceiver, placement, edge, graph_mapper,
+            routing_infos, synapse_information, machine_time_step):
 
-        super(Logic, self).get_connections_from_machine(transceiver, placement, edge,
-                                                           graph_mapper, routing_infos,
-                                                           synapse_information,
-                                                           machine_time_step)
+        super(Logic, self).get_connections_from_machine(
+            transceiver, placement, edge, graph_mapper, routing_infos,
+            synapse_information, machine_time_step)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Logic, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
-
-    # def get_binary_start_type(self):
-    #     super(Logic, self).get_binary_start_type()
-    #
-    # def requires_mapping(self):
-    #     pass
+    def add_pre_run_connection_holder(
+            self, connection_holder, projection_edge, synapse_information):
+        super(Logic, self).add_pre_run_connection_holder(
+            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass
 
     @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
     def get_n_keys_for_partition(self, partition, graph_mapper):
-        return 8  # 2  # two for control IDs
+        return 8  # for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
@@ -139,11 +110,9 @@ class Logic(ApplicationVertex,
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
         'truth_table': [0, 1, 1, 0],
-        'random_seed': [numpy.random.randint(10000), numpy.random.randint(10000),
-                        numpy.random.randint(10000), numpy.random.randint(10000)]}
-
-    # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = LogicSynapseType()
+        'random_seed': [
+            numpy.random.randint(10000), numpy.random.randint(10000),
+            numpy.random.randint(10000), numpy.random.randint(10000)]}
 
     def __init__(self, truth_table, input_sequence,
                  rate_on=default_parameters['rate_on'],
@@ -152,7 +121,8 @@ class Logic(ApplicationVertex,
                  stochastic=default_parameters['stochastic'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
+                 incoming_spike_buffer_size=default_parameters[
+                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -197,19 +167,12 @@ class Logic(ApplicationVertex,
             self._incoming_spike_buffer_size = config.getint(
                 "Simulation", "incoming_spike_buffer_size")
 
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
-
     def neurons(self):
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
         # Logic has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
-
-    #    def get_max_atoms_per_core(self):
-    #       return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -218,9 +181,6 @@ class Logic(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            # sdram=ConstantSDRAM(
-            #     self.LOGIC_REGION_BYTES +
-            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
@@ -254,7 +214,6 @@ class Logic(ApplicationVertex,
                                     time_scale_factor, graph_mapper,
                                     routing_info, tags):
         vertex = placement.vertex
-#         vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Logic Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -267,7 +226,6 @@ class Logic(ApplicationVertex,
         spec.reserve_memory_region(
             region=LogicMachineVertex._LOGIC_REGIONS.LOGIC.value,
             size=self.LOGIC_REGION_BYTES, label='LogicParams')
-        # vertex.reserve_provenance_data_region(spec)
         # reserve recording region
         spec.reserve_memory_region(
             LogicMachineVertex._LOGIC_REGIONS.RECORDING.value,
@@ -321,7 +279,6 @@ class Logic(ApplicationVertex,
         data = numpy.array(self._truth_table, dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))
 
-
         # End-of-Spec:
         spec.end_specification()
 
@@ -334,7 +291,6 @@ class Logic(ApplicationVertex,
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
         return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
@@ -381,7 +337,7 @@ class Logic(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        print("set_recording")
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
@@ -395,15 +351,14 @@ class Logic(ApplicationVertex,
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
-        data = data_values#.read_all()
+        data = data_values
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
 
-        # return formatted_data
         return output_data
 
     def reset_ring_buffer_shifts(self):
-        print("due to AcceptsIncomingSynapses, but no synaptic manager... ?")
+        pass
