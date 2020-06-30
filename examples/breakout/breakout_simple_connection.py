@@ -24,7 +24,8 @@ import spinn_gym as gym
 # -----------------------------------------------------------------------------
 #  Globals
 # -----------------------------------------------------------------------------
-vis_proc = None # Visualiser process (global)
+vis_proc = None  # Visualiser process (global)
+
 
 # -----------------------------------------------------------------------------
 #  Helper Functions
@@ -48,7 +49,8 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
          ])
     # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
-def get_scores(breakout_pop,simulator):
+
+def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
@@ -56,6 +58,7 @@ def get_scores(breakout_pop,simulator):
         simulator.machine_time_step)
 
     return scores.tolist()
+
 
 def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
                               colour_bits=2, row_start=0):
@@ -73,6 +76,7 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
     idx = idx + 2
 
     return idx
+
 
 def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                          weight, coord_map_func):
@@ -93,12 +97,11 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                                        subsampidx, weight, 1.))
 
             # OFF channels only on segment borders
-            # if((j+1)%(y_res/subsamp_factor)==0 or
-            #(i+1)%(x_res/subsamp_factor)==0 or j==0 or i==0):
             connection_list_off.append((coord_map_func(j, i, 0, row_bits),
                                         subsampidx, weight, 1.))
 
     return connection_list_on, connection_list_off
+
 
 # -----------------------------------------------------------------------------
 # Initialise Simulation and Parameters

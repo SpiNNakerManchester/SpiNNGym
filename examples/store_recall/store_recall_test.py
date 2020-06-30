@@ -1,8 +1,4 @@
 import spynnaker8 as p
-# from spynnaker.pyNN.connections. \
-#     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-# from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-#     SpynnakerExternalDevicePluginManager as ex
 import spinn_gym as gym
 
 from pyNN.utility.plotting import Figure, Panel
@@ -19,6 +15,7 @@ def get_scores(recall_pop, simulator):
         simulator.machine_time_step)
 
     return scores.tolist()
+
 
 rate_on = 10
 rate_off = 0
@@ -50,17 +47,12 @@ recall_model = gym.Recall(rate_on=rate_on,
                           rand_seed=random_seed)
 
 recall_pop = p.Population(recall_model.neurons(), recall_model)
-
 readout_pop = p.Population(recall_model.neurons(), p.IF_cond_exp())
 
 input_pop.record('spikes')
-# recall_pop.record('spikes')
 readout_pop.record('spikes')
 
 i2a = p.Projection(input_pop, recall_pop, p.AllToAllConnector())
-
-# test_rec = p.Projection(recall_pop, recall_pop, p.AllToAllConnector(),
-#                         p.StaticSynapse(weight=0.1, delay=0.5))
 i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
@@ -91,8 +83,3 @@ Figure(
 plt.show()
 
 p.end()
-
-
-
-
-

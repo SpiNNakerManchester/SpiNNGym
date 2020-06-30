@@ -1,15 +1,11 @@
 import spynnaker8 as p
-# from spynnaker.pyNN.connections.\
-#     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-# from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-#     SpynnakerExternalDevicePluginManager as ex
 import spinn_gym as gym
 
-# import pylab
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
+
 
 def get_scores(bandit_pop, simulator):
     b_vertex = bandit_pop._vertex
@@ -19,6 +15,7 @@ def get_scores(bandit_pop, simulator):
         simulator.machine_time_step)
 
     return scores.tolist()
+
 
 p.setup(timestep=1.0)
 
@@ -43,8 +40,8 @@ output_pop2.record('spikes')
 
 i2a = p.Projection(input_pop, arms_pop, p.AllToAllConnector())
 
-#neuron ID 0 = reward
-#neuron ID 1 = no reward
+# neuron ID 0 = reward
+# neuron ID 1 = no reward
 test_rec = p.Projection(arms_pop, arms_pop, p.AllToAllConnector(),
                         p.StaticSynapse(weight=0.1, delay=0.5))
 i2o1 = p.Projection(arms_pop, output_pop1, p.AllToAllConnector(),
@@ -72,8 +69,3 @@ Figure(
 plt.show()
 
 p.end()
-
-
-
-
-

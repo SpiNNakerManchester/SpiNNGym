@@ -8,6 +8,7 @@ import spynnaker8 as p
 import spinn_gym as gym
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
+
 def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
     scores = g_vertex.get_data(
@@ -75,18 +76,16 @@ from_list_conn_out = [[0, left, weight, 1], [6, left, weight, 1],
                       [3, left, weight, 1], [11, left, weight, 1],
                       [2, right, weight, 1], [8, right, weight, 1],
                       [5, right, weight, 1], [9, right, weight, 1]]
-output_pop = p.Population(outputs, p.IF_cond_exp(
-                                            tau_m=0.5, tau_refrac=0
-                                           , v_thresh=-64
-                                           , tau_syn_E=1, tau_syn_I=1
-                                           ), label='out')
+output_pop = p.Population(
+    outputs, p.IF_cond_exp(
+        tau_m=0.5, tau_refrac=0, v_thresh=-64, tau_syn_E=1, tau_syn_I=1),
+    label='out')
 output_pop.record(['spikes', 'v', 'gsyn_exc'])
 p.Projection(pendulum, output_pop, p.FromListConnector(from_list_conn_out))
-output_pop2 = p.Population(outputs, p.IF_cond_exp(
-                                            tau_m=0.5, tau_refrac=0
-                                            , v_thresh=-64
-                                            , tau_syn_E=0.5, tau_syn_I=0.5
-                                            ), label='out2')
+output_pop2 = p.Population(
+    outputs, p.IF_cond_exp(
+        tau_m=0.5, tau_refrac=0, v_thresh=-64, tau_syn_E=0.5, tau_syn_I=0.5),
+    label='out2')
 output_pop2.record(['spikes', 'v', 'gsyn_exc'])
 p.Projection(null_pop, output_pop2, p.FromListConnector(from_list_conn_out))
 arm_conns = [from_list_conn_left, from_list_conn_right]
@@ -106,9 +105,11 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 #     p.Projection(null_pop, arm_collection[j],
 #                  p.FromListConnector(arm_conns[j]))
 # for conn in from_list_conn_left:
-#     p.Projection(null_pops[conn[0]], arm_collection[0], p.AllToAllConnector())
+#     p.Projection(null_pops[conn[0]], arm_collection[0],
+#                  p.AllToAllConnector())
 # for conn in from_list_conn_right:
-#     p.Projection(null_pops[conn[0]], arm_collection[1], p.AllToAllConnector())
+#     p.Projection(null_pops[conn[0]], arm_collection[1],
+#                  p.AllToAllConnector())
 
 simulator = get_simulator()
 p.run(runtime)

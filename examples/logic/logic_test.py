@@ -1,8 +1,4 @@
 import spynnaker8 as p
-# from spynnaker.pyNN.connections.\
-#     spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-# from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-#     SpynnakerExternalDevicePluginManager as ex
 import spinn_gym as gym
 
 from pyNN.utility.plotting import Figure, Panel
@@ -10,7 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
-def get_scores(logic_pop,simulator):
+
+def get_scores(logic_pop, simulator):
     b_vertex = logic_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
@@ -19,13 +16,14 @@ def get_scores(logic_pop,simulator):
 
     return scores.tolist()
 
+
 p.setup(timestep=1.0)
 
 truth_table = [0, 1, 1, 0]
 input_sequence = [1, 1]
 
-#index 0 = off
-#index 1 = on
+# index 0 = off
+# index 1 = on
 model_input = [0, 1]
 
 input_size = len(input_sequence)
@@ -80,8 +78,3 @@ Figure(
 plt.show()
 
 p.end()
-
-
-
-
-
