@@ -241,21 +241,21 @@ void did_it_fire(uint32_t time){
 //    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
 //    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
     if (stochastic) {
-        for(int i=0; i<number_of_inputs; i=i+1) {
+        for (int i=0; i<number_of_inputs; i++) {
             if (input_sequence[i] == 0) {
-                if(rand021() < max_fire_prob_off) {
+                if (rand021() < max_fire_prob_off) {
                     send_spike(i);
                 }
             }
             else {
-                if(rand021() < max_fire_prob_on) {
+                if (rand021() < max_fire_prob_on) {
                     send_spike(i);
                 }
             }
         }
     }
     else{
-        for(int i=0; i<number_of_inputs; i=i+1) {
+        for (int i=0; i<number_of_inputs; i++) {
             if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0) {
                 send_spike(i);
             }

@@ -379,15 +379,15 @@ void mc_packet_received_callback(uint keyx, uint payload)
     compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
     use(payload);
-    if(compare == BACKWARD_MOTOR){
+    if (compare == BACKWARD_MOTOR) {
         motor_force = motor_force - force_increment;
-        if (motor_force < min_motor_force){
+        if (motor_force < min_motor_force) {
             motor_force = min_motor_force;
         }
     }
-    else if(compare == FORWARD_MOTOR){
+    else if (compare == FORWARD_MOTOR) {
         motor_force = motor_force + force_increment;
-        if (motor_force > max_motor_force){
+        if (motor_force > max_motor_force) {
             motor_force = max_motor_force;
         }
     }

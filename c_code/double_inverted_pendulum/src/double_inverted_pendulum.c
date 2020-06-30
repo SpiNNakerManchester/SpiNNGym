@@ -600,8 +600,7 @@ void timer_callback(uint unused, uint dummy)
     _time++;
     score_change_count++;
 
-    if (!infinite_run && _time >= simulation_ticks)
-    {
+    if (!infinite_run && _time >= simulation_ticks) {
     	// Finalise recording
         recording_finalise();
 
@@ -622,15 +621,14 @@ void timer_callback(uint unused, uint dummy)
     // Otherwise
     else
     {
-        if (_time == 0){
+        if (_time == 0) {
             update_state(0);
             // possibly use this to allow updating of time whenever
 //            auto start = chrono::steady_clock::now();
         }
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
-        if(tick_in_frame == time_increment)
-        {
+        if (tick_in_frame == time_increment) {
             if (in_bounds){
                 max_balance_time = (float)_time;
 //                max_balance_time = max_balance_time + 1;
@@ -646,16 +644,16 @@ void timer_callback(uint unused, uint dummy)
                 current_state[2] = pole2_angle;
                 io_printf(IO_BUF, "values: %k %k %k \n", (accum) cart_position,
                 		(accum) pole_angle, (accum) pole2_angle);
-                if(reward_based == 0){
+                if (reward_based == 0) {
                     recording_record(0, &current_state, 12);
                 }
-                else{
+                else {
                     recording_record(0, &max_balance_time, 4);
                 }
                 score_change_count=0;
             }
         }
-        if (in_bounds){
+        if (in_bounds) {
             send_status();
         }
     }

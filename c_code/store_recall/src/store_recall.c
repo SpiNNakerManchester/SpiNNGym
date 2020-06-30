@@ -62,7 +62,7 @@ typedef enum {
   KEY_CHOICE_1  = 0x1,
 } recall_key_t;
 
-typedef union{
+typedef union {
    uint32_t u;
    float f;
    accum a;
@@ -357,7 +357,8 @@ void update_state() {
     }
     if (current_state == STATE_STORING) {
         stored_value = current_value;
-//        io_printf(IO_BUF, "storing state:%u, stored:%u, time:%u\n", current_state, stored_value, _time);
+//        io_printf(IO_BUF, "storing state:%u, stored:%u, time:%u\n",
+//        		current_state, stored_value, _time);
     }
 }
 
