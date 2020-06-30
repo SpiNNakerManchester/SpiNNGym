@@ -33,16 +33,14 @@
 //----------------------------------------------------------------------------
 // Enumerations
 //----------------------------------------------------------------------------
-typedef enum
-{
+typedef enum {
   REGION_SYSTEM,
   REGION_LOGIC,
   REGION_RECORDING,
   REGION_DATA,
 } region_t;
 
-typedef enum
-{
+typedef enum {
   SPECIAL_EVENT_INPUT_1,
   SPECIAL_EVENT_INPUT_2,
   SPECIAL_EVENT_INPUT_3,
@@ -53,8 +51,7 @@ typedef enum
   SPECIAL_EVENT_INPUT_8,
 } special_event_t;
 
-typedef enum
-{
+typedef enum {
   KEY_CHOICE_0  = 0x0,
   KEY_CHOICE_1  = 0x1,
 //  KEY_CHOICE_2  = 0x2,
@@ -118,25 +115,9 @@ static inline void send_spike(int input)
 //  current_score++;
 }
 
-//static inline void add_no_reward()
-//{
-//  spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "No reward\n");
-////  current_score--;
-//}
-
 void resume_callback() {
     recording_reset();
 }
-
-//void add_event(int i, int j, colour_t col, bool bricked)
-//{
-//  const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-//  const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
-//
-//  spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "%d, %d, %u, %08x\n", i, j, col, spike_key);
-//}
 
 static bool initialize(uint32_t *timer_period)
 {
@@ -146,22 +127,14 @@ static bool initialize(uint32_t *timer_period)
     data_specification_metadata_t *address = data_specification_get_data_address();
 
     // Read the header
-    if (!data_specification_read_header(address))
-    {
+    if (!data_specification_read_header(address)) {
       return false;
     }
-    /*
-    simulation_initialise(
-        address_t address, uint32_t expected_app_magic_number,
-        uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
-        uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
-        int dma_transfer_done_callback_priority)
-    */
+
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
     		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-			&infinite_run, &_time, 1, 0))
-    {
+			&infinite_run, &_time, 1, 0)) {
       return false;
     }
     io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
@@ -179,8 +152,7 @@ static bool initialize(uint32_t *timer_period)
 
     // Setup recording
     uint32_t recording_flags = 0;
-    if (!recording_initialize(&recording_region, &recording_flags))
-    {
+    if (!recording_initialize(&recording_region, &recording_flags)) {
        rt_error(RTE_SWERR);
        return false;
     }
@@ -209,17 +181,18 @@ static bool initialize(uint32_t *timer_period)
     validate_mars_kiss64_seed(kiss_seed);
 
     int truth_table_index = 0;
-    for(int i=0; i<number_of_inputs; i=i+1){
+    for (int i=0; i<number_of_inputs; i++) {
         truth_table_index = truth_table_index + (input_sequence[i] * (1 << i));
-        io_printf(IO_BUF, "%d: input %u, index %u, 2 %u\n", i, input_sequence[i], truth_table_index, 1 << i);
+        io_printf(IO_BUF, "%d: input %u, index %u, 2 %u\n",
+        		i, input_sequence[i], truth_table_index, 1 << i);
     }
-    for(int i=0; i<(1 << number_of_inputs); i=i+1){
+    for (int i=0; i<(1 << number_of_inputs); i++){
         io_printf(IO_BUF, "t%d: %u\n", i, truth_table[i]);
     }
     correct_output = truth_table[truth_table_index];
 
 //    srand(rand_seed);
-    //TODO check this prints right, ybug read the address
+    // TODO check this prints right, ybug read the address
     io_printf(IO_BUF, "score delay %d\n", (uint32_t *)logic_region[0]);
     io_printf(IO_BUF, "no inputs %d\n", (uint32_t *)logic_region[1]);
     io_printf(IO_BUF, "kiss seed. %d\n", (uint32_t *)logic_region[2]);
@@ -241,17 +214,19 @@ static bool initialize(uint32_t *timer_period)
 
 void was_it_correct(){  // TODO: probably rename this function?
     int choice = -1;
-    if (output_choice[0] > output_choice[1]){
+    if (output_choice[0] > output_choice[1]) {
         choice = 0;
     }
-    else if (output_choice[1] > output_choice[0]){
+    else if (output_choice[1] > output_choice[0]) {
         choice = 1;
     }
-//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
+//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n",
+//    		output_choice[0], output_choice[1], choice, current_score);
     if (choice == correct_output){
         current_score = current_score + 1;
     }
-//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n", output_choice[0], output_choice[1], choice, current_score);
+//    io_printf(IO_BUF, "c0 %u, c1 %u, c %u, score %u\n",
+//    		output_choice[0], output_choice[1], choice, current_score);
     output_choice[0] = 0;
     output_choice[1] = 0;
 
@@ -265,26 +240,26 @@ void did_it_fire(uint32_t time){
 //    io_printf(IO_BUF, "time = %u\n", time);
 //    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
 //    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
-    if(stochastic){
-        for(int i=0; i<number_of_inputs; i=i+1){
-            if(input_sequence[i] == 0){
-                if(rand021() < max_fire_prob_off){
+    if (stochastic) {
+        for(int i=0; i<number_of_inputs; i=i+1) {
+            if (input_sequence[i] == 0) {
+                if(rand021() < max_fire_prob_off) {
                     send_spike(i);
                 }
             }
-            else{
-                if(rand021() < max_fire_prob_on){
+            else {
+                if(rand021() < max_fire_prob_on) {
                     send_spike(i);
                 }
             }
         }
     }
     else{
-        for(int i=0; i<number_of_inputs; i=i+1){
-            if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0){
+        for(int i=0; i<number_of_inputs; i=i+1) {
+            if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0) {
                 send_spike(i);
             }
-            else if(input_sequence[i] == 1 && time % (1000 / rate_on) == 0){
+            else if (input_sequence[i] == 1 && time % (1000 / rate_on) == 0) {
                 send_spike(i);
             }
         }
@@ -300,10 +275,10 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "key = %x\n", key);
 //    io_printf(IO_BUF, "payload = %x\n", payload);
     use(payload);
-    if(compare == KEY_CHOICE_0){
+    if (compare == KEY_CHOICE_0) {
         output_choice[0]++;
     }
-    else if(compare == KEY_CHOICE_1){
+    else if (compare == KEY_CHOICE_1) {
         output_choice[1]++;
     }
 //    else if(compare == KEY_CHOICE_2){
@@ -337,16 +312,15 @@ void timer_callback(uint unused, uint dummy)
     _time++;
     score_change_count++;
 
-    if (!infinite_run && _time >= simulation_ticks)
-    {
+    if (!infinite_run && _time >= simulation_ticks) {
         //spin1_pause();
         recording_finalise();
         // go into pause and resume state to avoid another tick
         simulation_handle_pause_resume(resume_callback);
         //    spin1_callback_off(MC_PACKET_RECEIVED);
 
-        io_printf(IO_BUF, "infinite_run %d; time %d\n",infinite_run, _time);
-        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+        io_printf(IO_BUF, "infinite_run %d; time %d\n", infinite_run, _time);
+        io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
 
@@ -358,19 +332,17 @@ void timer_callback(uint unused, uint dummy)
         return;
     }
     // Otherwise
-    else
-    {
+    else {
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
         did_it_fire(score_change_count);
-        if(tick_in_frame == score_delay)
-        {
+        if (tick_in_frame == score_delay) {
             was_it_correct();
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 1s
-            if(score_change_count >= 1000){
+            if (score_change_count >= 1000) {
                 recording_record(0, &current_score, 4);
                 score_change_count = 0;
             }
@@ -379,12 +351,6 @@ void timer_callback(uint unused, uint dummy)
 //    io_printf(IO_BUF, "time %u\n", ticks);
 //    io_printf(IO_BUF, "time %u\n", _time);
 }
-//-------------------------------------------------------------------------------
-
-INT_HANDLER sark_int_han (void);
-
-
-//-------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 // Entry point
@@ -393,9 +359,8 @@ void c_main(void)
 {
   // Load DTCM data
   uint32_t timer_period;
-  if (!initialize(&timer_period))
-  {
-    io_printf(IO_BUF,"Error in initialisation - exiting!\n");
+  if (!initialize(&timer_period)) {
+    io_printf(IO_BUF, "Error in initialisation - exiting!\n");
     rt_error(RTE_SWERR);
     return;
   }
@@ -407,7 +372,7 @@ void c_main(void)
               timer_period);
   spin1_set_timer_tick(timer_period);
 
-  io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+  io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
 
   // Register callback
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
@@ -416,8 +381,5 @@ void c_main(void)
   _time = UINT32_MAX;
 
   simulation_run();
-
-
-
 
 }

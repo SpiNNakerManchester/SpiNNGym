@@ -38,7 +38,8 @@
     base rate for the neurons to fire in each bin
     each spike equals a change in force to be applied (what is that amount)
     receptive field of each bin
-    update model on each timer tick and on each spike received, or number of spikes per tick equals a force
+    update model on each timer tick and on each spike received,
+    or number of spikes per tick equals a force
 
     add option to rate (increased poisson P()) code and rank code
 */
@@ -46,16 +47,14 @@
 //----------------------------------------------------------------------------
 // Enumerations
 //----------------------------------------------------------------------------
-typedef enum
-{
+typedef enum {
   REGION_SYSTEM,
   REGION_PENDULUM,
   REGION_RECORDING,
   REGION_DATA,
 } region_t;
 
-typedef enum
-{
+typedef enum {
   SPECIAL_EVENT_ANGLE,
   SPECIAL_EVENT_ANGLE_2,
   SPECIAL_EVENT_CART,
@@ -64,13 +63,13 @@ typedef enum
   SPECIAL_EVENT_CART_V,
 } special_event_t;
 
-typedef enum // forward will be considered positive motion
-{
+typedef enum {
+  // forward will be considered positive motion
   BACKWARD_MOTOR  = 0x0,
   FORWARD_MOTOR  = 0x1,
 } arm_key_t;
 
-typedef union{
+typedef union {
    uint32_t u;
 //   uint32_t* us;
    float f;
@@ -138,12 +137,12 @@ float bin_overlap = 2.5;
 float tau_force;
 uint_float_union temp_accum;
 
-int central = 1; // if it's central that mean perfectly central on the track and angle is the lowest rate, else half
+// if it's central that means perfectly central on the track and angle is the
+// lowest rate, else half
+int central = 1;
 
 // experimental parameters
-
 float max_balance_time = 0;
-
 float current_state[3];
 bool in_bounds = true;
 
@@ -217,7 +216,8 @@ void resume_callback() {
 //void add_event(int i, int j, colour_t col, bool bricked)
 //{
 //  const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
-//  const uint32_t spike_key = key | (SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
+//  const uint32_t spike_key = key | (
+//		  SPECIAL_EVENT_MAX + (i << 10) + (j << 2) + (bricked<<1) + colour_bit);
 //
 //  spin1_send_mc_packet(spike_key, 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "%d, %d, %u, %08x\n", i, j, col, spike_key);
@@ -346,10 +346,11 @@ static bool initialize(uint32_t *timer_period)
 //    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
 //    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);
 
-    io_printf(IO_BUF, "starting state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
-                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
-                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
-                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+    io_printf(IO_BUF, "starting state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) ",
+    		"and cart (d,v,a):(%k, %k, %k)\n",
+			(accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+			(accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+			(accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
     log_info("End of initialise");
@@ -388,32 +389,40 @@ bool update_state(float time_step){
     float test_f = (float)sink((accum)pole_angle);
     temp_accum.a = sink((accum)pole_angle);
 
-    io_printf(IO_BUF, "test a %k, f %k, temp a %k, temp f %k\n", test_a, (accum)test_f, (accum)temp_accum.a, (accum)temp_accum.f);
+    io_printf(IO_BUF, "test a %k, f %k, temp a %k, temp f %k\n",
+    		test_a, (accum)test_f, (accum)temp_accum.a, (accum)temp_accum.f);
 
-    io_printf(IO_BUF, "before state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
-                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
-                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
-                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+    io_printf(IO_BUF, "before state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) ",
+    		"and cart (d,v,a):(%k, %k, %k)\n",
+			(accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+			(accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+			(accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
     // equation fro pole 1
     float effective_force_pole_on_cart = 0;
     float mass_pole = mass_pole_pm * half_pole_length;
-    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity * (float)sink((accum)pole_angle));
+    float pole_angle_force = (mass_pole * half_pole_length * pole_velocity * pole_velocity *
+    		(float)sink((accum)pole_angle));
     float angle_scalar = (0.75f * mass_pole *  (float)cosk((accum)pole_angle));
-    float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length)) +
-                        (gravity * (float)sink((accum)pole_angle)));
-    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole_angle) *  (float)cosk((accum)pole_angle)));
+    float friction_and_gravity = (((friction_pole_hinge * pole_velocity) / (
+    		mass_pole * half_pole_length)) + (gravity * (float)sink((accum)pole_angle)));
+    float effective_pole_mass = mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk(
+    		(accum)pole_angle) *  (float)cosk((accum)pole_angle)));
     effective_force_pole_on_cart = pole_angle_force + (angle_scalar * friction_and_gravity);
 
     // equation for pole 2
     mass_pole = mass_pole_pm * half_pole2_length;
-    pole_angle_force = (mass_pole * half_pole2_length * pole2_velocity * pole2_velocity * (float)sink((accum)pole2_angle));
+    pole_angle_force = (mass_pole * half_pole2_length * pole2_velocity * pole2_velocity *
+    		(float)sink((accum)pole2_angle));
     angle_scalar = (0.75f * mass_pole *  (float)cosk((accum)pole2_angle));
-    friction_and_gravity = (((friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length)) +
-                        (gravity * (float)sink((accum)pole2_angle)));
-    effective_pole_mass = effective_pole_mass + (mass_pole * (1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole2_angle) *  (float)cosk((accum)pole2_angle))));
+    friction_and_gravity = ((friction_pole_hinge * pole2_velocity) / (
+    		mass_pole * half_pole2_length)) + (gravity * (float)sink((accum)pole2_angle));
+    effective_pole_mass = effective_pole_mass + (mass_pole * (
+    		1.0f - ((3.0f / 4.0f) *  (float)cosk((accum)pole2_angle) *
+    				(float)cosk((accum)pole2_angle))));
 
-    effective_force_pole_on_cart = effective_force_pole_on_cart + pole_angle_force + (angle_scalar * friction_and_gravity);
+    effective_force_pole_on_cart = effective_force_pole_on_cart + pole_angle_force + (
+    		angle_scalar * friction_and_gravity);
 
     if (cart_velocity > 0){
         cart_acceleration = (motor_force - friction_cart_on_track + effective_force_pole_on_cart) /
@@ -428,12 +437,15 @@ bool update_state(float time_step){
     float length_scalar = -3.0f / (4.0f * half_pole_length);
     float cart_acceleration_effect = cart_acceleration * (float)cosk((accum)pole_angle);
     float gravity_effect = gravity * (float)sink((accum)pole_angle);
-    float friction_effect = (friction_pole_hinge * pole_velocity) / (mass_pole * half_pole_length);
-    pole_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
+    float friction_effect = (friction_pole_hinge * pole_velocity) / (
+    		mass_pole * half_pole_length);
+    pole_acceleration = length_scalar * (
+    		cart_acceleration_effect + gravity_effect + friction_effect);
 
-//    io_printf(IO_BUF, "half_pole_length, length_scalar, cart_effect, gravity_effect, friction effect, pole_acceleration %k %k %k %k %k %k\n",
-//    		(accum)half_pole_length, (accum)length_scalar, (accum)cart_acceleration_effect,
-//			(accum)gravity_effect, (accum)friction_effect, (accum)pole_acceleration);
+    io_printf(IO_BUF, "half_pole_length, length_scalar, cart_effect, gravity_effect,"
+    		"friction effect, pole_acceleration %k %k %k %k %k %k\n",
+    		(accum)half_pole_length, (accum)length_scalar, (accum)cart_acceleration_effect,
+			(accum)gravity_effect, (accum)friction_effect, (accum)pole_acceleration);
 
     pole_velocity = (pole_acceleration * time_step) + pole_velocity;
     pole_angle = (pole_velocity * time_step) + pole_angle;
@@ -444,7 +456,8 @@ bool update_state(float time_step){
     cart_acceleration_effect = cart_acceleration * (float)cosk((accum)pole2_angle);
     gravity_effect = gravity * (float)sink((accum)pole2_angle);
     friction_effect = (friction_pole_hinge * pole2_velocity) / (mass_pole * half_pole2_length);
-    pole2_acceleration = length_scalar * (cart_acceleration_effect + gravity_effect + friction_effect);
+    pole2_acceleration = length_scalar * (
+    		cart_acceleration_effect + gravity_effect + friction_effect);
 
     pole2_velocity = (pole2_acceleration * time_step) + pole2_velocity;
     pole2_angle = (pole2_velocity * time_step) + pole2_angle;
@@ -459,10 +472,11 @@ bool update_state(float time_step){
         motor_force = 0;
     }
 
-    io_printf(IO_BUF, "after state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) and cart (d,v,a):(%k, %k, %k)\n",
-                        (accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
-                        (accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
-                        (accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
+    io_printf(IO_BUF, "after state (d,v,a) & 2:(%k, %k, %k) & (%k, %k, %k) ",
+    		"and cart (d,v,a):(%k, %k, %k)\n",
+			(accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
+			(accum)pole2_angle, (accum)pole2_velocity, (accum)pole2_acceleration,
+			(accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
     if (cart_position > track_length || cart_position < 0 ||
         pole_angle > max_pole_angle  || pole_angle < min_pole_angle ||
@@ -482,15 +496,15 @@ void mc_packet_received_callback(uint keyx, uint payload)
     compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
     use(payload);
-    if(compare == BACKWARD_MOTOR){
+    if (compare == BACKWARD_MOTOR) {
         motor_force = motor_force - force_increment;
-        if (motor_force < min_motor_force){
+        if (motor_force < min_motor_force) {
             motor_force = min_motor_force;
         }
     }
-    else if(compare == FORWARD_MOTOR){
+    else if (compare == FORWARD_MOTOR) {
         motor_force = motor_force + force_increment;
-        if (motor_force > max_motor_force){
+        if (motor_force > max_motor_force) {
             motor_force = max_motor_force;
         }
     }
@@ -513,7 +527,8 @@ bool firing_prob(float relative_value, int bin){
     if (separation < 0){
         separation = -separation;
     }
-//    io_printf(IO_BUF, "norm = %k, separation = %k, realtive = %k, bin = %d\n", (accum)norm_value, (accum)separation, (accum)relative_value, bin);
+//    io_printf(IO_BUF, "norm = %k, separation = %k, realtive = %k, bin = %d\n",
+//    		(accum)norm_value, (accum)separation, (accum)relative_value, bin);
     if (norm_value < 0){
         norm_value = -norm_value;
     }
@@ -538,17 +553,23 @@ void send_status(){
     float relative_angle_2;
     float relative_angular_velocity_2;
     relative_cart = cart_position / track_length;
-//    io_printf(IO_BUF, "rela = %k, cart = %k, max = %k\n", (accum)relative_cart, (accum)cart_position, (accum)track_length);
+//    io_printf(IO_BUF, "rela = %k, cart = %k, max = %k\n",
+//    		(accum)relative_cart, (accum)cart_position, (accum)track_length);
     relative_cart_velocity = (cart_velocity + highend_cart_v) / (2.f * highend_cart_v);
-//    io_printf(IO_BUF, "rela = %k, cartv = %k, maxv = %k\n", (accum)relative_cart_velocity, (accum)cart_velocity, (accum)highend_cart_v);
+//    io_printf(IO_BUF, "rela = %k, cartv = %k, maxv = %k\n",
+//    		(accum)relative_cart_velocity, (accum)cart_velocity, (accum)highend_cart_v);
     relative_angle = (pole_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
-//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
+//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n",
+//    		(accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
     relative_angular_velocity = (pole_velocity + highend_pole_v) / (2.f * highend_pole_v);
-//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
+//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n",
+//    		(accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
     relative_angle_2 = (pole2_angle + max_pole_angle_bin) / (2.f * max_pole_angle_bin);
-//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n", (accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
+//    io_printf(IO_BUF, "rela = %k, ang = %k, max = %k\n",
+//    		(accum)relative_angle, (accum)pole_angle, (accum)max_pole_angle_bin);
     relative_angular_velocity_2 = (pole2_velocity + highend_pole_v) / (2.f * highend_pole_v);
-//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n", (accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
+//    io_printf(IO_BUF, "rela = %k, angv = %k, maxv = %k\n",
+//    		(accum)relative_angular_velocity, (accum)pole_velocity, (accum)highend_pole_v);
     for (int i = 0; i < number_of_bins; i = i + 1){
         if (firing_prob(relative_cart, i)){
             spike_cart(i);
@@ -581,19 +602,18 @@ void timer_callback(uint unused, uint dummy)
 
     if (!infinite_run && _time >= simulation_ticks)
     {
-        //spin1_pause();
+    	// Finalise recording
         recording_finalise();
+
         // go into pause and resume state to avoid another tick
         simulation_handle_pause_resume(resume_callback);
-        //    spin1_callback_off(MC_PACKET_RECEIVED);
 
-        io_printf(IO_BUF, "infinite_run %d; time %d\n",infinite_run, _time);
-        io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
+        io_printf(IO_BUF, "infinite_run %d; time %d\n", infinite_run, _time);
+        io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
         //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
         //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
 
         io_printf(IO_BUF, "Exiting on timer.\n");
-//        simulation_handle_pause_resume(NULL);
         simulation_ready_to_read();
 
         _time -= 1;
@@ -620,7 +640,7 @@ void timer_callback(uint unused, uint dummy)
             tick_in_frame = 0;
 //            update_frame();
             // Update recorded score every 0.1s
-            if(score_change_count >= 100){
+            if (score_change_count >= 100) {
                 current_state[0] = cart_position;
                 current_state[1] = pole_angle;
                 current_state[2] = pole2_angle;
@@ -642,12 +662,6 @@ void timer_callback(uint unused, uint dummy)
 //    io_printf(IO_BUF, "time %u\n", ticks);
 //    io_printf(IO_BUF, "time %u\n", _time);
 }
-//-------------------------------------------------------------------------------
-
-//INT_HANDLER sark_int_han (void);
-
-
-//-------------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 // Entry point
@@ -659,7 +673,7 @@ void c_main(void)
 	uint32_t timer_period;
 	if (!initialize(&timer_period))
 	{
-		io_printf(IO_BUF,"Error in initialisation - exiting!\n");
+		io_printf(IO_BUF, "Error in initialisation - exiting!\n");
 		rt_error(RTE_SWERR);
 		return;
 	}
@@ -671,8 +685,8 @@ void c_main(void)
 			timer_period);
 	spin1_set_timer_tick(timer_period);
 
-	io_printf(IO_BUF, "simulation_ticks %d\n",simulation_ticks);
-	io_printf(IO_BUF, "timer tick %d, %k\n",TIMER_TICK, (accum)TIMER_TICK);
+	io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
+	io_printf(IO_BUF, "timer tick %d, %k\n", TIMER_TICK, (accum)TIMER_TICK);
 
 	// Register callback
 	spin1_callback_on(TIMER_TICK, timer_callback, 2);
