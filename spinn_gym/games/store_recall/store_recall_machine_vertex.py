@@ -20,10 +20,11 @@ class RecallMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, resources_required, constraints=None, label=None):
+    def __init__(self, resources_required, constraints=None, label=None,
+                 app_vertex=None, vertex_slice=None):
         # Superclasses
-        MachineVertex.__init__(self, label,
-                               constraints=constraints)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
         self._resource_required = resources_required
 
     @property

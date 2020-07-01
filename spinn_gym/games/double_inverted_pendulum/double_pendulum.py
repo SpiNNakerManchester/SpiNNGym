@@ -62,12 +62,12 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
                      AbstractProvidesNKeysForPartition):
 
     def get_connections_from_machine(
-            self, transceiver, placement, edge, graph_mapper,
-            routing_infos, synapse_information, machine_time_step):
+            self, transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores):
 
         super(DoublePendulum, self).get_connections_from_machine(
-            transceiver, placement, edge, graph_mapper, routing_infos,
-            synapse_information, machine_time_step)
+            transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
@@ -81,7 +81,7 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
         pass
 
     @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition, graph_mapper):
+    def get_n_keys_for_partition(self, partition):
         return self._n_neurons  # for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
@@ -209,7 +209,7 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
                               label=None, constraints=None):
         # Return suitable machine vertex
         return DoublePendulumMachineVertex(
-            resources_required, constraints, self._label)
+            resources_required, constraints, self._label, self, vertex_slice)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -221,16 +221,14 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     @inject_items({"machine_time_step": "MachineTimeStep",
                    "time_scale_factor": "TimeScaleFactor",
-                   "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
                    "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags"}
+                                     "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, graph_mapper,
-                                    routing_info, tags):
+                                    time_scale_factor, routing_info, tags):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Double Pendulum Instance ***\n\n")
@@ -348,10 +346,8 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
     @overrides(
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(
-            self, variable, buffer_manager, placements, graph_mapper):
-        self._clear_recording_region(
-            buffer_manager, placements, graph_mapper,
-            0)
+            self, variable, buffer_manager, placements):
+        self._clear_recording_region(buffer_manager, placements, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -372,8 +368,8 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
-                 graph_mapper, buffer_manager, machine_time_step):
-        vertex = graph_mapper.get_machine_vertices(self).pop()
+                 buffer_manager, machine_time_step):
+        vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded

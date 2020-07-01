@@ -4,9 +4,7 @@ from enum import Enum
 from pacman.model.graphs.machine import MachineVertex
 
 # SpinnFrontEndCommon imports
-from spinn_front_end_common.utilities import helpful_functions  # , constants
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
+from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.interface.buffer_management.buffer_models import (
     AbstractReceiveBuffersToHost)
 
@@ -22,10 +20,11 @@ class BanditMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
                ('RECORDING', 2),
                ('ARMS', 3)])
 
-    def __init__(self, resources_required, constraints=None, label=None):
+    def __init__(self, resources_required, constraints=None, label=None,
+                 app_vertex=None, vertex_slice=None):
         # Superclasses
-        MachineVertex.__init__(self, label,
-                               constraints=constraints)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
         self._resource_required = resources_required
 
     @property
@@ -34,10 +33,6 @@ class BanditMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
 
     def get_minimum_buffer_sdram_usage(self):
         return 0  # probably should make this a user input
-
-    def get_n_timesteps_in_buffer_space(self, buffer_space, machine_time_step):
-        return recording_utilities.get_n_timesteps_in_buffer_space(
-            buffer_space, [0])  # this could be completely wrong - test
 
     def get_recorded_region_ids(self):
         return [0]

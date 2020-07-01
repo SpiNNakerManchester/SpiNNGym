@@ -20,12 +20,11 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self, resources_required, constraints=None, label=None):
+    def __init__(self, resources_required, constraints=None, label=None,
+                 app_vertex=None, vertex_slice=None):
         # Superclasses
-        MachineVertex.__init__(self, label,
-                               constraints=constraints)
-        # ProvidesProvenanceDataFromMachineImpl.__init__(
-        #     self, self._BREAKOUT_REGIONS.PROVENANCE.value, 0)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
         self._resource_required = resources_required
 
     @property

@@ -54,8 +54,7 @@ def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.graph_mapper, simulator.buffer_manager,
-        simulator.machine_time_step)
+        simulator.buffer_manager, simulator.machine_time_step)
 
     return scores.tolist()
 
