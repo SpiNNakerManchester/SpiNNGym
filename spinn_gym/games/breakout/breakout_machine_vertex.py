@@ -13,6 +13,7 @@ from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 
+
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
@@ -59,4 +60,3 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
     def get_binary_start_type(self):
         print("BreakoutMachineVertex get_binary_start_type")
         return ExecutableType.USES_SIMULATION_INTERFACE
-
