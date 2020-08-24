@@ -1,5 +1,7 @@
 from enum import Enum
 
+from spinn_utilities.overrides import overrides
+
 # PACMAN imports
 from pacman.model.graphs.machine import MachineVertex
 
@@ -7,12 +9,16 @@ from pacman.model.graphs.machine import MachineVertex
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.interface.buffer_management.buffer_models \
     import AbstractReceiveBuffersToHost
+from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
+    import AbstractHasAssociatedBinary
+from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
 
 # ----------------------------------------------------------------------------
 # DoublePendulumMachineVertex
 # ----------------------------------------------------------------------------
-class DoublePendulumMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
+class DoublePendulumMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
+                                  AbstractHasAssociatedBinary):
     _DOUBLE_PENDULUM_REGIONS = Enum(
         value="_DOUBLE_PENDULUM_REGIONS",
         names=[('SYSTEM', 0),
@@ -44,3 +50,15 @@ class DoublePendulumMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
         :return: The region numbers that have active recording
         :rtype: iterable(int) """
         return [0]
+
+#     def get_n_keys_for_partition(self, partition):
+#         return self._n_neurons  # for control IDs
+
+    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
+    def get_binary_file_name(self):
+        return "double_inverted_pendulum.aplx"
+
+    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
+    def get_binary_start_type(self):
+        # return ExecutableStartType.USES_SIMULATION_INTERFACE
+        return ExecutableType.USES_SIMULATION_INTERFACE

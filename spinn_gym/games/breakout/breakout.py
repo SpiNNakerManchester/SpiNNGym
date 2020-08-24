@@ -235,7 +235,7 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
+            vertex.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
         # Write breakout region containing routing key to transmit with
@@ -273,10 +273,12 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
+        print("Breakout get_binary_file_name")
         return "breakout.aplx"
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
+        print("Breakout get_binary_start_type")
         # return ExecutableStartType.USES_SIMULATION_INTERFACE
         return ExecutableType.USES_SIMULATION_INTERFACE
 

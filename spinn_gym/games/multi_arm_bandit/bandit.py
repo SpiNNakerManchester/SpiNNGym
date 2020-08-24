@@ -1,8 +1,9 @@
+from spinn_utilities.overrides import overrides
+
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
 from pacman.model.constraints.key_allocator_constraints import \
     ContiguousKeyRangeContraint
-from spinn_utilities.overrides import overrides
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
@@ -19,8 +20,6 @@ from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
@@ -28,10 +27,6 @@ from spinn_front_end_common.utilities import globals_variables
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-from spinn_front_end_common.abstract_models\
-   .abstract_provides_n_keys_for_partition \
-   import AbstractProvidesNKeysForPartition
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -55,10 +50,9 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # Bandit
 # ----------------------------------------------------------------------------
 class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
-             AbstractHasAssociatedBinary,
              AbstractProvidesOutgoingPartitionConstraints,
              AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-             SimplePopulationSettable, AbstractProvidesNKeysForPartition):
+             SimplePopulationSettable):
 
     def get_connections_from_machine(
             self, transceiver, placement, edge, routing_infos,
@@ -78,10 +72,6 @@ class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     def clear_connection_cache(self):
         pass
-
-    @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition):
-        return 8  # eight for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
@@ -235,7 +225,7 @@ class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             BanditMachineVertex._BANDIT_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
+            vertex.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
         # Write bandit region containing routing key to transmit with
@@ -275,18 +265,6 @@ class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
 
         # End-of-Spec:
         spec.end_specification()
-
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
-        return "bandit.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides

@@ -1,5 +1,7 @@
 from enum import Enum
 
+from spinn_utilities.overrides import overrides
+
 # PACMAN imports
 from pacman.model.graphs.machine import MachineVertex
 
@@ -7,12 +9,15 @@ from pacman.model.graphs.machine import MachineVertex
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.interface.buffer_management.buffer_models.\
     abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
-
+from spinn_front_end_common.utilities.utility_objs import ExecutableType
+from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
+    import AbstractHasAssociatedBinary
 
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
-class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
+class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
+                            AbstractHasAssociatedBinary):
     _BREAKOUT_REGIONS = Enum(
         value="_BREAKOUT_REGIONS",
         names=[('SYSTEM', 0),
@@ -41,3 +46,17 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
         :return: The region numbers that have active recording
         :rtype: iterable(int) """
         return [0]
+
+    # ------------------------------------------------------------------------
+    # AbstractHasAssociatedBinary overrides
+    # ------------------------------------------------------------------------
+    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
+    def get_binary_file_name(self):
+        print("BreakoutMachineVertex get_binary_file_name")
+        return "breakout.aplx"
+
+    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
+    def get_binary_start_type(self):
+        print("BreakoutMachineVertex get_binary_start_type")
+        return ExecutableType.USES_SIMULATION_INTERFACE
+

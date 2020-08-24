@@ -22,8 +22,6 @@ from spinn_front_end_common.interface.buffer_management \
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
@@ -31,10 +29,6 @@ from spinn_front_end_common.utilities import globals_variables
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-from spinn_front_end_common.abstract_models \
-    .abstract_provides_n_keys_for_partition \
-    import AbstractProvidesNKeysForPartition
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -65,10 +59,9 @@ class Bad_Table(Exception):
 # Recall
 # ----------------------------------------------------------------------------
 class Recall(ApplicationVertex, AbstractGeneratesDataSpecification,
-             AbstractHasAssociatedBinary,
              AbstractProvidesOutgoingPartitionConstraints,
              AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-             SimplePopulationSettable, AbstractProvidesNKeysForPartition):
+             SimplePopulationSettable):
 
     def get_connections_from_machine(
             self, transceiver, placement, edge, routing_infos,
@@ -88,10 +81,6 @@ class Recall(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     def clear_connection_cache(self):
         pass
-
-    @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition):
-        return self._n_neurons  # 2  # two for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
@@ -246,7 +235,7 @@ class Recall(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             RecallMachineVertex._RECALL_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
+            vertex.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
         # Write recall region containing routing key to transmit with
@@ -284,18 +273,6 @@ class Recall(ApplicationVertex, AbstractGeneratesDataSpecification,
 
         # End-of-Spec:
         spec.end_specification()
-
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
-        return "store_recall.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
