@@ -181,7 +181,6 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        print("create breakout machine vertex, resources ", resources_required)
         return BreakoutMachineVertex(resources_required, constraints,
                                      self._label, self, vertex_slice)
 

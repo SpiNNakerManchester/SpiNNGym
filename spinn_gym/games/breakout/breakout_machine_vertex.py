@@ -48,15 +48,10 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
         :rtype: iterable(int) """
         return [0]
 
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
-        print("BreakoutMachineVertex get_binary_file_name")
         return "breakout.aplx"
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
-        print("BreakoutMachineVertex get_binary_start_type")
         return ExecutableType.USES_SIMULATION_INTERFACE
