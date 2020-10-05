@@ -258,10 +258,9 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
             [self._recording_size], ip_tags=ip_tags))
 
         # Write probabilites for arms
-        spec.comment("\nWriting arm probability region region:\n")
+        spec.comment("\nWriting pendulum data region:\n")
         spec.switch_write_focus(
             PendulumMachineVertex._PENDULUM_REGIONS.DATA.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_value(self._encoding, data_type=DataType.UINT32)
         spec.write_value(self._time_increment, data_type=DataType.UINT32)
         spec.write_value(self._pole_length, data_type=DataType.S1615)

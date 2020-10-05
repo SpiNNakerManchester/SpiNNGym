@@ -207,9 +207,10 @@ static bool initialize(uint32_t *timer_period)
     // TODO check this prints right, ybug read the address
     io_printf(IO_BUF, "time period %d\n", time_period);
     io_printf(IO_BUF, "pop_size %d\n", pop_size);
-    io_printf(IO_BUF, "kiss seed. %d\n", (uint32_t *)logic_region[2]);
-    io_printf(IO_BUF, "seed 0x%x\n", (uint32_t *)logic_region[3]);
-    io_printf(IO_BUF, "seed %u\n", logic_region[3]);
+    io_printf(IO_BUF, "kiss seed 0 %d\n", kiss_seed[0]);
+    io_printf(IO_BUF, "seed 1 %u\n", kiss_seed[1]);
+    io_printf(IO_BUF, "seed 2 %u\n", kiss_seed[2]);
+    io_printf(IO_BUF, "seed 3 %u\n", kiss_seed[3]);
     io_printf(IO_BUF, "rate on %u\n", rate_on);
     io_printf(IO_BUF, "rate off %u\n", rate_off);
     io_printf(IO_BUF, "stochastic %d\n", stochastic);
@@ -303,15 +304,19 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "compare = %x\n", compare);
 //    io_printf(IO_BUF, "key = %x\n", key);
 //    io_printf(IO_BUF, "payload = %x\n", payload);
-    use(payload);
-    if (compare == KEY_CHOICE_0) {
-        chose_0++;
-    }
-    else if (compare == KEY_CHOICE_1) {
-        chose_1++;
-    }
-    else {
-        io_printf(IO_BUF, "it broke key selection %d\n", key);
+    // If no payload has been set, make sure the loop will run
+    if (payload == 0) { payload = 1; }
+
+    for (uint count = payload; count > 0; count--) {
+        if (compare == KEY_CHOICE_0) {
+            chose_0++;
+        }
+        else if (compare == KEY_CHOICE_1) {
+            chose_1++;
+        }
+        else {
+            io_printf(IO_BUF, "it broke key selection %d\n", key);
+        }
     }
 }
 
@@ -456,6 +461,7 @@ void c_main(void)
   // Register callback
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
   spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+  spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);
 
   _time = UINT32_MAX;
 

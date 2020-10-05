@@ -495,17 +495,21 @@ void mc_packet_received_callback(uint keyx, uint payload)
     uint32_t compare;
     compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
-    use(payload);
-    if (compare == BACKWARD_MOTOR) {
-        motor_force = motor_force - force_increment;
-        if (motor_force < min_motor_force) {
-            motor_force = min_motor_force;
+    // If no payload has been set, make sure the loop will run
+    if (payload == 0) { payload = 1; }
+
+    for (uint count = payload; count > 0; count--) {
+        if (compare == BACKWARD_MOTOR) {
+            motor_force = motor_force - force_increment;
+            if (motor_force < min_motor_force) {
+                motor_force = min_motor_force;
+            }
         }
-    }
-    else if (compare == FORWARD_MOTOR) {
-        motor_force = motor_force + force_increment;
-        if (motor_force > max_motor_force) {
-            motor_force = max_motor_force;
+        else if (compare == FORWARD_MOTOR) {
+            motor_force = motor_force + force_increment;
+            if (motor_force > max_motor_force) {
+                motor_force = max_motor_force;
+            }
         }
     }
 }
@@ -688,7 +692,8 @@ void c_main(void)
 
 	// Register callback
 	spin1_callback_on(TIMER_TICK, timer_callback, 2);
-	spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+    spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+    spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);
 
 	_time = UINT32_MAX;
 

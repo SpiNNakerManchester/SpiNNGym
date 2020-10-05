@@ -804,14 +804,18 @@ void timer_callback(uint unused, uint dummy)
 
 void mc_packet_received_callback(uint key, uint payload)
 {
-    use(payload);
-    // Right
-    if (key & KEY_RIGHT) {
-        right_key_count++;
-    }
-    // Left
-    else {
-        left_key_count++;
+    // If no payload has been set, make sure the loop will run
+    if (payload == 0) { payload = 1; }
+
+    for (uint count = payload; count > 0; count--) {
+        // Right
+        if (key & KEY_RIGHT) {
+            right_key_count++;
+        }
+        // Left
+        else {
+            left_key_count++;
+        }
     }
 }
 
@@ -843,6 +847,7 @@ void c_main(void)
     // Register callback
     spin1_callback_on(TIMER_TICK, timer_callback, TIMER);
     spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, MC);
+    spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, MC);
 
     _time = UINT32_MAX;
 

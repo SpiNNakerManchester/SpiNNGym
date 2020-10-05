@@ -53,13 +53,7 @@ typedef enum {
 
 typedef enum {
   KEY_CHOICE_0  = 0x0,
-  KEY_CHOICE_1  = 0x1,
-//  KEY_CHOICE_2  = 0x2,
-//  KEY_CHOICE_3  = 0x3,
-//  KEY_CHOICE_4  = 0x4,
-//  KEY_CHOICE_5  = 0x5,
-//  KEY_CHOICE_6  = 0x6,
-//  KEY_CHOICE_7  = 0x7,
+  KEY_CHOICE_1  = 0x1
 } arm_key_t;
 
 //----------------------------------------------------------------------------
@@ -103,7 +97,7 @@ static uint32_t key;
 
 //! the number of timer ticks that this model should run for before exiting.
 uint32_t simulation_ticks = 0;
-uint32_t score_change_count=0;
+uint32_t score_change_count = 0;
 
 //----------------------------------------------------------------------------
 // Inline functions
@@ -193,18 +187,19 @@ static bool initialize(uint32_t *timer_period)
 
 //    srand(rand_seed);
     // TODO check this prints right, ybug read the address
-    io_printf(IO_BUF, "score delay %d\n", (uint32_t *)logic_region[0]);
-    io_printf(IO_BUF, "no inputs %d\n", (uint32_t *)logic_region[1]);
-    io_printf(IO_BUF, "kiss seed. %d\n", (uint32_t *)logic_region[2]);
-    io_printf(IO_BUF, "seed 0x%x\n", (uint32_t *)logic_region[3]);
-    io_printf(IO_BUF, "seed %u\n", logic_region[3]);
-    io_printf(IO_BUF, "rate on %u\n", logic_region[6]);
-    io_printf(IO_BUF, "rate off %u\n", logic_region[7]);
-    io_printf(IO_BUF, "stochastic %d\n", logic_region[8]);
-    io_printf(IO_BUF, "input seq %u\n", logic_region[9]);
-    io_printf(IO_BUF, "tt %d\n", logic_region[9 + number_of_inputs]);
-    io_printf(IO_BUF, "tt+1 %d\n", logic_region[9 + number_of_inputs + 1]);
-    io_printf(IO_BUF, "tt-1 %d\n", logic_region[9 + number_of_inputs - 1]);
+    io_printf(IO_BUF, "score delay %d\n", score_delay);
+    io_printf(IO_BUF, "no inputs %d\n", number_of_inputs);
+    io_printf(IO_BUF, "kiss seed 0 %d\n", kiss_seed[0]);
+    io_printf(IO_BUF, "seed 1 %u\n", kiss_seed[1]);
+    io_printf(IO_BUF, "seed 2 %u\n", kiss_seed[2]);
+    io_printf(IO_BUF, "rate on %u\n", rate_on);
+    io_printf(IO_BUF, "rate off %u\n", rate_off);
+    io_printf(IO_BUF, "stochastic %d\n", stochastic);
+    io_printf(IO_BUF, "input seq 0 %u\n", input_sequence[0]);
+    io_printf(IO_BUF, "input seq 1 %u\n", input_sequence[1]);
+    io_printf(IO_BUF, "tt 0 %d\n", truth_table[0]);
+    io_printf(IO_BUF, "tt 1 %d\n", truth_table[1]);
+    io_printf(IO_BUF, "tt 2 %d\n", truth_table[2]);
     io_printf(IO_BUF, "correct out %d\n", correct_output);
 
     io_printf(IO_BUF, "Initialise: completed successfully\n");
@@ -237,11 +232,11 @@ float rand021(){
 }
 
 void did_it_fire(uint32_t time){
-//    io_printf(IO_BUF, "time = %u\n", time);
 //    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
 //    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
     if (stochastic) {
         for (int i=0; i<number_of_inputs; i++) {
+//            io_printf(IO_BUF, "stochastic, input_sequence[%u] = %u\n", i, input_sequence[i]);
             if (input_sequence[i] == 0) {
                 if (rand021() < max_fire_prob_off) {
                     send_spike(i);
@@ -256,6 +251,7 @@ void did_it_fire(uint32_t time){
     }
     else{
         for (int i=0; i<number_of_inputs; i++) {
+//            io_printf(IO_BUF, " input_sequence[%u] = %u\n", i, input_sequence[i]);
             if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0) {
                 send_spike(i);
             }
@@ -268,39 +264,25 @@ void did_it_fire(uint32_t time){
 
 void mc_packet_received_callback(uint keyx, uint payload)
 {
+//    io_printf(IO_BUF, "mc_packet_received_callback");
+//    io_printf(IO_BUF, "key = %x\n", keyx);
+//    io_printf(IO_BUF, "payload = %x\n", payload);
     uint32_t compare;
-//    int max_number_of_bits = 8;
     compare = keyx & 0x1;
 //    io_printf(IO_BUF, "compare = %x\n", compare);
-//    io_printf(IO_BUF, "key = %x\n", key);
-//    io_printf(IO_BUF, "payload = %x\n", payload);
-    use(payload);
-    if (compare == KEY_CHOICE_0) {
-        output_choice[0]++;
-    }
-    else if (compare == KEY_CHOICE_1) {
-        output_choice[1]++;
-    }
-//    else if(compare == KEY_CHOICE_2){
-//        output_choice[2]++;
-//    }
-//    else if(compare == KEY_CHOICE_3){
-//        output_choice[3]++;
-//    }
-//    else if(compare == KEY_CHOICE_4){
-//        output_choice[4]++;
-//    }
-//    else if(compare == KEY_CHOICE_5){
-//        output_choice[5]++;
-//    }
-//    else if(compare == KEY_CHOICE_6){
-//        output_choice[6]++;
-//    }
-//    else if(compare == KEY_CHOICE_7){
-//        output_choice[7]++;
-//    }
-    else {
-        io_printf(IO_BUF, "it broke key selection %d\n", key);
+    // If no payload has been set, make sure the loop will run
+    if (payload == 0) { payload = 1; }
+
+    for (uint count = payload; count > 0; count--) {
+        if (compare == KEY_CHOICE_0) {
+            output_choice[0]++;
+        }
+        else if (compare == KEY_CHOICE_1) {
+            output_choice[1]++;
+        }
+        else {
+            io_printf(IO_BUF, "it broke key selection %d\n", key);
+        }
     }
 }
 
@@ -335,6 +317,7 @@ void timer_callback(uint unused, uint dummy)
     else {
         // Increment ticks in frame counter and if this has reached frame delay
         tick_in_frame++;
+//        io_printf(IO_BUF, "tick_in_frame %d score_delay %d\n", tick_in_frame, score_delay);
         did_it_fire(score_change_count);
         if (tick_in_frame == score_delay) {
             was_it_correct();
@@ -377,6 +360,7 @@ void c_main(void)
   // Register callback
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
   spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+  spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);
 
   _time = UINT32_MAX;
 

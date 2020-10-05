@@ -348,33 +348,38 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "compare = %x\n", compare);
 //    io_printf(IO_BUF, "key = %x\n", key);
 //    io_printf(IO_BUF, "payload = %x\n", payload);
-    use(payload);
-    if (compare == KEY_ARM_0) {
-        arm_choices[0]++;
-    }
-    else if (compare == KEY_ARM_1) {
-        arm_choices[1]++;
-    }
-    else if (compare == KEY_ARM_2) {
-        arm_choices[2]++;
-    }
-    else if (compare == KEY_ARM_3) {
-        arm_choices[3]++;
-    }
-    else if (compare == KEY_ARM_4) {
-        arm_choices[4]++;
-    }
-    else if (compare == KEY_ARM_5) {
-        arm_choices[5]++;
-    }
-    else if (compare == KEY_ARM_6) {
-        arm_choices[6]++;
-    }
-    else if (compare == KEY_ARM_7) {
-        arm_choices[7]++;
-    }
-    else {
-        io_printf(IO_BUF, "it broke arm selection %d\n", key);
+
+    // If no payload has been set, make sure the loop will run
+    if (payload == 0) { payload = 1; }
+
+    for (uint count = payload; count > 0; count--) {
+        if (compare == KEY_ARM_0) {
+            arm_choices[0]++;
+        }
+        else if (compare == KEY_ARM_1) {
+            arm_choices[1]++;
+        }
+        else if (compare == KEY_ARM_2) {
+            arm_choices[2]++;
+        }
+        else if (compare == KEY_ARM_3) {
+            arm_choices[3]++;
+        }
+        else if (compare == KEY_ARM_4) {
+            arm_choices[4]++;
+        }
+        else if (compare == KEY_ARM_5) {
+            arm_choices[5]++;
+        }
+        else if (compare == KEY_ARM_6) {
+            arm_choices[6]++;
+        }
+        else if (compare == KEY_ARM_7) {
+            arm_choices[7]++;
+        }
+        else {
+            io_printf(IO_BUF, "it broke arm selection %d\n", key);
+        }
     }
 }
 
@@ -472,6 +477,7 @@ void c_main(void)
   // Register callback
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
   spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
+  spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);
 
   _time = UINT32_MAX;
 

@@ -58,21 +58,29 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                SimplePopulationSettable
                ):
 
+    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
     def get_connections_from_machine(
             self, transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores):
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements=None, monitor_api=None, fixed_routes=None,
+            extra_monitor=None):
+
+        # TODO: make this work properly (the following call does nothing)
 
         super(Breakout, self).get_connections_from_machine(
             transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores)
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements, monitor_api, fixed_routes, extra_monitor)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder,
-                                      projection_edge, synapse_information):
+    @overrides(AbstractAcceptsIncomingSynapses.add_pre_run_connection_holder)
+    def add_pre_run_connection_holder(
+            self, connection_holder, projection_edge, synapse_information):
         super(Breakout, self).add_pre_run_connection_holder(
             connection_holder, projection_edge, synapse_information)
+
 
     def clear_connection_cache(self):
         pass
@@ -255,7 +263,6 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting breakout param region:\n")
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.PARAMS.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_value(self._x_factor, data_type=DataType.UINT32)
         spec.write_value(self._y_factor, data_type=DataType.UINT32)
         spec.write_value(self._bricking, data_type=DataType.UINT32)
