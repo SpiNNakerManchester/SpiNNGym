@@ -83,7 +83,6 @@ class Logic(ApplicationVertex, AbstractGeneratesDataSpecification,
         super(Logic, self).add_pre_run_connection_holder(
             connection_holder, projection_edge, synapse_information)
 
-
     def clear_connection_cache(self):
         pass
 
