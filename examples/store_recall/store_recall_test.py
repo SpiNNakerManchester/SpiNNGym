@@ -66,10 +66,12 @@ print(scores)
 i = 0
 print("score 0 \t\t|\t score 1 \t|\t\t  trials")
 while i < len(scores):
-    print("{:8}\t\t{:8}\t\t{:8}".format(scores[i][0], scores[i+1][0], scores[i+2][0]))
+    print("{:8}\t\t{:8}\t\t{:8}".format(
+        scores[i][0], scores[i+1][0], scores[i+2][0]))
     i += 3
 
-accuracy = float(scores[len(scores)-2][0]+scores[len(scores)-3][0]) / float(scores[len(scores)-1][0])
+accuracy = float(scores[len(scores)-2][0]+scores[len(scores)-3][0]) / float(
+    scores[len(scores)-1][0])
 print("Accuracy:", accuracy)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
