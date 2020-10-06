@@ -183,49 +183,46 @@ void resume_callback() {
     recording_reset();
 }
 
-static bool initialize(uint32_t *timer_period, bool first)
+static bool initialize(uint32_t *timer_period)
 {
 	io_printf(IO_BUF, "Init inverted pendulum\n");
 
     // Get the address this core's DTCM data starts at from SRAM
     data_specification_metadata_t *address = data_specification_get_data_address();
 
-    if (first) {
-
-        // Read the header
-        if (!data_specification_read_header(address)) {
-          return false;
-        }
-        /*
-        simulation_initialise(
-            address_t address, uint32_t expected_app_magic_number,
-            uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
-            uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
-            int dma_transfer_done_callback_priority)
-        */
-        // Get the timing details and set up thse simulation interface
-        if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
-        		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-				&infinite_run, &_time, 1, 0)) {
-          return false;
-        }
+    // Read the header
+    if (!data_specification_read_header(address)) {
+      return false;
+    }
+    /*
+    simulation_initialise(
+        address_t address, uint32_t expected_app_magic_number,
+        uint32_t* timer_period, uint32_t *simulation_ticks_pointer,
+        uint32_t *infinite_run_pointer, int sdp_packet_callback_priority,
+        int dma_transfer_done_callback_priority)
+    */
+    // Get the timing details and set up thse simulation interface
+    if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
+            APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+            &infinite_run, &_time, 1, 0)) {
+      return false;
+    }
 //        io_printf(IO_BUF, "sim time = %u\n", simulation_ticks);
-        // Read pendulum region
-        address_t pendulum_region = data_specification_get_region(REGION_PENDULUM, address);
-        key = pendulum_region[0];
+    // Read pendulum region
+    address_t pendulum_region = data_specification_get_region(REGION_PENDULUM, address);
+    key = pendulum_region[0];
 //        io_printf(IO_BUF, "\tKey=%08x\n", key);
 //        io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
 
-        //get recording region
-        void *recording_region = data_specification_get_region(
-                REGION_RECORDING, address);
+    //get recording region
+    void *recording_region = data_specification_get_region(
+            REGION_RECORDING, address);
 
-        // Setup recording
-        uint32_t recording_flags = 0;
-        if (!recording_initialize(&recording_region, &recording_flags)) {
-           rt_error(RTE_SWERR);
-           return false;
-        }
+    // Setup recording
+    uint32_t recording_flags = 0;
+    if (!recording_initialize(&recording_region, &recording_flags)) {
+       rt_error(RTE_SWERR);
+       return false;
     }
 
     cart_position = track_length / 2;
@@ -575,7 +572,7 @@ void timer_callback(uint unused, uint dummy)
 //            io_printf(IO_BUF, "time inc %u, time %k, score_change %u ",
 //            		"resetting to initial conditions\n",
 //					time_increment, (accum)current_time, score_change_count);
-            send_status();
+//            send_status();
             if (in_bounds){
                 if (current_time > max_balance_time) {
                     max_balance_time = current_time;
@@ -584,14 +581,14 @@ void timer_callback(uint unused, uint dummy)
 //                max_balance_time = max_balance_time + 1;
                 in_bounds = update_state((float)time_increment / 1000.f);
             }
-            else{
-//                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum) current_time);
-                current_time = 0;
-                uint32_t timer_period;
-                initialize(&timer_period, false);
-//                in_bounds = update_state((float)time_increment / 1000.f);
-                in_bounds = true;
-            }
+//            else{
+////                io_printf(IO_BUF, "Pendulum out of bounds at time %k\n", (accum) current_time);
+//                current_time = 0;
+//                uint32_t timer_period;
+//                initialize(&timer_period, false);
+////                in_bounds = update_state((float)time_increment / 1000.f);
+//                in_bounds = true;
+//            }
             // Reset ticks in frame and update frame
             tick_in_frame = 0;
 //            update_frame();
@@ -608,9 +605,9 @@ void timer_callback(uint unused, uint dummy)
                 score_change_count=0;
             }
         }
-//        if (in_bounds){
-//            send_status();
-//        }
+        if (in_bounds){
+            send_status();
+        }
     }
 //    io_printf(IO_BUF, "time %u\n", ticks);
 //    io_printf(IO_BUF, "time %u\n", _time);
