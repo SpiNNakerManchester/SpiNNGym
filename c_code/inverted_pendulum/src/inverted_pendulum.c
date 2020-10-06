@@ -620,7 +620,7 @@ void c_main(void)
 {
   // Load DTCM data
   uint32_t timer_period;
-  if (!initialize(&timer_period, true))
+  if (!initialize(&timer_period))
   {
 //    io_printf(IO_BUF,"Init err - exit!\n");
     rt_error(RTE_SWERR);
