@@ -1,67 +1,46 @@
+from spinn_utilities.overrides import overrides
+
 # PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
-
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-from pacman.model.decorators.overrides import overrides
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
+from data_specification.enums.data_type import DataType
 
 # SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
+from spinn_front_end_common.interface.buffer_management \
+    import recording_utilities
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
-from spinn_front_end_common.abstract_models\
-   .abstract_provides_n_keys_for_partition \
-   import AbstractProvidesNKeysForPartition
-
 # Pendulum imports
-from double_pendulum_vertex import DoublePendulumMachineVertex
+from spinn_gym.games.double_inverted_pendulum.double_pendulum_machine_vertex \
+    import DoublePendulumMachineVertex
 
 import numpy
-
-from data_specification.enums.data_type import DataType
 
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
@@ -69,45 +48,44 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # ----------------------------------------------------------------------------
 # Double Pendulum
 # ----------------------------------------------------------------------------
-class DoublePendulum(ApplicationVertex,
-                AbstractGeneratesDataSpecification,
-                AbstractHasAssociatedBinary,
-                AbstractProvidesOutgoingPartitionConstraints,
-                AbstractAcceptsIncomingSynapses,
-                AbstractNeuronRecordable,
-                SimplePopulationSettable,
-                AbstractProvidesNKeysForPartition
-                # AbstractBinaryUsesSimulationRun
-                ):
+class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
+                     AbstractProvidesOutgoingPartitionConstraints,
+                     AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+                     SimplePopulationSettable):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                                     routing_infos, synapse_information, machine_time_step):
+    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
+    def get_connections_from_machine(
+            self, transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements=None, monitor_api=None, fixed_routes=None,
+            extra_monitor=None):
 
-        super(DoublePendulum, self).get_connections_from_machine(transceiver, placement, edge,
-                                                           graph_mapper, routing_infos,
-                                                           synapse_information,
-                                                           machine_time_step)
+        # TODO: make this work properly (the following call does nothing)
+
+        super(DoublePendulum, self).get_connections_from_machine(
+            transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements, monitor_api, fixed_routes, extra_monitor)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(DoublePendulum, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
+    @overrides(AbstractAcceptsIncomingSynapses.add_pre_run_connection_holder)
+    def add_pre_run_connection_holder(
+            self, connection_holder, projection_edge, synapse_information):
+        super(DoublePendulum, self).add_pre_run_connection_holder(
+            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass
-
-    @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition, graph_mapper):
-        return self._n_neurons  # 2  # two for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
 
-    PENDULUM_REGION_BYTES = 24
-    DATA_REGION_BYTES = 80
-    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7 # 1 week
+    PENDULUM_REGION_BYTES = 4
+    DATA_REGION_BYTES = 17 * 4
+    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7  # 1 week
 
     # parameters expected by PyNN
     default_parameters = {
@@ -148,7 +126,8 @@ class DoublePendulum(ApplicationVertex,
                  bin_overlap=default_parameters['bin_overlap'],
                  tau_force=default_parameters['tau_force'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
+                 incoming_spike_buffer_size=default_parameters[
+                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration']):
         # **NOTE** n_neurons currently ignored - width and height will be
         # specified as additional parameters, forcing their product to be
@@ -164,8 +143,9 @@ class DoublePendulum(ApplicationVertex,
         self._pole2_length = pole2_length
         self._pole2_angle = pole2_angle
 
-        self._force_increments= force_increments
-        # for rate based it's only 1 neuron per metric (position, angle, velocity of both)
+        self._force_increments = force_increments
+        # for rate based it's only 1 neuron per metric
+        # (position, angle, velocity of both)
         self._n_neurons = 6 * number_of_bins
 
         self._time_increment = time_increment
@@ -196,19 +176,12 @@ class DoublePendulum(ApplicationVertex,
             self._incoming_spike_buffer_size = config.getint(
                 "Simulation", "incoming_spike_buffer_size")
 
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
-
     def neurons(self):
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
         # Pendulum has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
-
-    #    def get_max_atoms_per_core(self):
-    #       return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -220,7 +193,7 @@ class DoublePendulum(ApplicationVertex,
             # sdram=SDRAMResource(
             #     self.PENDULUM_REGION_BYTES +
             #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
+            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
 
@@ -230,7 +203,8 @@ class DoublePendulum(ApplicationVertex,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        return DoublePendulumMachineVertex(resources_required, constraints, self._label)
+        return DoublePendulumMachineVertex(
+            resources_required, constraints, self._label, self, vertex_slice)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -242,69 +216,69 @@ class DoublePendulum(ApplicationVertex,
     # ------------------------------------------------------------------------
     @inject_items({"machine_time_step": "MachineTimeStep",
                    "time_scale_factor": "TimeScaleFactor",
-                   "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "TotalMachineTimeSteps"})
+                   "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags",
-                                     "n_machine_time_steps"}
+                                     "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, graph_mapper,
-                                    routing_info, tags, n_machine_time_steps):
+                                    time_scale_factor, routing_info, tags):
         vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Double Pendulum Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
 
         # Reserve memory:
         spec.reserve_memory_region(
-            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.SYSTEM.value,
+            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .SYSTEM.value,
             size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
             label='setup')
         spec.reserve_memory_region(
-            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.PENDULUM.value,
+            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .PENDULUM.value,
             size=self.PENDULUM_REGION_BYTES, label='PendulumVertex')
-        # vertex.reserve_provenance_data_region(spec)
         # reserve recording region
         spec.reserve_memory_region(
-            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.RECORDING.value,
+            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .RECORDING.value,
             recording_utilities.get_recording_header_size(1))
         spec.reserve_memory_region(
-            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.DATA.value,
+            region=DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .DATA.value,
             size=self.DATA_REGION_BYTES, label='PendulumData')
 
         # Write setup region
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
-            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.SYSTEM.value)
+            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
+            vertex.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
         # Write pendulum region containing routing key to transmit with
         spec.comment("\nWriting double pendulum region:\n")
         spec.switch_write_focus(
-            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.PENDULUM.value)
+            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .PENDULUM.value)
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
         # Write recording region for score
         spec.comment("\nWriting double pendulum recording region:\n")
         spec.switch_write_focus(
-            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.RECORDING.value)
+            DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS
+            .RECORDING.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_array(recording_utilities.get_recording_header_array(
             [self._recording_size], ip_tags=ip_tags))
 
         # Write probabilites for arms
-        spec.comment("\nWriting arm probability region region:\n")
+        spec.comment("\nWriting double pendulum data region:\n")
         spec.switch_write_focus(
             DoublePendulumMachineVertex._DOUBLE_PENDULUM_REGIONS.DATA.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_value(self._encoding, data_type=DataType.UINT32)
         spec.write_value(self._time_increment, data_type=DataType.UINT32)
         spec.write_value(self._pole_length, data_type=DataType.S1615)
@@ -325,18 +299,6 @@ class DoublePendulum(ApplicationVertex,
 
         # End-of-Spec:
         spec.end_specification()
-
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
-        return "double_pendulum.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
@@ -366,10 +328,8 @@ class DoublePendulum(ApplicationVertex,
     @overrides(
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(
-            self, variable, buffer_manager, placements, graph_mapper):
-        self._clear_recording_region(
-            buffer_manager, placements, graph_mapper,
-            0)
+            self, variable, buffer_manager, placements):
+        self._clear_recording_region(buffer_manager, placements, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -382,7 +342,7 @@ class DoublePendulum(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a = 1
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
@@ -390,13 +350,13 @@ class DoublePendulum(ApplicationVertex,
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
-                 graph_mapper, buffer_manager, machine_time_step):
-        vertex = graph_mapper.get_machine_vertices(self).pop()
+                 buffer_manager, machine_time_step):
+        vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_for_vertex(placement, 0)
-        data = data_values#.read_all()
+        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data = data_values
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.float32))
@@ -406,3 +366,5 @@ class DoublePendulum(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        pass

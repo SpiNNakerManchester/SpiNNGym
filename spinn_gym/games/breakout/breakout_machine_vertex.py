@@ -1,21 +1,24 @@
 from enum import Enum
 
-# PACMAN imports
-from pacman.model.decorators.overrides import overrides
+from spinn_utilities.overrides import overrides
 
+# PACMAN imports
+from pacman.model.graphs.machine import MachineVertex
 
 # SpinnFrontEndCommon imports
-from pacman.model.graphs.machine import MachineVertex
-from spinn_front_end_common.interface.provenance \
-    .provides_provenance_data_from_machine_impl \
-    import ProvidesProvenanceDataFromMachineImpl
-from spinn_front_end_common.utilities import helpful_functions, constants
-from spinn_front_end_common.interface.buffer_management.buffer_models.abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
+from spinn_front_end_common.utilities import helpful_functions
+from spinn_front_end_common.interface.buffer_management.buffer_models.\
+    abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
+from spinn_front_end_common.utilities.utility_objs import ExecutableType
+from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
+    import AbstractHasAssociatedBinary
+
 
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
-class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
+class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
+                            AbstractHasAssociatedBinary):
     _BREAKOUT_REGIONS = Enum(
         value="_BREAKOUT_REGIONS",
         names=[('SYSTEM', 0),
@@ -23,12 +26,11 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self, resources_required, constraints=None, label=None):
+    def __init__(self, resources_required, constraints=None, label=None,
+                 app_vertex=None, vertex_slice=None):
         # Superclasses
-        MachineVertex.__init__(self, label,
-                               constraints=constraints)
-        # ProvidesProvenanceDataFromMachineImpl.__init__(
-        #     self, self._BREAKOUT_REGIONS.PROVENANCE.value, 0)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
         self._resource_required = resources_required
 
     @property
@@ -45,3 +47,11 @@ class BreakoutMachineVertex(MachineVertex, AbstractReceiveBuffersToHost):
         :return: The region numbers that have active recording
         :rtype: iterable(int) """
         return [0]
+
+    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
+    def get_binary_file_name(self):
+        return "breakout.aplx"
+
+    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
+    def get_binary_start_type(self):
+        return ExecutableType.USES_SIMULATION_INTERFACE

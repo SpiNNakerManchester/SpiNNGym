@@ -1,127 +1,91 @@
-from __future__ import print_function
+from spinn_utilities.overrides import overrides
+
 # PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
-
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-from pacman.model.decorators.overrides import overrides
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
 from pacman.model.graphs.application import ApplicationVertex
 from pacman.model.resources.cpu_cycles_per_tick_resource import \
     CPUCyclesPerTickResource
 from pacman.model.resources.dtcm_resource import DTCMResource
 from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.constant_sdram import ConstantSDRAM
 from pacman.model.resources.variable_sdram import VariableSDRAM
 
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
+from data_specification.enums.data_type import DataType
 
 # SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
+from spinn_front_end_common.interface.buffer_management \
+    import recording_utilities
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
 from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
-from spinn_front_end_common.abstract_models\
-   .abstract_provides_n_keys_for_partition \
-   import AbstractProvidesNKeysForPartition
 
 # Bandit imports
-from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import BanditMachineVertex
+from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import \
+    BanditMachineVertex
 
 import numpy
 
-from data_specification.enums.data_type import DataType
-
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
-# ----------------------------------------------------------------------------
-# Bandit
-# ----------------------------------------------------------------------------
-# **HACK** for Projection to connect a synapse type is required
-# class BanditSynapseType(object):
-#     def get_synapse_id_by_target(self, target):
-#         return 0
-
 
 # ----------------------------------------------------------------------------
 # Bandit
 # ----------------------------------------------------------------------------
-class Bandit(ApplicationVertex,
-                AbstractGeneratesDataSpecification,
-                AbstractHasAssociatedBinary,
-                AbstractProvidesOutgoingPartitionConstraints,
-                AbstractAcceptsIncomingSynapses,
-                AbstractNeuronRecordable,
-                SimplePopulationSettable,
-                AbstractProvidesNKeysForPartition
-                # AbstractBinaryUsesSimulationRun
-                ):
+class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
+             AbstractProvidesOutgoingPartitionConstraints,
+             AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+             SimplePopulationSettable):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                                     routing_infos, synapse_information, machine_time_step):
+    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
+    def get_connections_from_machine(
+            self, transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements=None, monitor_api=None, fixed_routes=None,
+            extra_monitor=None):
 
-        super(Bandit, self).get_connections_from_machine(transceiver, placement, edge,
-                                                           graph_mapper, routing_infos,
-                                                           synapse_information,
-                                                           machine_time_step)
+        # TODO: make this work properly (the following call does nothing)
+
+        super(Bandit, self).get_connections_from_machine(
+            transceiver, placement, edge, routing_infos,
+            synapse_information, machine_time_step, using_extra_monitor_cores,
+            placements, monitor_api, fixed_routes, extra_monitor)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Bandit, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
-
-    # def get_binary_start_type(self):
-    #     super(Bandit, self).get_binary_start_type()
-    #
-    # def requires_mapping(self):
-    #     pass
+    @overrides(AbstractAcceptsIncomingSynapses.add_pre_run_connection_holder)
+    def add_pre_run_connection_holder(
+            self, connection_holder, projection_edge, synapse_information):
+        super(Bandit, self).add_pre_run_connection_holder(
+            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass
-
-    @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition, graph_mapper):
-        return 8  # 2  # two for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
 
-    BANDIT_REGION_BYTES = 24
-    ARMS_REGION_BYTES = 80
+    BANDIT_REGION_BYTES = 4
+    BASE_ARMS_REGION_BYTES = 11 * 4
     MAX_SIM_DURATION = 1000 * 60 * 60  # 1 hour
 
     # parameters expected by PyNN
@@ -137,11 +101,9 @@ class Bandit(ApplicationVertex,
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
         'arms': [0.1, 0.9],
-        'random_seed': [numpy.random.randint(10000), numpy.random.randint(10000),
-                        numpy.random.randint(10000), numpy.random.randint(10000)]}
-
-    # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = BanditSynapseType()
+        'random_seed': [
+            numpy.random.randint(10000), numpy.random.randint(10000),
+            numpy.random.randint(10000), numpy.random.randint(10000)]}
 
     def __init__(self, arms=default_parameters['arms'],
                  reward_delay=default_parameters['reward_delay'],
@@ -152,7 +114,8 @@ class Bandit(ApplicationVertex,
                  constant_input=default_parameters['constant_input'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
+                 incoming_spike_buffer_size=default_parameters[
+                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -197,19 +160,12 @@ class Bandit(ApplicationVertex,
             self._incoming_spike_buffer_size = config.getint(
                 "Simulation", "incoming_spike_buffer_size")
 
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
-
     def neurons(self):
         return self._n_neurons
 
     def get_maximum_delay_supported_in_ms(self, machine_time_step):
         # Bandit has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
-
-    #    def get_max_atoms_per_core(self):
-    #       return self.n_atoms
 
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
@@ -218,9 +174,6 @@ class Bandit(ApplicationVertex,
     def get_resources_used_by_atoms(self, vertex_slice):
         # **HACK** only way to force no partitioning is to zero dtcm and cpu
         container = ResourceContainer(
-            # sdram=ConstantSDRAM(
-            #     self.BANDIT_REGION_BYTES +
-            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
             sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
             dtcm=DTCMResource(0),
             cpu_cycles=CPUCyclesPerTickResource(0))
@@ -231,7 +184,8 @@ class Bandit(ApplicationVertex,
     def create_machine_vertex(self, vertex_slice, resources_required,
                               label=None, constraints=None):
         # Return suitable machine vertex
-        return BanditMachineVertex(resources_required, constraints, self._label)
+        return BanditMachineVertex(
+            resources_required, constraints, self._label, self, vertex_slice)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
@@ -243,18 +197,15 @@ class Bandit(ApplicationVertex,
     # ------------------------------------------------------------------------
     @inject_items({"machine_time_step": "MachineTimeStep",
                    "time_scale_factor": "TimeScaleFactor",
-                   "graph_mapper": "MemoryGraphMapper",
                    "routing_info": "MemoryRoutingInfos",
                    "tags": "MemoryTags"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags"}
+                                     "routing_info", "tags"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, graph_mapper,
-                                    routing_info, tags):
+                                    time_scale_factor, routing_info, tags):
         vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
 
         spec.comment("\n*** Spec for Bandit Instance ***\n\n")
         spec.comment("\nReserving memory space for data regions:\n\n")
@@ -267,21 +218,21 @@ class Bandit(ApplicationVertex,
         spec.reserve_memory_region(
             region=BanditMachineVertex._BANDIT_REGIONS.BANDIT.value,
             size=self.BANDIT_REGION_BYTES, label='BanditParams')
-        # vertex.reserve_provenance_data_region(spec)
         # reserve recording region
         spec.reserve_memory_region(
             BanditMachineVertex._BANDIT_REGIONS.RECORDING.value,
             recording_utilities.get_recording_header_size(1))
         spec.reserve_memory_region(
             region=BanditMachineVertex._BANDIT_REGIONS.ARMS.value,
-            size=self.ARMS_REGION_BYTES, label='BanditArms')
+            size=self.BASE_ARMS_REGION_BYTES+(self._no_arms*4),
+            label='BanditArms')
 
         # Write setup region
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             BanditMachineVertex._BANDIT_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
+            vertex.get_binary_file_name(), machine_time_step,
             time_scale_factor))
 
         # Write bandit region containing routing key to transmit with
@@ -300,10 +251,9 @@ class Bandit(ApplicationVertex,
             [self._recording_size], ip_tags=ip_tags))
 
         # Write probabilites for arms
-        spec.comment("\nWriting arm probability region region:\n")
+        spec.comment("\nWriting arm probability region:\n")
         spec.switch_write_focus(
             BanditMachineVertex._BANDIT_REGIONS.ARMS.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_value(self._reward_delay, data_type=DataType.UINT32)
         spec.write_value(self._no_arms, data_type=DataType.UINT32)
         spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
@@ -321,18 +271,6 @@ class Bandit(ApplicationVertex,
 
         # End-of-Spec:
         spec.end_specification()
-
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
-        return "bandit.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
@@ -362,10 +300,8 @@ class Bandit(ApplicationVertex,
     @overrides(
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(
-            self, variable, buffer_manager, placements, graph_mapper):
-        self._clear_recording_region(
-            buffer_manager, placements, graph_mapper,
-            0)
+            self, variable, buffer_manager, placements):
+        self._clear_recording_region(buffer_manager, placements, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -378,7 +314,7 @@ class Bandit(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a = 1
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
@@ -386,13 +322,13 @@ class Bandit(ApplicationVertex,
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
-                 graph_mapper, buffer_manager, machine_time_step):
-        vertex = graph_mapper.get_machine_vertices(self).pop()
+                 buffer_manager, machine_time_step):
+        vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
-        data = data_values#.read_all()
+        data = data_values
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
@@ -402,3 +338,5 @@ class Bandit(ApplicationVertex,
         # return formatted_data
         return output_data
 
+    def reset_ring_buffer_shifts(self):
+        pass
