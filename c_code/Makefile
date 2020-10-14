@@ -1,4 +1,4 @@
-DIRS = breakout inverted_pendulum double_inverted_pendulum multi_arm_bandit logic store_recall
+DIRS = breakout inverted_pendulum double_inverted_pendulum multi_arm_bandit logic store_recall icub_vor_env
 #DIRS = breakout double_inverted_pendulum multi_arm_bandit logic store_recall
 	   
 
