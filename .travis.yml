@@ -1,9 +1,19 @@
 language: python
-python:
-  - 2.7
-  - 3.6
-  - 3.7
-  - 3.8
+jobs:
+  include:
+    - name: Py3.6 (and doc deploy)
+      python: 3.6
+      env:
+        - DEPLOY_DIR=$PWD/deploy
+        - ROOT_DOC_DIR=$PWD/doc/global
+        - C_DOC_DIR=$PWD/c_models/html
+        - PY_DOC_DIR=$PWD/doc/source/_build/html
+    - name: Py3.7
+      python: 3.7
+    - name: Py3.8
+      python: 3.8
+    - name: Py2.7 (legacy)
+      python: 2.7
 dist: focal
 
 env:
