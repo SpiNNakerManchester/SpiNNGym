@@ -62,26 +62,15 @@ class Logic(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
     def get_connections_from_machine(
-            self, transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores,
-            placements=None, monitor_api=None, fixed_routes=None,
-            extra_monitor=None):
+            self, transceiver, placements, app_edge, synapse_info):
 
         # TODO: make this work properly (the following call does nothing)
 
         super(Logic, self).get_connections_from_machine(
-            transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores,
-            placements, monitor_api, fixed_routes, extra_monitor)
+            transceiver, placements, app_edge, synapse_info)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.add_pre_run_connection_holder)
-    def add_pre_run_connection_holder(
-            self, connection_holder, projection_edge, synapse_information):
-        super(Logic, self).add_pre_run_connection_holder(
-            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass

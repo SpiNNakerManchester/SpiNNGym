@@ -7,7 +7,6 @@ assert __version__
 
 install_requires = [
     'SpiNNUtilities >= 1!5.0.1, < 1!6.0.0',
-    'SpiNNStorageHandlers >= 1!5.0.1, < 1!6.0.0',
     'SpiNNMachine >= 1!5.0.1, < 1!6.0.0',
     'SpiNNMan >= 1!5.0.1, < 1!6.0.0',
     'SpiNNaker_PACMAN >= 1!5.0.1, < 1!6.0.0',

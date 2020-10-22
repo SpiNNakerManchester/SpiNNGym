@@ -55,20 +55,13 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
                SimplePopulationSettable):
 
     def get_connections_from_machine(
-            self, transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores):
+            self, transceiver, placements, app_edge, synapse_info):
 
         super(Pendulum, self).get_connections_from_machine(
-            transceiver, placement, edge, routing_infos,
-            synapse_information, machine_time_step, using_extra_monitor_cores)
+            transceiver, placements, app_edge, synapse_info)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
-
-    def add_pre_run_connection_holder(
-            self, connection_holder, projection_edge, synapse_information):
-        super(Pendulum, self).add_pre_run_connection_holder(
-            connection_holder, projection_edge, synapse_information)
 
     def clear_connection_cache(self):
         pass
