@@ -74,20 +74,24 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     ICUB_VOR_ENV_REGION_BYTES = 4
     BASE_DATA_REGION_BYTES = 3 * 4
-    MAX_SIM_DURATION = 1000 * 60 * 60 * 24  # 1 day
+    MAX_SIM_DURATION = 10000
+#     RECORDABLE_VARIABLES = "error"
+    RECORDABLE_VARIABLES = [
+        "L_count", "R_count", "error", "head_pos", "head_vel"]
+    RECORDABLE_DTYPES = [
+        DataType.UINT32, DataType.UINT32, DataType.S1615, DataType.S1615,
+        DataType.S1615]
 
     # parameters expected by PyNN
     default_parameters = {
         'error_window_size': 10,
-        'error_value': 0.0,
         'constraints': None,
         'label': "ICubVorEnv",
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION}
 
-    def __init__(self, head_positions, head_velocities,
+    def __init__(self, head_pos, head_vel, perfect_eye_pos, perfect_eye_vel,
                  error_window_size=default_parameters['error_window_size'],
-                 error_value=default_parameters['error_value'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters[
@@ -100,23 +104,39 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._label = label
 
         # Pass in variables
-        self._head_positions = head_positions
-        self._head_velocities = head_velocities
+        self._head_pos = head_pos
+        self._head_vel = head_vel
+        self._perfect_eye_pos = perfect_eye_pos
+        self._perfect_eye_vel = perfect_eye_vel
         self._error_window_size = error_window_size
-        self._error_value = error_value
-        self._number_of_inputs = len(head_positions)
-        if self._number_of_inputs != len(head_velocities):
+        self._number_of_inputs = len(head_pos)
+        if self._number_of_inputs != len(head_vel):
             raise ConfigurationException(
                 "The length of head_positions {} is not the same as the "
                 "length of head_velocities {}".format(
-                    self._number_of_inputs, len(head_velocities)))
+                    self._number_of_inputs, len(head_vel)))
 
         # n_neurons is the number of atoms in the network, which in this
         # case only needs to be 2 (for receiving "left" and "right")
         self._n_neurons = 2
 
-        # used to define size of recording region
-        self._recording_size = int((simulation_duration_ms / 1000.) * 4)
+        # used to define size of recording region:
+        # record variables every error_window_size ms (same size each time)
+        self._n_recordable_variables = len(self.RECORDABLE_VARIABLES)
+
+        self._recording_size = int(
+            (simulation_duration_ms / error_window_size) *
+            front_end_common_constants.BYTES_PER_WORD)
+
+        # set up recording region IDs and data types
+        self._region_ids = dict()
+        self._region_dtypes = dict()
+        for n in range(self._n_recordable_variables):
+            self._region_ids[self.RECORDABLE_VARIABLES[n]] = n
+            self._region_dtypes[
+                self.RECORDABLE_VARIABLES[n]] = self.RECORDABLE_DTYPES[n]
+
+        self._m_vertex = None
 
         # Superclasses
         ApplicationVertex.__init__(
@@ -195,10 +215,11 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         # reserve recording region
         spec.reserve_memory_region(
             ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.RECORDING.value,
-            recording_utilities.get_recording_header_size(1))
+            recording_utilities.get_recording_header_size(
+                len(self.RECORDABLE_VARIABLES)))
         spec.reserve_memory_region(
             region=ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.DATA.value,
-            size=self.BASE_DATA_REGION_BYTES+(self._number_of_inputs*8),
+            size=self.BASE_DATA_REGION_BYTES+(self._number_of_inputs*16),
             label='ICubVorEnvArms')
 
         # Write setup region
@@ -221,20 +242,34 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.RECORDING.value)
         ip_tags = tags.get_ip_tags_for_vertex(self) or []
+        recording_sizes = [
+            self._recording_size for _ in range(self._n_recordable_variables)]
         spec.write_array(recording_utilities.get_recording_header_array(
-            [self._recording_size], ip_tags=ip_tags))
+            recording_sizes, ip_tags=ip_tags))
 
-        # Write probabilites for arms
+        # Write parameters for ICubVorEnv data
         spec.comment("\nWriting icub_vor_env data region:\n")
+        float_scale = float(DataType.S1615.scale)
         spec.switch_write_focus(
             ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.DATA.value)
         spec.write_value(self._error_window_size, data_type=DataType.UINT32)
-        spec.write_value(self._error_value, data_type=DataType.UINT32)
         spec.write_value(self._number_of_inputs, data_type=DataType.UINT32)
         # Write the data - Arrays must be 32-bit values, so convert
-        data = numpy.array(self._head_positions, dtype=numpy.uint32)
+        data = numpy.array(
+            [int(x * float_scale) for x in self._head_pos],
+            dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))
-        data = numpy.array(self._head_velocities, dtype=numpy.uint32)
+        data = numpy.array(
+            [int(x * float_scale) for x in self._head_vel],
+            dtype=numpy.uint32)
+        spec.write_array(data.view(numpy.uint32))
+        data = numpy.array(
+            [int(x * float_scale) for x in self._perfect_eye_pos],
+            dtype=numpy.uint32)
+        spec.write_array(data.view(numpy.uint32))
+        data = numpy.array(
+            [int(x * float_scale) for x in self._perfect_eye_vel],
+            dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))
 
         # End-of-Spec:
@@ -269,11 +304,12 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(
             self, variable, buffer_manager, placements):
-        self._clear_recording_region(buffer_manager, placements, 0)
+        for n in range(len(self.RECORDABLE_VARIABLES)):
+            self._clear_recording_region(buffer_manager, placements, n)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
-        return 'score'  # whatever this "records" will probably not be "score"
+        return self.RECORDABLE_VARIABLES
 
     @overrides(AbstractNeuronRecordable.is_recording)
     def is_recording(self, variable):
@@ -286,25 +322,41 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
+        return 10000  # 10 seconds hard coded in as sim duration... ?
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
                  buffer_manager, machine_time_step):
-        vertex = self.machine_vertices.pop()
-        print('get_data from machine vertex ', vertex)
-        placement = placements.get_placement_of_vertex(vertex)
+        if self._m_vertex is None:
+            self._m_vertex = self.machine_vertices.pop()
+        print('get_data from machine vertex ', self._m_vertex,
+              ' for variable ', variable)
+        placement = placements.get_placement_of_vertex(self._m_vertex)
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data_values, _ = buffer_manager.get_data_by_placement(
+            placement, self._region_ids[variable])
         data = data_values
 
         numpy_format = list()
-        numpy_format.append(("Score", numpy.int32))
+        output_format = list()
+        if self._region_dtypes[variable] is DataType.S1615:
+            numpy_format.append((variable, numpy.int32))
+            output_format.append((variable, numpy.float32))
+        else:
+            numpy_format.append((variable, numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
-
-        return output_data
+        if self._region_dtypes[variable] is DataType.S1615:
+            convert = numpy.zeros_like(
+                output_data, dtype=numpy.float32).view(output_format)
+            for i in range(output_data.size):
+                for j in range(len(numpy_format)):
+                    convert[i][j] = float(
+                        output_data[i][j]) / float(DataType.S1615.scale)
+            return convert
+        else:
+            return output_data
 
     def reset_ring_buffer_shifts(self):
         pass

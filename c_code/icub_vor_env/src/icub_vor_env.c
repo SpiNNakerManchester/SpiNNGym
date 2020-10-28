@@ -36,7 +36,7 @@ typedef enum {
   REGION_ICUB_VOR_ENV_DATA,
 } region_t;
 
-// we may need some of these at some point
+// we may need some of these at some point, so keeping them for now
 //typedef enum {
 //  SPECIAL_EVENT_INPUT_1,
 //  SPECIAL_EVENT_INPUT_2,
@@ -52,7 +52,7 @@ typedef enum {
 typedef enum {
   KEY_CHOICE_LEFT  = 0x0,
   KEY_CHOICE_RIGHT  = 0x1
-} arm_key_t;
+} lr_key_t;
 
 //----------------------------------------------------------------------------
 // Globals
@@ -63,24 +63,35 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-//! Set global variables up here
-// - head position, head velocity (from array read in to start off with?)
-// - error value(s)
+//! Parameters set from Python code go here
+// - error_window_size
+// - number_of_inputs
+// - head position, head velocity arrays
+// - perfect eye position, perfect eye velocity arrays (unused at present)
 uint32_t error_window_size;
 uint32_t number_of_inputs;
 accum *head_positions;
 accum *head_velocities;
-accum error_value;
-// I'm sure there are more to be added to this list
+accum *perfect_eye_pos;
+accum *perfect_eye_vel;
 
-//! track the left and right values
-uint32_t error_values[2] = {0};
+//accum *eye_pos;
+//accum *eye_vel;
+
+//! Global error value
+accum error_value = 0.0k;
+
+//! count left and right spikes
+uint32_t spike_counters[2] = {0};
 
 //! The upper bits of the key value that model should transmit with
 static uint32_t key;
 
-//! How many ticks until next window (default size 10ms)
-static uint32_t tick_in_window = 0;
+//! How many ticks until next error window (default size 10ms)
+static uint32_t tick_in_error_window = 0;
+
+//! How many ticks until end of head loop
+static uint32_t tick_in_head_loop = 0;
 
 //! the number of timer ticks that this model should run for before exiting.
 uint32_t simulation_ticks = 0;
@@ -89,8 +100,8 @@ uint32_t simulation_ticks = 0;
 // Inline functions
 //----------------------------------------------------------------------------
 
-// This is the function for sending a spike out from the environment, related
-// to the error signal
+// This is the function for sending a spike out from the environment, currently
+// related to the counts at the Left and Right atoms
 static inline void send_spike(int input)
 {
   spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
@@ -146,44 +157,33 @@ static bool initialize(uint32_t *timer_period)
 
     // Ideally I guess this could be set up using a struct, but let's keep it simpler for now
     error_window_size = icub_vor_env_data_region[0];
-    error_value = icub_vor_env_data_region[1];
-    number_of_inputs = icub_vor_env_data_region[2];
-    head_positions = (accum *)&icub_vor_env_data_region[3];
-    head_velocities = (accum *)&icub_vor_env_data_region[3 + number_of_inputs];
+    number_of_inputs = icub_vor_env_data_region[1];
+    head_positions = (accum *)&icub_vor_env_data_region[2];
+    head_velocities = (accum *)&icub_vor_env_data_region[2 + number_of_inputs];
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[2 + (2 * number_of_inputs)];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[2 + (3 * number_of_inputs)];
 
-    // Print values out to check
-    io_printf(IO_BUF, "error_window_size %u, error_value %u\n");
-    for (uint32_t i=0; i<number_of_inputs; i++) {
-        io_printf(IO_BUF, "%d: position %k, velocity %k, error %k\n",
-        		i, head_positions[i], head_velocities[i], error_value);
-    }
+    // Print some values out to check
+    io_printf(IO_BUF, "error_window_size %u\n", error_window_size);
+    io_printf(IO_BUF, "At 0: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+            head_positions[0], head_velocities[0], perfect_eye_pos[0], perfect_eye_vel[0]);
+    io_printf(IO_BUF, "At 250: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+            head_positions[250], head_velocities[250], perfect_eye_pos[250], perfect_eye_vel[250]);
+    io_printf(IO_BUF, "At 500: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+            head_positions[500], head_velocities[500], perfect_eye_pos[500], perfect_eye_vel[500]);
+    io_printf(IO_BUF, "At 750: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+            head_positions[750], head_velocities[750], perfect_eye_pos[750], perfect_eye_vel[750]);
 
+    // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
     return true;
 }
 
-void update_error(uint32_t time, uint32_t index) {
-    // Update the error values in here when a mc packet is received
-    io_printf(IO_BUF, "At time %u, update index %u", time, index);
-    error_values[index] += 1;
-}
-
-void test_the_head() {
-//    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
-//    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
-    // This is a simplified version of what actually needs to happen
-    for (uint32_t i=0; i < number_of_inputs; i++) {
-        // It's here where we need to count which is bigger?
-        if (error_values[0] > error_values[1]) {
-            io_printf(IO_BUF, "error_values[0] %u > error_values[1] %u",
-                    error_values[0], error_values[1]);
-            send_spike(0);
-        }
-        else {
-            send_spike(1);
-        }
-    }
+void update_count(uint32_t index) {
+    // Update the count values in here when a mc packet is received
+//    io_printf(IO_BUF, "At time %u, update index %u \n", _time, index);
+    spike_counters[index] += 1;
 }
 
 // when a packet is received, update the error
@@ -194,22 +194,57 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "payload = %x\n", payload);
     uint32_t compare;
     compare = keyx & 0x1;
-//    io_printf(IO_BUF, "compare = %x\n", compare);
+
     // If no payload has been set, make sure the loop will run
     if (payload == 0) { payload = 1; }
 
+    // Update the spike counters based on the key value
     for (uint count = payload; count > 0; count--) {
         if (compare == KEY_CHOICE_LEFT) {
-            // I think these are counts?
-            update_error(_time, 0);
+            update_count(0);
         }
         else if (compare == KEY_CHOICE_RIGHT) {
-            update_error(_time, 1);
+            update_count(1);
         }
         else {
             io_printf(IO_BUF, "Unexpected key value %d\n", key);
         }
     }
+}
+
+// Test the counters for the head after this loop
+void test_the_head() {
+    // Here I am testing this is working by sending a spike out to
+    // wherever this vertex connects to, depending on which counter is higher.
+    if (spike_counters[0] > spike_counters[1]) {
+//        io_printf(IO_BUF, "spike_counters[0] %u > spike_counters[1] %u \n",
+//                spike_counters[0], spike_counters[1]);
+        send_spike(0);
+        // L > R so "move eye left" (blank for now while we decide how to do this)
+
+    }
+    else {
+//        io_printf(IO_BUF, "spike_counters[0] %u <= spike_counters[1] %u \n",
+//                spike_counters[0], spike_counters[1]);
+        send_spike(1);
+        // L <= R so "move eye right" (blank for now while we decide how to do this)
+
+    }
+
+    // Here is where the error should be calculated: for now measure the error
+    // from the default eye position (middle = 0.5) and default velocity (0.0)
+    accum DEFAULT_EYE_POS = 0.5k;
+    accum DEFAULT_EYE_VEL = 0.0k;
+
+    // I'm not sure whether this should be an absolute error or not...
+    accum error_pos = absk(head_positions[tick_in_head_loop] - DEFAULT_EYE_POS);
+    accum error_vel = absk(head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL);
+    error_value = error_pos + error_vel;
+
+    // The above could easily be replaced by a comparison to the perfect eye
+    // position and velocity at the current value of tick_in_head_loop, once it has
+    // been worked out how the spike counters at L and R translate to head/eye movement
+
 }
 
 void timer_callback(uint unused, uint dummy)
@@ -219,20 +254,18 @@ void timer_callback(uint unused, uint dummy)
 
     _time++;
 
+    // If the time has run out
     if (!infinite_run && _time >= simulation_ticks) {
         //spin1_pause();
         recording_finalise();
+
         // go into pause and resume state to avoid another tick
         simulation_handle_pause_resume(resume_callback);
-        //    spin1_callback_off(MC_PACKET_RECEIVED);
 
         io_printf(IO_BUF, "infinite_run %d; time %d\n", infinite_run, _time);
         io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
-        //    io_printf(IO_BUF, "key count Left %u\n", left_key_count);
-        //    io_printf(IO_BUF, "key count Right %u\n", right_key_count);
 
         io_printf(IO_BUF, "Exiting on timer.\n");
-//        simulation_handle_pause_resume(NULL);
         simulation_ready_to_read();
 
         _time -= 1;
@@ -240,22 +273,38 @@ void timer_callback(uint unused, uint dummy)
     }
     // Otherwise
     else {
-        // Increment ticks in frame counter and if this has reached frame delay
-        tick_in_window++;
+        // Increment ticks for head loop and error window
+        tick_in_head_loop++;
+        tick_in_error_window++;
 
-        // every 10ms (timesteps?) aggregate the values
-        if (tick_in_window == error_window_size) {
-            // Reset ticks in frame and update frame
-            tick_in_window = 0;
-            // Work out the error values
-            test_the_head();
+        // Test whether we have reached the end of the head inputs
+        if (tick_in_head_loop == number_of_inputs) {
+            // Reset back to zero if so
+            tick_in_head_loop = 0;
         }
 
-        // There is probably a point where the error values should be reset too?
+        // If ticks_in_error_window has reached error_window_size then compare
+        // the counters and calculate error
+        if (tick_in_error_window == error_window_size) {
+            // Check spike counters and calculate error value
+            test_the_head();
+
+            // Do recording
+            recording_record(0, &spike_counters[0], 4);
+            recording_record(1, &spike_counters[1], 4);
+            recording_record(2, &error_value, 4);
+            recording_record(3, &head_positions[tick_in_head_loop], 4);
+            recording_record(4, &head_velocities[tick_in_head_loop], 4);
+
+            // Reset ticks in error window
+            tick_in_error_window = 0;
+
+            // Reset the spike_counters
+            spike_counters[0] = 0;
+            spike_counters[1] = 0;
+        }
 
     }
-//    io_printf(IO_BUF, "time %u\n", ticks);
-//    io_printf(IO_BUF, "time %u\n", _time);
 }
 
 //----------------------------------------------------------------------------
@@ -271,7 +320,9 @@ void c_main(void)
     return;
   }
 
-  tick_in_window = 0;
+  // Initialise (probably unnecessary...)
+  tick_in_error_window = 0;
+  tick_in_head_loop = 0;
 
   // Set timer tick (in microseconds)
   io_printf(IO_BUF, "setting timer tick callback for %d microseconds\n",
@@ -280,7 +331,7 @@ void c_main(void)
 
   io_printf(IO_BUF, "simulation_ticks %d\n", simulation_ticks);
 
-  // Register callback
+  // Register callbacks
   spin1_callback_on(TIMER_TICK, timer_callback, 2);
   spin1_callback_on(MC_PACKET_RECEIVED, mc_packet_received_callback, -1);
   spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);

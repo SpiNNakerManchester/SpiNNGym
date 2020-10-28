@@ -31,24 +31,24 @@ class ICubVorEnvMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
         # Superclasses
         MachineVertex.__init__(
             self, label, constraints, app_vertex, vertex_slice)
-        self._resource_required = resources_required
+        self._resources_required = resources_required
 
     @property
     def resources_required(self):
-        return self._resource_required
+        return self._resources_required
 
     def get_minimum_buffer_sdram_usage(self):
         return 0  # probably should make this a user input
 
     def get_recorded_region_ids(self):
-        return [0]
+        return [0, 1, 2, 3, 4]
 
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._ICUB_VOR_ENV_REGIONS.RECORDING.value, txrx)
 
     def get_n_keys_for_partition(self, partition):
-        return 8  # for control IDs (CHECK: this should be 2, right?)
+        return 2  # for control IDs (CHECK: this should be 2, right?)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
