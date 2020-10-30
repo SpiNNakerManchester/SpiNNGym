@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <stdfix-full-iso.h>
+
 // Spin 1 API includes
 #include <spin1_api.h>
 
@@ -24,6 +26,7 @@
 #include "random.h"
 
 #include <recording.h>
+
 
 //----------------------------------------------------------------------------
 // Enumerations
@@ -69,6 +72,7 @@ static uint32_t infinite_run;
 // - head position, head velocity arrays
 // - perfect eye position, perfect eye velocity arrays (unused at present)
 uint32_t error_window_size;
+uint32_t output_size;
 uint32_t number_of_inputs;
 accum *head_positions;
 accum *head_velocities;
@@ -77,6 +81,7 @@ accum *perfect_eye_vel;
 
 //accum *eye_pos;
 //accum *eye_vel;
+//accum *encoded_error_rates;
 
 //! Global error value
 accum error_value = 0.0k;
@@ -102,9 +107,14 @@ uint32_t simulation_ticks = 0;
 
 // This is the function for sending a spike out from the environment, currently
 // related to the counts at the Left and Right atoms
-static inline void send_spike(int input)
+static inline void send_spike(int input, accum value)
 {
-  spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
+//    uint32_t payload = bitsk(value);
+//    io_printf(IO_BUF, "payload %d value %k", payload, value);
+    // The rate value needs to be sent as a uint32_t, so convert and send
+    spin1_send_mc_packet(key | (input), bitsk(value), WITH_PAYLOAD);
+//    spin1_send_mc_packet(key | (input), value, WITH_PAYLOAD);
+//    spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "sending spike to input %d\n", input);
 }
 
@@ -157,14 +167,15 @@ static bool initialize(uint32_t *timer_period)
 
     // Ideally I guess this could be set up using a struct, but let's keep it simpler for now
     error_window_size = icub_vor_env_data_region[0];
-    number_of_inputs = icub_vor_env_data_region[1];
-    head_positions = (accum *)&icub_vor_env_data_region[2];
-    head_velocities = (accum *)&icub_vor_env_data_region[2 + number_of_inputs];
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[2 + (2 * number_of_inputs)];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[2 + (3 * number_of_inputs)];
+    output_size = icub_vor_env_data_region[1];
+    number_of_inputs = icub_vor_env_data_region[2];
+    head_positions = (accum *)&icub_vor_env_data_region[3];
+    head_velocities = (accum *)&icub_vor_env_data_region[3 + number_of_inputs];
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
 
     // Print some values out to check
-    io_printf(IO_BUF, "error_window_size %u\n", error_window_size);
+    io_printf(IO_BUF, "error_window_size %u output_size %u\n", error_window_size, output_size);
     io_printf(IO_BUF, "At 0: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
             head_positions[0], head_velocities[0], perfect_eye_pos[0], perfect_eye_vel[0]);
     io_printf(IO_BUF, "At 250: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
@@ -216,34 +227,76 @@ void mc_packet_received_callback(uint keyx, uint payload)
 void test_the_head() {
     // Here I am testing this is working by sending a spike out to
     // wherever this vertex connects to, depending on which counter is higher.
-    if (spike_counters[0] > spike_counters[1]) {
-//        io_printf(IO_BUF, "spike_counters[0] %u > spike_counters[1] %u \n",
-//                spike_counters[0], spike_counters[1]);
-        send_spike(0);
-        // L > R so "move eye left" (blank for now while we decide how to do this)
-
-    }
-    else {
-//        io_printf(IO_BUF, "spike_counters[0] %u <= spike_counters[1] %u \n",
-//                spike_counters[0], spike_counters[1]);
-        send_spike(1);
-        // L <= R so "move eye right" (blank for now while we decide how to do this)
-
-    }
+//    if (spike_counters[0] > spike_counters[1]) {
+////        io_printf(IO_BUF, "spike_counters[0] %u > spike_counters[1] %u \n",
+////                spike_counters[0], spike_counters[1]);
+//        send_spike(0, 0);
+//        // L > R so "move eye left" (blank for now while we decide how to do this)
+//
+//    }
+//    else {
+////        io_printf(IO_BUF, "spike_counters[0] %u <= spike_counters[1] %u \n",
+////                spike_counters[0], spike_counters[1]);
+//        send_spike(1, 0);
+//        // L <= R so "move eye right" (blank for now while we decide how to do this)
+//
+//    }
 
     // Here is where the error should be calculated: for now measure the error
-    // from the default eye position (middle = 0.5) and default velocity (0.0)
+    // from the default eye position (middle = 0.5) and stationary velocity (0.0)
     accum DEFAULT_EYE_POS = 0.5k;
     accum DEFAULT_EYE_VEL = 0.0k;
 
-    // I'm not sure whether this should be an absolute error or not...
-    accum error_pos = absk(head_positions[tick_in_head_loop] - DEFAULT_EYE_POS);
-    accum error_vel = absk(head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL);
+    // Error is relative (in both cases) as the test is done based on > or < 0.0
+    accum error_pos = head_positions[tick_in_head_loop] - DEFAULT_EYE_POS;
+    accum error_vel = head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL;
     error_value = error_pos + error_vel;
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
     // been worked out how the spike counters at L and R translate to head/eye movement
+
+    // Encode the error into a series of rates which are then sent on
+    accum min_rate = 2.0k;
+    accum max_rate = 20.0k;
+
+    accum mid_neuron = (accum) (output_size) * 0.5k;
+    accum low_threshold = absk(error_value) * mid_neuron;
+    accum up_threshold = low_threshold - mid_neuron;
+
+    // The first 100 values in the connecting pop are agonist, then the next 100 are antagonist
+    uint32_t loop_size = output_size / 2;
+    for (uint32_t n=0; n < loop_size; n++) {
+        accum loop_value = (accum) n;
+        // Unless otherwise specified, rate values are min_rate
+        accum agonist_rate = min_rate;
+        accum antagonist_rate = min_rate;
+        if (loop_value < up_threshold) {
+            if (error_value >= 0.0k) {
+                // Antagonist is max_rate
+                antagonist_rate = max_rate;
+            } else {
+                // Agonist is max_rate
+                agonist_rate = max_rate;
+            }
+        } else if (loop_value < low_threshold) {
+            accum loop_to_up_value = loop_value - up_threshold;
+            accum low_to_up_value = low_threshold - up_threshold;
+//            threshold_calc = inter_value1 / inter_value2;
+            accum encoded_error_rate = max_rate - ((max_rate-min_rate) * (loop_to_up_value / low_to_up_value));
+            if (error_value >= 0.0k) {
+                // Antagonist is encoded_error_rate
+                antagonist_rate = encoded_error_rate;
+            } else {
+                // Agonist is encoded_error_rate
+                agonist_rate = encoded_error_rate;
+            }
+        }
+
+        // Now send the relevant spikes to the connected SSP population
+        send_spike(n, agonist_rate);
+        send_spike(n+loop_size, antagonist_rate);
+    }
 
 }
 

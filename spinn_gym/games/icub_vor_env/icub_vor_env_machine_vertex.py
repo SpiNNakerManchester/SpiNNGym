@@ -48,7 +48,12 @@ class ICubVorEnvMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
             placement, self._ICUB_VOR_ENV_REGIONS.RECORDING.value, txrx)
 
     def get_n_keys_for_partition(self, partition):
-        return 2  # for control IDs (CHECK: this should be 2, right?)
+        n_keys = 0
+        # The way this has been written, there should only be one edge, but
+        # better to be safe than sorry
+        for edge in partition.edges:
+            n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
+        return n_keys
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

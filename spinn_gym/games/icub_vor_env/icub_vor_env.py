@@ -72,10 +72,13 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     def get_synapse_id_by_target(self, target):
         return 0
 
+    # key value
     ICUB_VOR_ENV_REGION_BYTES = 4
+    # error_window_size, output_size, number_of_inputs
     BASE_DATA_REGION_BYTES = 3 * 4
+    # not sure this is entirely necessary but keeping it for now
     MAX_SIM_DURATION = 10000
-#     RECORDABLE_VARIABLES = "error"
+    # Probably better ways of doing this too, but keeping it for now
     RECORDABLE_VARIABLES = [
         "L_count", "R_count", "error", "head_pos", "head_vel"]
     RECORDABLE_DTYPES = [
@@ -85,6 +88,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     # parameters expected by PyNN
     default_parameters = {
         'error_window_size': 10,
+        'output_size': 200,
         'constraints': None,
         'label': "ICubVorEnv",
         'incoming_spike_buffer_size': None,
@@ -92,6 +96,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     def __init__(self, head_pos, head_vel, perfect_eye_pos, perfect_eye_vel,
                  error_window_size=default_parameters['error_window_size'],
+                 output_size=default_parameters['output_size'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters[
@@ -109,6 +114,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._perfect_eye_pos = perfect_eye_pos
         self._perfect_eye_vel = perfect_eye_vel
         self._error_window_size = error_window_size
+        self._output_size = output_size
         self._number_of_inputs = len(head_pos)
         if self._number_of_inputs != len(head_vel):
             raise ConfigurationException(
@@ -235,7 +241,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.ICUB_VOR_ENV.value)
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
+            vertex, constants.LIVE_POISSON_CONTROL_PARTITION_ID))
 
         # Write recording region for score
         spec.comment("\nWriting icub_vor_env recording region:\n")
@@ -253,6 +259,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.DATA.value)
         spec.write_value(self._error_window_size, data_type=DataType.UINT32)
+        spec.write_value(self._output_size, data_type=DataType.UINT32)
         spec.write_value(self._number_of_inputs, data_type=DataType.UINT32)
         # Write the data - Arrays must be 32-bit values, so convert
         data = numpy.array(

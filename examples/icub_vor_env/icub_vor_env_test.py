@@ -53,10 +53,11 @@ p.setup(timestep=1.0)
 
 # Build input SSP and output population
 input_size = 2
-rate = 20
-input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=rate))
+output_size = 200
 
-output_pop = p.Population(2, p.IF_cond_exp())
+input_rate = 20
+input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=input_rate))
+output_pop = p.Population(output_size, p.SpikeSourcePoisson(rate=0))
 
 # get head_positions and head_velocities from file (1000 samples)
 base_dir = "./"
@@ -72,7 +73,8 @@ perfect_eye_vel = np.concatenate((head_vel[500:], head_vel[:500]))
 # build ICubVorEnv model pop
 error_window_size = 10
 icub_vor_env_model = gym.ICubVorEnv(
-    head_pos, head_vel, perfect_eye_vel, perfect_eye_pos, error_window_size)
+    head_pos, head_vel, perfect_eye_vel, perfect_eye_pos, error_window_size,
+    output_size)
 icub_vor_env_pop = p.Population(input_size, icub_vor_env_model)
 
 # Set recording for input and output pop (env pop records by default)
@@ -82,9 +84,9 @@ output_pop.record('spikes')
 # Input -> ICubVorEnv projection
 i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
 
-# ICubVorEnv -> output projection
-i2o2 = p.Projection(icub_vor_env_pop, output_pop, p.OneToOneConnector(),
-                    p.StaticSynapse(weight=0.1, delay=1.0))
+# ICubVorEnv -> output, setup live output to the SSP vertex
+p.external_devices.activate_live_output_to(
+    icub_vor_env_pop, output_pop, "CONTROL")
 
 # Store simulator and run
 simulator = get_simulator()
@@ -101,18 +103,39 @@ rec_head_vel = get_head_vel(
     icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
 
 # get the spike data from input and output and plot
-spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
-spikes_out = output_pop.get_data('spikes').segments[0].spiketrains
-Figure(
-    Panel(spikes_in, xlabel="Time (ms)", ylabel="nID", xticks=True),
-    Panel(spikes_out, xlabel="Time (ms)", ylabel="nID", xticks=True)
-)
-plt.show()
+# spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
+# spikes_out = output_pop.get_data('spikes').segments[0].spiketrains
+# Figure(
+#     Panel(spikes_in, xlabel="Time (ms)", ylabel="nID",
+#           xticks=True, yticks=True),
+#     Panel(spikes_out, xlabel="Time (ms)", ylabel="nID",
+#           xticks=True, yticks=True)
+# )
+# plt.show()
+
+spikes_in_spin = input_pop.spinnaker_get_data('spikes')
+spikes_out_spin = output_pop.spinnaker_get_data('spikes')
+
+# end simulation
+p.end()
 
 # plot the data from the ICubVorEnv pop
 x_plot = [(n) for n in range(0, runtime, error_window_size)]
-plt.figure(figsize=(10, 7))
-plt.subplot(3, 1, 1)
+plt.figure(figsize=(15, 11))
+
+plt.subplot(5, 1, 1)
+plt.scatter(
+    [i[1] for i in spikes_in_spin], [i[0] for i in spikes_in_spin], s=1)
+plt.legend(loc="best")
+plt.xlim([0, runtime])
+
+plt.subplot(5, 1, 2)
+plt.plot(x_plot, l_counts, 'bo', label="l_counts")
+plt.plot(x_plot, r_counts, 'ro', label="r_counts")
+plt.legend(loc="best")
+plt.xlim([0, runtime])
+
+plt.subplot(5, 1, 3)
 plt.plot(x_plot, rec_head_pos, label="head position")
 plt.plot(x_plot, rec_head_vel, label="head velocity")
 # plt.plot(perfect_eye_pos, label="eye position", ls='--')
@@ -120,16 +143,15 @@ plt.plot(x_plot, rec_head_vel, label="head velocity")
 plt.legend(loc="best")
 plt.xlim([0, runtime])
 
-plt.subplot(3, 1, 2)
+plt.subplot(5, 1, 4)
 plt.plot(x_plot, errors, label="errors")
 plt.legend(loc="best")
 plt.xlim([0, runtime])
 
-plt.subplot(3, 1, 3)
-plt.plot(x_plot, l_counts, 'bo', label="l_counts")
-plt.plot(x_plot, r_counts, 'ro', label="r_counts")
+plt.subplot(5, 1, 5)
+plt.scatter(
+    [i[1] for i in spikes_out_spin], [i[0] for i in spikes_out_spin], s=1)
 plt.legend(loc="best")
 plt.xlim([0, runtime])
-plt.show()
 
-p.end()
+plt.show()
