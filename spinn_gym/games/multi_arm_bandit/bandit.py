@@ -327,5 +327,19 @@ class Bandit(ApplicationVertex, AbstractGeneratesDataSpecification,
         # return formatted_data
         return output_data
 
+    def _clear_recording_region(
+            self, buffer_manager, placements, recording_region_id):
+        """ Clear a recorded data region from the buffer manager.
+
+        :param buffer_manager: the buffer manager object
+        :param placements: the placements object
+        :param recording_region_id: the recorded region ID for clearing
+        :rtype: None
+        """
+        for machine_vertex in self.machine_vertices:
+            placement = placements.get_placement_of_vertex(machine_vertex)
+            buffer_manager.clear_recorded_data(
+                placement.x, placement.y, placement.p, recording_region_id)
+
     def reset_ring_buffer_shifts(self):
         pass
