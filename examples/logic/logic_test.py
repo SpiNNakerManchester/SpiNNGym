@@ -63,7 +63,7 @@ p.run(runtime)
 
 scores = get_scores(logic_pop=logic_pop, simulator=simulator)
 
-print(scores)
+print('scores:', scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out1 = output_pop1.get_data('spikes').segments[0].spiketrains

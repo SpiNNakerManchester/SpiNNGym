@@ -1,11 +1,11 @@
 import spynnaker8 as p
 import spinn_gym as gym
 
-from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from spinn_front_end_common.utilities.globals_variables import get_simulator
+
 
 # Examples of get functions for variables
 def get_error(icub_vor_env_pop, simulator):
@@ -50,14 +50,17 @@ def get_head_vel(icub_vor_env_pop, simulator):
 
 # Setup
 p.setup(timestep=1.0)
+# p.set_number_of_neurons_per_core(p.SpikeSourcePoisson, 100)
 
 # Build input SSP and output population
 input_size = 2
 output_size = 200
 
 input_rate = 20
-input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=input_rate))
-output_pop = p.Population(output_size, p.SpikeSourcePoisson(rate=0))
+input_pop = p.Population(input_size, p.SpikeSourcePoisson(rate=input_rate),
+                         label='SSP_input')
+output_pop = p.Population(output_size, p.SpikeSourcePoisson(rate=0),
+                          label='SSP_output')
 
 # get head_positions and head_velocities from file (1000 samples)
 base_dir = "./"
@@ -65,6 +68,12 @@ head_pos = np.loadtxt(os.path.join(
     base_dir, "normalised_head_positions_1000.csv"))
 head_vel = np.loadtxt(os.path.join(
     base_dir, "normalised_head_velocities_1000.csv"))
+
+# The values in the files are [0,1] when we really want [-1,1]; obtain this
+# by multiplying by 2 and subtracting 1
+
+head_pos = (head_pos * 2.0) - 1.0
+head_vel = (head_vel * 2.0) - 1.0
 
 # perfect eye positions and velocities are exactly out of phase with head
 perfect_eye_pos = np.concatenate((head_pos[500:], head_pos[:500]))
@@ -126,7 +135,6 @@ plt.figure(figsize=(15, 11))
 plt.subplot(5, 1, 1)
 plt.scatter(
     [i[1] for i in spikes_in_spin], [i[0] for i in spikes_in_spin], s=1)
-plt.legend(loc="best")
 plt.xlim([0, runtime])
 
 plt.subplot(5, 1, 2)
@@ -151,7 +159,6 @@ plt.xlim([0, runtime])
 plt.subplot(5, 1, 5)
 plt.scatter(
     [i[1] for i in spikes_out_spin], [i[0] for i in spikes_out_spin], s=1)
-plt.legend(loc="best")
 plt.xlim([0, runtime])
 
 plt.show()
