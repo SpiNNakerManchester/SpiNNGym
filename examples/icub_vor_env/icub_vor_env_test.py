@@ -79,6 +79,11 @@ head_vel = (head_vel * 2.0) - 1.0
 perfect_eye_pos = np.concatenate((head_pos[500:], head_pos[:500]))
 perfect_eye_vel = np.concatenate((head_vel[500:], head_vel[:500]))
 
+# Report 4 points:
+for i in [0, 250, 500, 750]:
+    print("At {}: head pos {:4.6f}, head vel {:4.6f}, eye pos {:4.6f}, eye vel {:4.6f}".format(
+        i, head_pos[i], head_vel[i], perfect_eye_pos[i], perfect_eye_vel[i]))
+
 # build ICubVorEnv model pop
 error_window_size = 10
 icub_vor_env_model = gym.ICubVorEnv(

@@ -253,7 +253,7 @@ void test_the_head() {
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = head_positions[tick_in_head_loop] - DEFAULT_EYE_POS;
     accum error_vel = head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL;
-    error_value = (error_pos + error_vel) * 2  - 1.0k;
+    error_value = (error_pos + error_vel);
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
