@@ -174,16 +174,16 @@ static bool initialize(uint32_t *timer_period)
     perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
     perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
 
-    // Print some values out to check
-    io_printf(IO_BUF, "error_window_size %u output_size %u\n", error_window_size, output_size);
-    io_printf(IO_BUF, "At 0: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-            head_positions[0], head_velocities[0], perfect_eye_pos[0], perfect_eye_vel[0]);
-    io_printf(IO_BUF, "At 250: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-            head_positions[250], head_velocities[250], perfect_eye_pos[250], perfect_eye_vel[250]);
-    io_printf(IO_BUF, "At 500: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-            head_positions[500], head_velocities[500], perfect_eye_pos[500], perfect_eye_vel[500]);
-    io_printf(IO_BUF, "At 750: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-            head_positions[750], head_velocities[750], perfect_eye_pos[750], perfect_eye_vel[750]);
+    // Print some values out to check THIS HAS BEEN CHECKED ON 1st DECEMBER 2020
+//    io_printf(IO_BUF, "error_window_size %u output_size %u\n", error_window_size, output_size);
+//    io_printf(IO_BUF, "At 0: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+//            head_positions[0], head_velocities[0], perfect_eye_pos[0], perfect_eye_vel[0]);
+//    io_printf(IO_BUF, "At 250: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+//            head_positions[250], head_velocities[250], perfect_eye_pos[250], perfect_eye_vel[250]);
+//    io_printf(IO_BUF, "At 500: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+//            head_positions[500], head_velocities[500], perfect_eye_pos[500], perfect_eye_vel[500]);
+//    io_printf(IO_BUF, "At 750: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
+//            head_positions[750], head_velocities[750], perfect_eye_pos[750], perfect_eye_vel[750]);
 
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
@@ -250,7 +250,7 @@ void test_the_head() {
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = head_positions[tick_in_head_loop] - DEFAULT_EYE_POS;
     accum error_vel = head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL;
-    error_value = error_pos + error_vel;
+    error_value = (error_pos + error_vel) * 2  - 1.0k;
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
