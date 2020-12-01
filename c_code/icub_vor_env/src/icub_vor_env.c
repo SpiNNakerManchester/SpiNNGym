@@ -110,7 +110,7 @@ uint32_t simulation_ticks = 0;
 static inline void send_spike(int input, accum value)
 {
 //    uint32_t payload = bitsk(value);
-//    io_printf(IO_BUF, "payload %d value %k", payload, value);
+//    io_printf(IO_BUF, "payload %u value %k time %u", payload, value, _time);
     // The rate value needs to be sent as a uint32_t, so convert and send
     spin1_send_mc_packet(key | (input), bitsk(value), WITH_PAYLOAD);
 //    spin1_send_mc_packet(key | (input), value, WITH_PAYLOAD);
@@ -145,8 +145,10 @@ static bool initialize(uint32_t *timer_period)
     io_printf(IO_BUF, "simulation time = %u\n", simulation_ticks);
 
 
-    // Read icub_vor region, which for now contains the information about keys on received mc packets
-    address_t icub_vor_env_address_region = data_specification_get_region(REGION_ICUB_VOR_ENV, address);
+    // Read icub_vor region, which for now contains the information
+    // about keys on received mc packets
+    address_t icub_vor_env_address_region = data_specification_get_region(
+            REGION_ICUB_VOR_ENV, address);
     key = icub_vor_env_address_region[0];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
     io_printf(IO_BUF, "\tTimer period=%d\n", *timer_period);
@@ -163,7 +165,8 @@ static bool initialize(uint32_t *timer_period)
     }
 
     // Now get the data associated with the environment
-    address_t icub_vor_env_data_region = data_specification_get_region(REGION_ICUB_VOR_ENV_DATA, address);
+    address_t icub_vor_env_data_region = data_specification_get_region(
+            REGION_ICUB_VOR_ENV_DATA, address);
 
     // Ideally I guess this could be set up using a struct, but let's keep it simpler for now
     error_window_size = icub_vor_env_data_region[0];
@@ -243,8 +246,8 @@ void test_the_head() {
 //    }
 
     // Here is where the error should be calculated: for now measure the error
-    // from the default eye position (middle = 0.5) and stationary velocity (0.0)
-    accum DEFAULT_EYE_POS = 0.5k;
+    // from the default eye position (middle = 0.0) and stationary velocity (0.0)
+    accum DEFAULT_EYE_POS = 0.0k;
     accum DEFAULT_EYE_VEL = 0.0k;
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
@@ -283,7 +286,8 @@ void test_the_head() {
             accum loop_to_up_value = loop_value - up_threshold;
             accum low_to_up_value = low_threshold - up_threshold;
 //            threshold_calc = inter_value1 / inter_value2;
-            accum encoded_error_rate = max_rate - ((max_rate-min_rate) * (loop_to_up_value / low_to_up_value));
+            accum encoded_error_rate = max_rate - (
+                    (max_rate-min_rate) * (loop_to_up_value / low_to_up_value));
             if (error_value >= 0.0k) {
                 // Antagonist is encoded_error_rate
                 antagonist_rate = encoded_error_rate;
