@@ -106,20 +106,21 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void add_reward()
+static inline void add_reward(void)
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_REWARD), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Got a reward\n");
 }
 
-static inline void add_no_reward()
+static inline void add_no_reward(void)
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_NO_REWARD), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "No reward\n");
 //  current_score--;
 }
 
-void resume_callback() {
+void resume_callback(void)
+{
     recording_reset();
 }
 
@@ -217,7 +218,8 @@ static bool initialize(uint32_t *timer_period)
     return true;
 }
 
-float rand021() {
+float rand021(void)
+{
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
@@ -263,7 +265,8 @@ void send_state(uint32_t time) {
     }
 }
 
-bool was_there_a_reward() {
+bool was_there_a_reward(void)
+{
     int choice = -1; //mars_kiss64_seed(kiss_seed) % number_of_arms;
 //    int choice = rand() % number_of_arms;
     int highest_value = 0;

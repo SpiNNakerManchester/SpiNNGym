@@ -179,7 +179,8 @@ static inline void spike_cart_v(int bin)
 //    io_printf(IO_BUF, "spike_cart_v \t%d - \t%u\n", bin, mask);
 }
 
-void resume_callback() {
+void resume_callback(void)
+{
     recording_reset();
 }
 
@@ -310,7 +311,8 @@ static bool initialize(uint32_t *timer_period)
 }
 
 // updates the current state of the pendulum
-bool update_state(float time_step){
+bool update_state(float time_step)
+{
     float gravity = -9.8; // m/s^2
     float mass_cart = 1; // kg
     float mass_pole = 0.1; // kg
@@ -394,18 +396,21 @@ void mc_packet_received_callback(uint keyx, uint payload)
     }
 }
 
-float rand021(){
+float rand021(void)
+{
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
-float norm_dist(float mean, float stdev){
+float norm_dist(float mean, float stdev)
+{
     accum norm_dist;
     norm_dist = gaussian_dist_variate(mars_kiss64_seed, NULL);
     norm_dist = (norm_dist * stdev) + mean;
     return (float)norm_dist;
 }
 
-bool firing_prob(float relative_value, int bin){
+bool firing_prob(float relative_value, int bin)
+{
     float norm_value = norm_dist(0, bin_width / bin_overlap);
     float separation = relative_value - (bin_width * (float)bin);
     if (separation < 0){
@@ -429,7 +434,8 @@ bool firing_prob(float relative_value, int bin){
     }
 }
 
-void send_status(){
+void send_status(void)
+{
     float relative_cart;
     float relative_angle;
     float relative_cart_velocity;
