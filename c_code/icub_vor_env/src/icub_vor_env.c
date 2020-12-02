@@ -119,7 +119,7 @@ static inline void send_spike(int input, accum value)
 }
 
 // Required if using auto-pause and resume
-void resume_callback() {
+void resume_callback(void) {
     recording_reset();
 }
 
@@ -227,7 +227,7 @@ void mc_packet_received_callback(uint keyx, uint payload)
 }
 
 // Test the counters for the head after this loop
-void test_the_head() {
+void test_the_head(void) {
     // Here I am testing this is working by sending a spike out to
     // wherever this vertex connects to, depending on which counter is higher.
 //    if (spike_counters[0] > spike_counters[1]) {
