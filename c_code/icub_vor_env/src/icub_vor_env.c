@@ -207,7 +207,7 @@ void mc_packet_received_callback(uint keyx, uint payload)
 //    io_printf(IO_BUF, "key = %x\n", keyx);
 //    io_printf(IO_BUF, "payload = %x\n", payload);
     uint32_t compare;
-    compare = keyx & 0x1;
+    compare = keyx & 0x1;  // This is an odd and even check.
 
     // If no payload has been set, make sure the loop will run
     if (payload == 0) { payload = 1; }
