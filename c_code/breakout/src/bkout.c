@@ -161,14 +161,14 @@ static uint32_t x_ratio = UINT32_MAX / GAME_WIDTH_MAX;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void add_score_up_event()
+static inline void add_score_up_event(void)
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_UP), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score up\n");
   current_score++;
 }
 
-static inline void add_score_down_event()
+static inline void add_score_down_event(void)
 {
   spin1_send_mc_packet(key | (SPECIAL_EVENT_SCORE_DOWN), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "Score down\n");
@@ -211,7 +211,7 @@ static inline void set_pixel_col (int i, int j, colour_t col, bool bricked)
 //    }
 }
 
-static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
+static inline bool is_a_brick(int the_x, int the_y) // x = width, y = height
 {
     // io_printf(IO_BUF, "x:%d, y:%d, px:%d, py:%d\n", x, y, pos_x, pos_y);
     if (the_x < 0 || the_y < 0 || the_x >= GAME_WIDTH - 1 || the_y >= GAME_HEIGHT - 1) {
@@ -253,7 +253,8 @@ static inline bool is_a_brick(int the_x, int the_y) // x - width, y- height?
     return false;
 }
 
-static inline uint32_t hitting_a_brick(int the_x, int the_y){
+static inline uint32_t hitting_a_brick(int the_x, int the_y)
+{
     // io_printf(IO_BUF, "hitting brick from x:%d, y:%d\n", the_x, the_y);
     uint32_t encoded_result = 0;
     bool check_left = false;
@@ -296,7 +297,7 @@ static inline uint32_t hitting_a_brick(int the_x, int the_y){
 // Static functions
 //----------------------------------------------------------------------------
 // initialise frame buffer to blue
-static void init_frame ()
+static void init_frame(void)
 {
     for (int i=0; i<GAME_WIDTH/4; i++) {
         for (int j=0; j<GAME_HEIGHT; j++) {
@@ -317,7 +318,8 @@ static void init_frame ()
     current_number_of_bricks = BRICKS_PER_COLUMN * BRICKS_PER_ROW;
 }
 
-float rand021(){
+float rand021(void)
+{
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
@@ -703,7 +705,8 @@ static bool initialize(uint32_t *timer_period)
     return true;
 }
 
-void resume_callback() {
+void resume_callback(void)
+{
     recording_reset();
 }
 

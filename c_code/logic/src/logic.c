@@ -109,7 +109,8 @@ static inline void send_spike(int input)
 //  current_score++;
 }
 
-void resume_callback() {
+void resume_callback(void)
+{
     recording_reset();
 }
 
@@ -207,7 +208,8 @@ static bool initialize(uint32_t *timer_period)
     return true;
 }
 
-void was_it_correct(){  // TODO: probably rename this function?
+void was_it_correct(void ) // TODO: probably rename this function?
+{
     int choice = -1;
     if (output_choice[0] > output_choice[1]) {
         choice = 0;
@@ -227,11 +229,13 @@ void was_it_correct(){  // TODO: probably rename this function?
 
 }
 
-float rand021(){
+float rand021(void)
+{
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
-void did_it_fire(uint32_t time){
+void did_it_fire(uint32_t time)
+{
 //    io_printf(IO_BUF, "time off = %u\n", time % (1000 / rate_off));
 //    io_printf(IO_BUF, "time on = %u\n", time % (1000 / rate_on));
     if (stochastic) {
@@ -249,7 +253,7 @@ void did_it_fire(uint32_t time){
             }
         }
     }
-    else{
+    else {
         for (int i=0; i<number_of_inputs; i++) {
 //            io_printf(IO_BUF, " input_sequence[%u] = %u\n", i, input_sequence[i]);
             if (input_sequence[i] == 0 && time % (1000 / rate_off) == 0) {

@@ -119,27 +119,32 @@ uint32_t score_change_count=0;
 //----------------------------------------------------------------------------
 // Inline functions
 //----------------------------------------------------------------------------
-static inline void spike_value(int value, int pop_index) {
+static inline void spike_value(int value, int pop_index)
+{
     spin1_send_mc_packet(key | ((value * pop_size) + pop_index), 0, NO_PAYLOAD);
 //  io_printf(IO_BUF, "sending spike to value %d from %d\n",
 //		  value, ((input * pop_size) + pop_index));
 //  current_score++;
 }
 
-static inline void spike_recall(int pop_index) {
+static inline void spike_recall(int pop_index)
+{
     spin1_send_mc_packet(key | ((SPECIAL_EVENT_RECALL * pop_size) + pop_index), 0, NO_PAYLOAD);
 }
 
-static inline void spike_store(int pop_index) {
+static inline void spike_store(int pop_index)
+{
     spin1_send_mc_packet(key | ((SPECIAL_EVENT_STORE * pop_size) + pop_index), 0, NO_PAYLOAD);
 }
 
-static inline void spike_forget(int pop_index) {
+static inline void spike_forget(int pop_index)
+{
 	use(pop_index);
 //    spin1_send_mc_packet(key | ((SPECIAL_EVENT_FORGET * pop_size) + pop_index), 0, NO_PAYLOAD);
 }
 
-void resume_callback() {
+void resume_callback(void)
+{
     recording_reset();
 }
 
@@ -223,11 +228,13 @@ static bool initialize(uint32_t *timer_period)
     return true;
 }
 
-float rand021() {
+float rand021(void)
+{
     return (float)(mars_kiss64_seed(kiss_seed) / (float)0xffffffff);
 }
 
-void move_state() {
+void move_state(void)
+{
     current_state = (current_state + 1) % STATE_SHIFT;
 }
 
@@ -320,7 +327,8 @@ void mc_packet_received_callback(uint keyx, uint payload)
     }
 }
 
-void did_it_store_correctly() {
+void did_it_store_correctly(void)
+{
     number_of_trials++;
     if (stored_value == 0) {
         if (chose_0 > chose_1) {
@@ -340,7 +348,8 @@ void did_it_store_correctly() {
     }
 }
 
-void update_state() {
+void update_state(void)
+{
     if (rand021() < prob_in_change) {
         current_value = (current_value + 1) % 2;
     }
@@ -367,7 +376,8 @@ void update_state() {
     }
 }
 
-void send_state(int32_t time) {
+void send_state(int32_t time)
+{
     if (current_state != STATE_RECALLING){
         send_value(time);
     }
