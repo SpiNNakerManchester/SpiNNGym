@@ -19,6 +19,7 @@
 
 // Common includes
 #include <debug.h>
+#include <round.h>
 
 // Front end common includes
 #include <data_specification.h>
@@ -66,6 +67,10 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
+static accum pos_to_vel = 7.957733154296875k;  // This is 20 SMALLER larger than it should be!
+//159.15493774414062k;
+//
+
 //! Parameters set from Python code go here
 // - error_window_size
 // - number_of_inputs
@@ -79,9 +84,8 @@ accum *head_velocities;
 accum *perfect_eye_pos;
 accum *perfect_eye_vel;
 
-//accum *eye_pos;
-//accum *eye_vel;
-//accum *encoded_error_rates;
+accum current_eye_pos;
+accum current_eye_vel;
 
 //! Global error value
 accum error_value = 0.0k;
@@ -109,13 +113,8 @@ uint32_t simulation_ticks = 0;
 // related to the counts at the Left and Right atoms
 static inline void send_spike(int input, accum value)
 {
-//    uint32_t payload = bitsk(value);
-//    io_printf(IO_BUF, "payload %u value %k time %u", payload, value, _time);
     // The rate value needs to be sent as a uint32_t, so convert and send
     spin1_send_mc_packet(key | (input), bitsk(value), WITH_PAYLOAD);
-//    spin1_send_mc_packet(key | (input), value, WITH_PAYLOAD);
-//    spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "sending spike to input %d\n", input);
 }
 
 // Required if using auto-pause and resume
@@ -176,18 +175,6 @@ static bool initialize(uint32_t *timer_period)
     head_velocities = (accum *)&icub_vor_env_data_region[3 + number_of_inputs];
     perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
     perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
-
-    // Print some values out to check THIS HAS BEEN CHECKED ON 1st DECEMBER 2020
-//    io_printf(IO_BUF, "error_window_size %u output_size %u\n", error_window_size, output_size);
-//    io_printf(IO_BUF, "At 0: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-//            head_positions[0], head_velocities[0], perfect_eye_pos[0], perfect_eye_vel[0]);
-//    io_printf(IO_BUF, "At 250: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-//            head_positions[250], head_velocities[250], perfect_eye_pos[250], perfect_eye_vel[250]);
-//    io_printf(IO_BUF, "At 500: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-//            head_positions[500], head_velocities[500], perfect_eye_pos[500], perfect_eye_vel[500]);
-//    io_printf(IO_BUF, "At 750: head pos %k, head vel %k, eye pos %k, eye vel %k\n",
-//            head_positions[750], head_velocities[750], perfect_eye_pos[750], perfect_eye_vel[750]);
-
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -203,9 +190,6 @@ void update_count(uint32_t index) {
 // when a packet is received, update the error
 void mc_packet_received_callback(uint keyx, uint payload)
 {
-//    io_printf(IO_BUF, "mc_packet_received_callback");
-//    io_printf(IO_BUF, "key = %x\n", keyx);
-//    io_printf(IO_BUF, "payload = %x\n", payload);
     uint32_t compare;
     compare = keyx & 0x1;  // This is an odd and even check.
 
@@ -230,29 +214,18 @@ void mc_packet_received_callback(uint keyx, uint payload)
 void test_the_head(void) {
     // Here I am testing this is working by sending a spike out to
     // wherever this vertex connects to, depending on which counter is higher.
-//    if (spike_counters[0] > spike_counters[1]) {
-////        io_printf(IO_BUF, "spike_counters[0] %u > spike_counters[1] %u \n",
-////                spike_counters[0], spike_counters[1]);
-//        send_spike(0, 0);
-//        // L > R so "move eye left" (blank for now while we decide how to do this)
-//
-//    }
-//    else {
-////        io_printf(IO_BUF, "spike_counters[0] %u <= spike_counters[1] %u \n",
-////                spike_counters[0], spike_counters[1]);
-//        send_spike(1, 0);
-//        // L <= R so "move eye right" (blank for now while we decide how to do this)
-//
-//    }
-
-    // Here is where the error should be calculated: for now measure the error
-    // from the default eye position (middle = 0.0) and stationary velocity (0.0)
-    accum DEFAULT_EYE_POS = 0.0k;
-    accum DEFAULT_EYE_VEL = 0.0k;
+    accum pos_diff=0.0k, vel_diff=0.0k;
+    int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
+    pos_diff = kbits(counter_diff);
+    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
+    current_eye_pos = current_eye_pos + kbits(counter_diff);
+    current_eye_vel = vel_diff;
+    io_printf(IO_BUF, "pos_diff %k, current_eye_pos %k, vel_diff %k, current_eye_vel %k\n",
+        pos_diff, current_eye_pos, vel_diff, current_eye_vel);
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
-    accum error_pos = head_positions[tick_in_head_loop] - DEFAULT_EYE_POS;
-    accum error_vel = head_velocities[tick_in_head_loop] - DEFAULT_EYE_VEL;
+    accum error_pos = head_positions[tick_in_head_loop] - current_eye_pos;
+    accum error_vel = head_velocities[tick_in_head_loop] - current_eye_vel;
     error_value = (error_pos + error_vel);
 
     // The above could easily be replaced by a comparison to the perfect eye
@@ -394,6 +367,9 @@ void c_main(void)
   spin1_callback_on(MCPL_PACKET_RECEIVED, mc_packet_received_callback, -1);
 
   _time = UINT32_MAX;
+
+  current_eye_pos = 0.0k;
+  current_eye_vel = 0.0k;
 
   simulation_run();
 
