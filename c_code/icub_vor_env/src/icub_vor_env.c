@@ -67,11 +67,7 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-static accum pos_to_vel = 159.15493774414062k;
-//7.957733154296875k;  // This is 20 SMALLER larger than it should be!
-//159.15493774414062k;
-//0.7957763671875k;
-//15.915496826171875k;
+static accum pos_to_vel = 15.915493774414062k; // 1/ (0.001 * 2 * np.pi * 10)
 
 //! Parameters set from Python code go here
 // - error_window_size
@@ -219,9 +215,10 @@ void test_the_head(void) {
     accum pos_diff, vel_diff;
     int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
     pos_diff = kbits(counter_diff);
-    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel)/100.0k;
+    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
     current_eye_pos = current_eye_pos + kbits(counter_diff);
-    current_eye_vel = current_eye_vel - vel_diff;
+//    current_eye_vel = current_eye_vel - vel_diff;
+    current_eye_vel = vel_diff;
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
