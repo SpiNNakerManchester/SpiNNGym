@@ -67,9 +67,11 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-static accum pos_to_vel = 7.957733154296875k;  // This is 20 SMALLER larger than it should be!
+static accum pos_to_vel = 159.15493774414062k;
+//7.957733154296875k;  // This is 20 SMALLER larger than it should be!
 //159.15493774414062k;
-//
+//0.7957763671875k;
+//15.915496826171875k;
 
 //! Parameters set from Python code go here
 // - error_window_size
@@ -173,8 +175,8 @@ static bool initialize(uint32_t *timer_period)
     number_of_inputs = icub_vor_env_data_region[2];
     head_positions = (accum *)&icub_vor_env_data_region[3];
     head_velocities = (accum *)&icub_vor_env_data_region[3 + number_of_inputs];
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -214,19 +216,21 @@ void mc_packet_received_callback(uint keyx, uint payload)
 void test_the_head(void) {
     // Here I am testing this is working by sending a spike out to
     // wherever this vertex connects to, depending on which counter is higher.
-    accum pos_diff=0.0k, vel_diff=0.0k;
+    accum pos_diff, vel_diff;
     int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
     pos_diff = kbits(counter_diff);
-    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
+    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel)/100.0k;
     current_eye_pos = current_eye_pos + kbits(counter_diff);
-    current_eye_vel = vel_diff;
-    io_printf(IO_BUF, "pos_diff %k, current_eye_pos %k, vel_diff %k, current_eye_vel %k\n",
-        pos_diff, current_eye_pos, vel_diff, current_eye_vel);
+    current_eye_vel = current_eye_vel - vel_diff;
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
-    accum error_pos = head_positions[tick_in_head_loop] - current_eye_pos;
-    accum error_vel = head_velocities[tick_in_head_loop] - current_eye_vel;
+    accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
+    accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
     error_value = (error_pos + error_vel);
+//    error_value = (error_pos);
+
+    io_printf(IO_BUF, "counter_diff %d, pos_diff %k, current_eye_vel %k, perfect_eye_vel %k, error_vel %k\n",
+        counter_diff, pos_diff, current_eye_vel, perfect_eye_vel[tick_in_head_loop], error_vel);
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
@@ -323,8 +327,10 @@ void timer_callback(uint unused, uint dummy)
             recording_record(0, &spike_counters[0], 4);
             recording_record(1, &spike_counters[1], 4);
             recording_record(2, &error_value, 4);
-            recording_record(3, &head_positions[tick_in_head_loop], 4);
-            recording_record(4, &head_velocities[tick_in_head_loop], 4);
+            recording_record(3, &current_eye_pos, 4);
+            recording_record(4, &current_eye_vel, 4);
+//            recording_record(3, &head_positions[tick_in_head_loop], 4);
+//            recording_record(4, &head_velocities[tick_in_head_loop], 4);
 
             // Reset ticks in error window
             tick_in_error_window = 0;
@@ -369,7 +375,7 @@ void c_main(void)
   _time = UINT32_MAX;
 
   current_eye_pos = 0.0k;
-  current_eye_vel = 0.0k;
+  current_eye_vel = 1.0k;
 
   simulation_run();
 
