@@ -81,7 +81,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     MAX_SIM_DURATION = 10000
     # Probably better ways of doing this too, but keeping it for now
     RECORDABLE_VARIABLES = [
-        "L_count", "R_count", "error", "head_pos", "head_vel"]
+        "l_count", "r_count", "error", "eye_pos", "eye_vel"]
     RECORDABLE_DTYPES = [
         DataType.UINT32, DataType.UINT32, DataType.S1615, DataType.S1615,
         DataType.S1615]
