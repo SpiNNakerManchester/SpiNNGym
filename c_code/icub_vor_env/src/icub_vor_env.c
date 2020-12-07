@@ -68,6 +68,7 @@ static uint32_t _time;
 static uint32_t infinite_run;
 
 static accum pos_to_vel = 15.915493774414062k; // 1/ (0.001 * 2 * np.pi * 10)
+static accum gain = 20.0k;
 
 //! Parameters set from Python code go here
 // - error_window_size
@@ -212,19 +213,19 @@ void mc_packet_received_callback(uint keyx, uint payload)
 void test_the_head(void) {
     // Here I am testing this is working by sending a spike out to
     // wherever this vertex connects to, depending on which counter is higher.
-    accum pos_diff, vel_diff;
+    accum pos_diff;
+    // Compute the integer difference in the number of spikes between L (agonist) and R (antagonist)
     int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
-    pos_diff = kbits(counter_diff);
-    vel_diff = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
-    current_eye_pos = current_eye_pos + kbits(counter_diff);
-//    current_eye_vel = current_eye_vel - vel_diff;
-    current_eye_vel = vel_diff;
+    // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
+    pos_diff = kbits(counter_diff) * gain;
+    current_eye_pos = current_eye_pos + pos_diff;
+    // Compute the current velocity
+    current_eye_vel = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
     accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
-    error_value = (error_pos + error_vel);
-//    error_value = (error_pos);
+    error_value = (error_pos + error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
 
     io_printf(IO_BUF, "counter_diff %d, pos_diff %k, current_eye_vel %k, perfect_eye_vel %k, error_vel %k\n",
         counter_diff, pos_diff, current_eye_vel, perfect_eye_vel[tick_in_head_loop], error_vel);
