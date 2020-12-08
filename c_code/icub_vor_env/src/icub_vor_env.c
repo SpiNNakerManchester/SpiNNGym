@@ -67,8 +67,6 @@ static uint32_t _time;
 //! Should simulation run for ever? 0 if not
 static uint32_t infinite_run;
 
-static accum pos_to_vel = 15.915493774414062k; // 1/ (0.001 * 2 * np.pi * 10)
-static accum gain = 20.0k;
 
 //! Parameters set from Python code go here
 // - error_window_size
@@ -83,11 +81,15 @@ accum *head_velocities;
 accum *perfect_eye_pos;
 accum *perfect_eye_vel;
 
-accum current_eye_pos;
-accum current_eye_vel;
+accum pos_to_vel;  // 1/ (0.001 * 2 * np.pi * 10)
+accum gain;
 
 //! Global error value
 accum error_value = 0.0k;
+
+//! Global eye position and velocity
+accum current_eye_pos;
+accum current_eye_vel;
 
 //! count left and right spikes
 uint32_t spike_counters[2] = {0};
@@ -170,10 +172,12 @@ static bool initialize(uint32_t *timer_period)
     error_window_size = icub_vor_env_data_region[0];
     output_size = icub_vor_env_data_region[1];
     number_of_inputs = icub_vor_env_data_region[2];
-    head_positions = (accum *)&icub_vor_env_data_region[3];
-    head_velocities = (accum *)&icub_vor_env_data_region[3 + number_of_inputs];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[3 + (2 * number_of_inputs)];
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[3 + (3 * number_of_inputs)];
+    gain = kbits(icub_vor_env_data_region[3]);
+    pos_to_vel = kbits(icub_vor_env_data_region[4]);
+    head_positions = (accum *)&icub_vor_env_data_region[5];
+    head_velocities = (accum *)&icub_vor_env_data_region[5 + number_of_inputs];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + (2 * number_of_inputs)];
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5 + (3 * number_of_inputs)];
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 

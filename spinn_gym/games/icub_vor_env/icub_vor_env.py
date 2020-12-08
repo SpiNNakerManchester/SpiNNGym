@@ -76,7 +76,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     # key value
     ICUB_VOR_ENV_REGION_BYTES = 4
     # error_window_size, output_size, number_of_inputs
-    BASE_DATA_REGION_BYTES = 3 * 4
+    BASE_DATA_REGION_BYTES = 5 * 4
     # not sure this is entirely necessary but keeping it for now
     MAX_SIM_DURATION = 10000
     # Probably better ways of doing this too, but keeping it for now
@@ -89,6 +89,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     # parameters expected by PyNN
     default_parameters = {
         'error_window_size': 10,
+        'gain': 20,
+        'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),
         'output_size': 200,
         'constraints': None,
         'label': "ICubVorEnv",
@@ -98,6 +100,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     def __init__(self, head_pos, head_vel, perfect_eye_pos, perfect_eye_vel,
                  error_window_size=default_parameters['error_window_size'],
                  output_size=default_parameters['output_size'],
+                 gain=default_parameters['gain'],
+                 pos_to_vel=default_parameters['pos_to_vel'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters[
@@ -116,6 +120,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._perfect_eye_vel = perfect_eye_vel
         self._error_window_size = error_window_size
         self._output_size = output_size
+        self._gain = gain
+        self._pos_to_vel = pos_to_vel
         self._number_of_inputs = len(head_pos)
         if self._number_of_inputs != len(head_vel):
             raise ConfigurationException(
@@ -217,7 +223,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
             label='setup')
         spec.reserve_memory_region(
             region=ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS
-            .ICUB_VOR_ENV.value,
+                .ICUB_VOR_ENV.value,
             size=self.ICUB_VOR_ENV_REGION_BYTES, label='ICubVorEnvParams')
         # reserve recording region
         spec.reserve_memory_region(
@@ -226,7 +232,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
                 len(self.RECORDABLE_VARIABLES)))
         spec.reserve_memory_region(
             region=ICubVorEnvMachineVertex._ICUB_VOR_ENV_REGIONS.DATA.value,
-            size=self.BASE_DATA_REGION_BYTES+(self._number_of_inputs*16),
+            size=self.BASE_DATA_REGION_BYTES + (self._number_of_inputs * 16),
             label='ICubVorEnvArms')
 
         # Write setup region
@@ -262,6 +268,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_value(self._error_window_size, data_type=DataType.UINT32)
         spec.write_value(self._output_size, data_type=DataType.UINT32)
         spec.write_value(self._number_of_inputs, data_type=DataType.UINT32)
+        spec.write_value(self.__round_to_nearest_accum(self._gain), data_type=DataType.S1615)
+        spec.write_value(self.__round_to_nearest_accum(self._pos_to_vel), data_type=DataType.S1615)
         # Write the data - Arrays must be 32-bit values, so convert
         data = numpy.array(
             [int(x * float_scale) for x in self._head_pos],
@@ -283,6 +291,10 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         # End-of-Spec:
         spec.end_specification()
 
+    def __round_to_nearest_accum(self, x):
+        eps = 2. ** (-15)
+        x_approx = numpy.floor((x / eps) + 0.5) * eps
+        return x_approx
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
     # ------------------------------------------------------------------------
