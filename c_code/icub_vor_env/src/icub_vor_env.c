@@ -222,7 +222,17 @@ void test_the_head(void) {
     int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
     // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
     pos_diff = kbits(counter_diff) * gain;
+    accum previous_eye_pos = current_eye_pos;
     current_eye_pos = current_eye_pos + pos_diff;
+    // Check bounds
+    if (current_eye_pos < -1.0k) {
+        current_eye_pos = -1.0k;
+    }
+    else if (current_eye_pos > 1.0k) {
+        current_eye_pos = 1.0k;
+    }
+    pos_diff = current_eye_pos - previous_eye_pos;
+
     // Compute the current velocity
     current_eye_vel = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
 
