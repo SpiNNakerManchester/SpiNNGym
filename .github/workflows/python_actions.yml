@@ -69,11 +69,7 @@ jobs:
       with: 
         package: examples spinn_gym
 
-    - name: Validate examples XML
+    - name: Validate XML
       uses: ./support/actions/validate-xml
       with:
-        base-path: examples
-    - name: Validate spinn_gym XML
-      uses: ./support/actions/validate-xml
-      with:
-        base-path: spinn_gym
+        base-path: examples spinn_gym
