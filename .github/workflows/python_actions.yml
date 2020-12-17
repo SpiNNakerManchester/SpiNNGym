@@ -65,6 +65,8 @@ jobs:
     - name: Lint with flake8
       run: flake8 $CODE_PATHS
     - name: Lint with pylint
+      # Code not yet updated to self-partitioning
+      if: false
       uses: ./support/actions/pylint
       with: 
         package: ${{ env.CODE_PATHS }}

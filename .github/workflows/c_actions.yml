@@ -41,6 +41,9 @@ jobs:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: >
           spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker SpiNNUtils
+    - name: Install SpiNNUtils
+      run: python setup.py install
+      working-directory: SpiNNUtils
 
     - name: Lint C code using Vera++
       # Note: run this before building to avoid linting modified_src directories
