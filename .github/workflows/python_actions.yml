@@ -15,8 +15,6 @@
 
 name: Python Actions
 on: [push]
-env:
-  CODE_PATHS: examples spinn_gym
 
 jobs:
   build:
@@ -63,15 +61,19 @@ jobs:
 #        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     - name: Lint with flake8
-      run: flake8 $CODE_PATHS
+      run: flake8 examples spinn_gym
     - name: Lint with pylint
       # Code not yet updated to self-partitioning
       if: false
       uses: ./support/actions/pylint
       with: 
-        package: ${{ env.CODE_PATHS }}
+        package: examples spinn_gym
 
-    - name: Validate all XML
+    - name: Validate examples XML
       uses: ./support/actions/validate-xml
       with:
-        base-path: ${{ env.CODE_PATHS }}
+        base-path: examples
+    - name: Validate spinn_gym XML
+      uses: ./support/actions/validate-xml
+      with:
+        base-path: spinn_gym
