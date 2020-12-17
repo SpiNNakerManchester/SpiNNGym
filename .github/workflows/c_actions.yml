@@ -13,23 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This workflow will install Python dependencies, run tests, lint and rat with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: C Actions
-
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-20.04
 
     steps:
     - name: Install Ubuntu packages
-      run: |
-        sudo apt-get update
-        sudo apt-get install vera++ doxygen gcc-arm-none-eabi --fix-missing
-
+      run: sudo apt-get install doxygen gcc-arm-none-eabi --fix-missing
     - name: Configure Python 3.6
       # Note: Python is needed for spinn_utilities.make_tools when building
       uses: actions/setup-python@v2
@@ -38,37 +30,28 @@ jobs:
 
     - name: Checkout
       uses: actions/checkout@v2
-
     - name: Checkout SupportScripts
       uses: actions/checkout@v2
       with:
         repository: SpiNNakerManchester/SupportScripts
         path: support
-
-    - name: Set SPINN_DIRS and NEURAL_MODELLING
-      run: |
-        echo "Set SPINN_DIRS to $PWD/spinnaker_tools"
-        echo "SPINN_DIRS=$PWD/spinnaker_tools" >> $GITHUB_ENV
-        echo "Set NEURAL_MODELLING to $PWD/sPyNNaker/neural_modelling"
-        echo "NEURAL_MODELLING_DIRS=$PWD/sPyNNaker/neural_modelling" >> $GITHUB_ENV
-
-    - name: Checkout SpiNNaker C Dependencies
-      run: |
-        support/gitclone2.sh https://github.com/SpiNNakerManchester/spinnaker_tools.git
-        support/gitclone2.sh https://github.com/SpiNNakerManchester/spinn_common.git
-        support/gitclone2.sh https://github.com/SpiNNakerManchester/SpiNNFrontEndCommon.git
-        support/gitclone2.sh https://github.com/SpiNNakerManchester/sPyNNaker.git
+    - name: Checkout Spinnaker Dependencies
+      uses: ./support/actions/checkout-spinn-deps
+      with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
-        support/gitclone2.sh https://github.com/SpiNNakerManchester/SpiNNUtils.git
-
-    - name: Install SpiNNUtils
-      run: python setup.py install
-      working-directory: SpiNNUtils
+        repositories: >
+          spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker SpiNNUtils
 
     - name: Lint C code using Vera++
       # Note: run this before building to avoid linting modified_src directories
-      run: support/run-vera.sh c_code
+      uses: ./support/actions/vera
+      with:
+        base-dir: c_code
 
+    - name: Set SPINN_DIRS and NEURAL_MODELLING
+      run: |
+        echo "SPINN_DIRS=$PWD/spinnaker_tools" >> $GITHUB_ENV
+        echo "NEURAL_MODELLING_DIRS=$PWD/sPyNNaker/neural_modelling" >> $GITHUB_ENV
     - name: Build SpiNNaker C dependencies
       run: |
         make -C $SPINN_DIRS
@@ -78,7 +61,12 @@ jobs:
     - name: Build C code
       run: make
       working-directory: c_code
+      env:
+        CFLAGS: -fdiagnostics-color=always
 
     # To be added: Documentation building
+#    - name: Build documentation using doxygen
+#      run: make doxysetup doxygen
+#      working-directory: neural_modelling
 
     # Note: This workflow does not run the C code; that'd be an integration test
