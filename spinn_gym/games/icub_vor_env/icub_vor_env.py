@@ -272,14 +272,6 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_value(self.__round_to_nearest_accum(self._pos_to_vel), data_type=DataType.S1615)
         # Write the data - Arrays must be 32-bit values, so convert
         data = numpy.array(
-            [int(x * float_scale) for x in self._head_pos],
-            dtype=numpy.uint32)
-        spec.write_array(data.view(numpy.uint32))
-        data = numpy.array(
-            [int(x * float_scale) for x in self._head_vel],
-            dtype=numpy.uint32)
-        spec.write_array(data.view(numpy.uint32))
-        data = numpy.array(
             [int(x * float_scale) for x in self._perfect_eye_pos],
             dtype=numpy.uint32)
         spec.write_array(data.view(numpy.uint32))

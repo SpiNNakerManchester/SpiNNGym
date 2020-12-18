@@ -71,13 +71,10 @@ static uint32_t infinite_run;
 //! Parameters set from Python code go here
 // - error_window_size
 // - number_of_inputs
-// - head position, head velocity arrays
-// - perfect eye position, perfect eye velocity arrays (unused at present)
+// - perfect eye position, perfect eye velocity arrays
 uint32_t error_window_size;
 uint32_t output_size;
 uint32_t number_of_inputs;
-accum *head_positions;
-accum *head_velocities;
 accum *perfect_eye_pos;
 accum *perfect_eye_vel;
 
@@ -174,10 +171,10 @@ static bool initialize(uint32_t *timer_period)
     number_of_inputs = icub_vor_env_data_region[2];
     gain = kbits(icub_vor_env_data_region[3]);
     pos_to_vel = kbits(icub_vor_env_data_region[4]);
-    head_positions = (accum *)&icub_vor_env_data_region[5];
-    head_velocities = (accum *)&icub_vor_env_data_region[5 + number_of_inputs];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + (2 * number_of_inputs)];
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5 + (3 * number_of_inputs)];
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + number_of_inputs];
+//    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + (2 * number_of_inputs)];
+//    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5 + (3 * number_of_inputs)];
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -219,6 +216,13 @@ void test_the_head(void) {
     // wherever this vertex connects to, depending on which counter is higher.
     accum pos_diff;
     // Compute the integer difference in the number of spikes between L (agonist) and R (antagonist)
+    // WTA experiments
+//    int32_t counter_diff;
+//    if (spike_counters[0] > spike_counters[1])
+//        counter_diff = spike_counters[0];
+//    else
+//        counter_diff = -spike_counters[1];
+
     int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
     // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
     pos_diff = kbits(counter_diff) * gain;
@@ -341,8 +345,6 @@ void timer_callback(uint unused, uint dummy)
             recording_record(2, &error_value, 4);
             recording_record(3, &current_eye_pos, 4);
             recording_record(4, &current_eye_vel, 4);
-//            recording_record(3, &head_positions[tick_in_head_loop], 4);
-//            recording_record(4, &head_velocities[tick_in_head_loop], 4);
 
             // Reset ticks in error window
             tick_in_error_window = 0;
