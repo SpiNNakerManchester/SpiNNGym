@@ -75,8 +75,9 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     # key value
     ICUB_VOR_ENV_REGION_BYTES = 4
-    # error_window_size, output_size, number_of_inputs, gain, pos_to_vel and wta_decision
-    BASE_DATA_REGION_BYTES = 6 * 4
+    # error_window_size, output_size, number_of_inputs, gain, pos_to_vel, wta_decision
+    # low_error_rate and high_error_rate
+    BASE_DATA_REGION_BYTES = 8 * 4
     # not sure this is entirely necessary but keeping it for now
     MAX_SIM_DURATION = 10000
     # Probably better ways of doing this too, but keeping it for now
@@ -89,10 +90,12 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
     # parameters expected by PyNN
     default_parameters = {
         'error_window_size': 10,
-        'gain': 20,
-        'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),
+        'gain': 20,  # boosts the effect of individual spikes
+        'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),  # magic multiplier to convert movement delta to speed
         'wta_decision': False,
-        'output_size': 200,
+        'low_error_rate': 2,  # Hz
+        'high_error_rate': 20,  # Hz
+        'output_size': 200,  # neurons encoding error via climbing fibres
         'constraints': None,
         'label': "ICubVorEnv",
         'incoming_spike_buffer_size': None,
@@ -104,11 +107,29 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
                  gain=default_parameters['gain'],
                  pos_to_vel=default_parameters['pos_to_vel'],
                  wta_decision=default_parameters['wta_decision'],
+                 low_error_rate=default_parameters['low_error_rate'],
+                 high_error_rate=default_parameters['high_error_rate'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters[
                      'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration']):
+        """
+
+        :param head_pos: array of head positions
+        :param head_vel: array of head velocities
+        :param perfect_eye_pos: array of ideal eye positions to produce the VOR
+        :param perfect_eye_vel: array of ideal eye velocities to produce the VOR
+        :param error_window_size: how often the environment changes
+        :param output_size: numbers of neurons encoding the error transmitted via combing fibres
+        :param gain: boosts the effect of individual spikes
+        :param pos_to_vel: magic multiplier to convert movement delta to speed
+        :param wta_decision: whether eye movement takes into account the difference in number of spikes between L / R
+        :param constraints: usual sPyNNaker constraints
+        :param label: name of the population
+        :param incoming_spike_buffer_size:
+        :param simulation_duration_ms: maximum simulation duration for this application vertex
+        """
         # **NOTE** n_neurons currently ignored - width and height will be
         # specified as additional parameters, forcing their product to be
         # duplicated in n_neurons seems pointless
@@ -125,6 +146,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._gain = gain
         self._pos_to_vel = pos_to_vel
         self._wta_decision = wta_decision
+        self._low_error_rate = low_error_rate
+        self._high_error_rate = high_error_rate
         self._number_of_inputs = len(head_pos)
         if self._number_of_inputs != len(head_vel):
             raise ConfigurationException(
@@ -274,6 +297,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_value(self.__round_to_nearest_accum(self._gain), data_type=DataType.S1615)
         spec.write_value(self.__round_to_nearest_accum(self._pos_to_vel), data_type=DataType.S1615)
         spec.write_value(int(self._wta_decision), data_type=DataType.UINT32)
+        spec.write_value(self.__round_to_nearest_accum(self._low_error_rate), data_type=DataType.S1615)
+        spec.write_value(self.__round_to_nearest_accum(self._high_error_rate), data_type=DataType.S1615)
         # Write the data - Arrays must be 32-bit values, so convert
         data = numpy.array(
             [int(x * float_scale) for x in self._perfect_eye_pos],

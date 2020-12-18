@@ -94,6 +94,11 @@ uint32_t spike_counters[2] = {0};
 //! wta decision or difference in L/R
 bool wta_decision;
 
+
+//! Encode the error into a series of rates which are then sent on
+accum min_rate = 2.0k;
+accum max_rate = 20.0k;
+
 //! The upper bits of the key value that model should transmit with
 static uint32_t key;
 
@@ -174,9 +179,11 @@ static bool initialize(uint32_t *timer_period)
     number_of_inputs = icub_vor_env_data_region[2];
     gain = kbits(icub_vor_env_data_region[3]);
     pos_to_vel = kbits(icub_vor_env_data_region[4]);
-    wta_decision = (bool)(icub_vor_env_data_region[6]);
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[6];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[6 + number_of_inputs];
+    wta_decision = (bool)(icub_vor_env_data_region[5]);
+    min_rate = kbits(icub_vor_env_data_region[6]);
+    max_rate = kbits(icub_vor_env_data_region[7]);
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[8];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[8 + number_of_inputs];
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -253,9 +260,6 @@ void test_the_head(void) {
     // position and velocity at the current value of tick_in_head_loop, once it has
     // been worked out how the spike counters at L and R translate to head/eye movement
 
-    // Encode the error into a series of rates which are then sent on
-    accum min_rate = 2.0k;
-    accum max_rate = 20.0k;
 
     accum mid_neuron = (accum) (output_size) * 0.5k;
     accum low_threshold = absk(error_value) * mid_neuron;
