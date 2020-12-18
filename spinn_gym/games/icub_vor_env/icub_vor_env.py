@@ -148,12 +148,12 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._wta_decision = wta_decision
         self._low_error_rate = low_error_rate
         self._high_error_rate = high_error_rate
-        self._number_of_inputs = len(head_pos)
-        if self._number_of_inputs != len(head_vel):
+        self._number_of_inputs = len(perfect_eye_pos)
+        if self._number_of_inputs != len(perfect_eye_vel):
             raise ConfigurationException(
-                "The length of head_positions {} is not the same as the "
-                "length of head_velocities {}".format(
-                    self._number_of_inputs, len(head_vel)))
+                "The length of perfect_eye_pos {} is not the same as the "
+                "length of perfect_eye_vel {}".format(
+                    self._number_of_inputs, len(perfect_eye_vel)))
 
         # n_neurons is the number of atoms in the network, which in this
         # case only needs to be 2 (for receiving "left" and "right")
