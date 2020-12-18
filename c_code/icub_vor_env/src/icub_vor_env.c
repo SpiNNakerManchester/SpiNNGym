@@ -91,6 +91,9 @@ accum current_eye_vel;
 //! count left and right spikes
 uint32_t spike_counters[2] = {0};
 
+//! wta decision or difference in L/R
+bool wta_decision;
+
 //! The upper bits of the key value that model should transmit with
 static uint32_t key;
 
@@ -171,10 +174,9 @@ static bool initialize(uint32_t *timer_period)
     number_of_inputs = icub_vor_env_data_region[2];
     gain = kbits(icub_vor_env_data_region[3]);
     pos_to_vel = kbits(icub_vor_env_data_region[4]);
-    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5];
-    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + number_of_inputs];
-//    perfect_eye_vel = (accum *)&icub_vor_env_data_region[5 + (2 * number_of_inputs)];
-//    perfect_eye_pos = (accum *)&icub_vor_env_data_region[5 + (3 * number_of_inputs)];
+    wta_decision = (bool)(icub_vor_env_data_region[6]);
+    perfect_eye_pos = (accum *)&icub_vor_env_data_region[6];
+    perfect_eye_vel = (accum *)&icub_vor_env_data_region[6 + number_of_inputs];
     // End of initialise
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
@@ -217,13 +219,15 @@ void test_the_head(void) {
     accum pos_diff;
     // Compute the integer difference in the number of spikes between L (agonist) and R (antagonist)
     // WTA experiments
-//    int32_t counter_diff;
-//    if (spike_counters[0] > spike_counters[1])
-//        counter_diff = spike_counters[0];
-//    else
-//        counter_diff = -spike_counters[1];
+    int32_t counter_diff;
 
-    int32_t counter_diff = (spike_counters[0] - spike_counters[1]);
+    if (wta_decision) {
+        counter_diff = spike_counters[0] > spike_counters[1] ? spike_counters[0] : -spike_counters[1];
+    }
+    else {
+        counter_diff = (spike_counters[0] - spike_counters[1]);
+    }
+
     // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
     pos_diff = kbits(counter_diff) * gain;
     accum previous_eye_pos = current_eye_pos;
@@ -244,9 +248,6 @@ void test_the_head(void) {
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
     accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
     error_value = (error_pos + error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
-
-    io_printf(IO_BUF, "counter_diff %d, pos_diff %k, current_eye_vel %k, perfect_eye_vel %k, error_vel %k\n",
-        counter_diff, pos_diff, current_eye_vel, perfect_eye_vel[tick_in_head_loop], error_vel);
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has

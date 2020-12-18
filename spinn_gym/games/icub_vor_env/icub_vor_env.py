@@ -75,8 +75,8 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     # key value
     ICUB_VOR_ENV_REGION_BYTES = 4
-    # error_window_size, output_size, number_of_inputs
-    BASE_DATA_REGION_BYTES = 5 * 4
+    # error_window_size, output_size, number_of_inputs, gain, pos_to_vel and wta_decision
+    BASE_DATA_REGION_BYTES = 6 * 4
     # not sure this is entirely necessary but keeping it for now
     MAX_SIM_DURATION = 10000
     # Probably better ways of doing this too, but keeping it for now
@@ -91,6 +91,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         'error_window_size': 10,
         'gain': 20,
         'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),
+        'wta_decision': False,
         'output_size': 200,
         'constraints': None,
         'label': "ICubVorEnv",
@@ -102,6 +103,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
                  output_size=default_parameters['output_size'],
                  gain=default_parameters['gain'],
                  pos_to_vel=default_parameters['pos_to_vel'],
+                 wta_decision=default_parameters['wta_decision'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
                  incoming_spike_buffer_size=default_parameters[
@@ -122,6 +124,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._output_size = output_size
         self._gain = gain
         self._pos_to_vel = pos_to_vel
+        self._wta_decision = wta_decision
         self._number_of_inputs = len(head_pos)
         if self._number_of_inputs != len(head_vel):
             raise ConfigurationException(
@@ -270,6 +273,7 @@ class ICubVorEnv(ApplicationVertex, AbstractGeneratesDataSpecification,
         spec.write_value(self._number_of_inputs, data_type=DataType.UINT32)
         spec.write_value(self.__round_to_nearest_accum(self._gain), data_type=DataType.S1615)
         spec.write_value(self.__round_to_nearest_accum(self._pos_to_vel), data_type=DataType.S1615)
+        spec.write_value(int(self._wta_decision), data_type=DataType.UINT32)
         # Write the data - Arrays must be 32-bit values, so convert
         data = numpy.array(
             [int(x * float_scale) for x in self._perfect_eye_pos],
