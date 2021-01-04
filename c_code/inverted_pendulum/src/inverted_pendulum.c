@@ -261,7 +261,10 @@ static bool initialize(uint32_t *timer_period)
     temp_accum.u = pend_region[14];
     tau_force = temp_accum.a;
 
+    io_printf(IO_BUF, "tau_force %f", tau_force);
+
     force_increment = (float)((max_motor_force - min_motor_force) / (float)force_increment);
+
 
     //Print variable for inspection if needed
 //    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)pend_region[0]);
@@ -276,10 +279,10 @@ static bool initialize(uint32_t *timer_period)
 //    io_printf(IO_BUF, "d %d\n", pend_region[1]);
 //    io_printf(IO_BUF, "halfp %f\n", pend_region[2]);
 //    io_printf(IO_BUF, "d %f\n", pend_region[2]);
-//    io_printf(IO_BUF, "half %k\n", (accum)half_pole_length);
-//    io_printf(IO_BUF, "d %f\n", (float)half_pole_length);
-//    io_printf(IO_BUF, "half accum %k\n", half_pole_length_accum.a);
-//    io_printf(IO_BUF, "d %f\n", (float)half_pole_length_accum.a);
+    io_printf(IO_BUF, "half %k\n", (accum)half_pole_length);
+    io_printf(IO_BUF, "d %f\n", (float)half_pole_length);
+    io_printf(IO_BUF, "half accum %k\n", half_pole_length_accum.a);
+    io_printf(IO_BUF, "d %f\n", (float)half_pole_length_accum.a);
 //    io_printf(IO_BUF, "anglep %f\n", pend_region[3]);
 //    io_printf(IO_BUF, "d %f\n", pend_region[3]);
 //    io_printf(IO_BUF, "angle accum %k\n", pole_angle_accum.a);
@@ -291,11 +294,11 @@ static bool initialize(uint32_t *timer_period)
 //    io_printf(IO_BUF, "force %u\n", pend_region[5]);
 //    io_printf(IO_BUF, "d %d\n", pend_region[5]);
 //    io_printf(IO_BUF, "max %u\n", pend_region[6]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[6]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[6]);
 //    io_printf(IO_BUF, "bins %u\n", pend_region[7]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[7]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[7]);
 //    io_printf(IO_BUF, "central %u\n", pend_region[8]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[8]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[8]);
 //    io_printf(IO_BUF, "re %d\n", reward_based);
 //    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
 //    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);
@@ -304,7 +307,7 @@ static bool initialize(uint32_t *timer_period)
 //    		(accum)pole_angle, (accum)pole_velocity, (accum)pole_acceleration,
 //			(accum)cart_position, (accum)cart_velocity, (accum)cart_acceleration);
 
-//    io_printf(IO_BUF, "Initialise: completed successfully\n");
+    io_printf(IO_BUF, "Initialise: completed successfully\n");
 
 //    auto start = chrono::steady_clock::now();
     return true;

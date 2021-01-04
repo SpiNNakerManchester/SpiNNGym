@@ -175,25 +175,25 @@ class DoublePendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # ApplicationVertex overrides
     # ------------------------------------------------------------------------
-    @overrides(ApplicationVertex.get_resources_used_by_atoms)
-    def get_resources_used_by_atoms(self, vertex_slice):
-        # **HACK** only way to force no partitioning is to zero dtcm and cpu
-        container = ResourceContainer(
-            # sdram=SDRAMResource(
-            #     self.PENDULUM_REGION_BYTES +
-            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
-            dtcm=DTCMResource(0),
-            cpu_cycles=CPUCyclesPerTickResource(0))
-
-        return container
-
-    @overrides(ApplicationVertex.create_machine_vertex)
-    def create_machine_vertex(self, vertex_slice, resources_required,
-                              label=None, constraints=None):
-        # Return suitable machine vertex
-        return DoublePendulumMachineVertex(
-            resources_required, constraints, self._label, self, vertex_slice)
+#     @overrides(ApplicationVertex.get_resources_used_by_atoms)
+#     def get_resources_used_by_atoms(self, vertex_slice):
+#         # **HACK** only way to force no partitioning is to zero dtcm and cpu
+#         container = ResourceContainer(
+#             # sdram=SDRAMResource(
+#             #     self.PENDULUM_REGION_BYTES +
+#             #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
+#             sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=12),
+#             dtcm=DTCMResource(0),
+#             cpu_cycles=CPUCyclesPerTickResource(0))
+#
+#         return container
+#
+#     @overrides(ApplicationVertex.create_machine_vertex)
+#     def create_machine_vertex(self, vertex_slice, resources_required,
+#                               label=None, constraints=None):
+#         # Return suitable machine vertex
+#         return DoublePendulumMachineVertex(
+#             resources_required, constraints, self._label, self, vertex_slice)
 
     @property
     @overrides(ApplicationVertex.n_atoms)
