@@ -68,11 +68,6 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._stochastic = stochastic
         self._input_sequence = input_sequence
         self._no_inputs = len(input_sequence)
-#         if self._no_inputs != numpy.log2(len(self._truth_table)):
-#             try:
-#                 raise Bad_Table('table and input sequence are not compatible')
-#             except Bad_Table as e:
-#                 print("ERROR: ", e)
 
         self._n_neurons = self._no_inputs
         self._rand_seed = rand_seed

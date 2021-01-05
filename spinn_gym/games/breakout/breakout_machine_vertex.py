@@ -28,6 +28,7 @@ from spinn_front_end_common.utilities import constants as \
 
 from spynnaker.pyNN.utilities import constants
 
+
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
