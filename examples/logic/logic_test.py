@@ -52,9 +52,9 @@ i2a = p.Projection(input_pop, logic_pop, p.AllToAllConnector())
 # test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(),
 #                     p.StaticSynapse(weight=0.1, delay=0.5))
 i2o1 = p.Projection(logic_pop, output_pop1, p.AllToAllConnector(),
-                    p.StaticSynapse(weight=0.1, delay=0.5))
+                    p.StaticSynapse(weight=0.1, delay=1))
 i2o2 = p.Projection(logic_pop, output_pop2, p.OneToOneConnector(),
-                    p.StaticSynapse(weight=0.1, delay=0.5))
+                    p.StaticSynapse(weight=0.1, delay=1))
 
 simulator = get_simulator()
 

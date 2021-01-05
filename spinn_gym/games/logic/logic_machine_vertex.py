@@ -133,6 +133,9 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
             self._LOGIC_REGIONS.LOGIC.value)
+        print("key for logic region: ",
+              routing_info.get_first_key_from_pre_vertex(
+                  vertex, constants.SPIKE_PARTITION_ID))
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -180,8 +183,8 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
 
-    def get_n_keys_for_partition(self, partition):
-        return 8  # for control IDs
+#     def get_n_keys_for_partition(self, partition):
+#         return self._no_inputs  # for control IDs
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
