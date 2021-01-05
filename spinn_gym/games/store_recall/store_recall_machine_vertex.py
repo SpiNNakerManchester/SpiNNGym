@@ -2,23 +2,42 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
+from data_specification.enums.data_type import DataType
+
 # PACMAN imports
+from pacman.executor.injection_decorator import inject_items
 from pacman.model.graphs.machine import MachineVertex
+from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models.\
-    abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
+from spinn_front_end_common.interface.buffer_management.buffer_models import \
+    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
+from spinn_front_end_common.interface.buffer_management \
+    import recording_utilities
+from spinn_front_end_common.abstract_models \
+    .abstract_generates_data_specification \
+    import AbstractGeneratesDataSpecification
+from spinn_front_end_common.interface.simulation import simulation_utilities
+from spinn_front_end_common.utilities import constants as \
+    front_end_common_constants
+
+# sPyNNaker imports
+from spynnaker.pyNN.utilities import constants
 
 
 # ----------------------------------------------------------------------------
 # RecallMachineVertex
 # ----------------------------------------------------------------------------
-class RecallMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
+class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
+                          AbstractReceiveBuffersToHost,
                           AbstractHasAssociatedBinary):
+    RECALL_REGION_BYTES = 4
+    DATA_REGION_BYTES = 12 * 4
+
     _RECALL_REGIONS = Enum(
         value="_RECALL_REGIONS",
         names=[('SYSTEM', 0),
@@ -26,12 +45,122 @@ class RecallMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, resources_required, constraints=None, label=None,
-                 app_vertex=None, vertex_slice=None):
+    def __init__(self, vertex_slice, resources_required, constraints, label,
+                 app_vertex, rate_on, rate_off, pop_size, prob_command,
+                 prob_in_change, time_period, stochastic, reward,
+                 incoming_spike_buffer_size, simulation_duration_ms,
+                 rand_seed):
+
+        # Resources required
+        self._resource_required = ResourceContainer(
+            sdram=ConstantSDRAM(resources_required))
+
+        # **NOTE** n_neurons currently ignored - width and height will be
+        # specified as additional parameters, forcing their product to be
+        # duplicated in n_neurons seems pointless
+
+        self._label = label
+
+        # Pass in variables
+        self._rate_on = rate_on
+        self._rate_off = rate_off
+        self._stochastic = stochastic
+        self._reward = reward
+        self._pop_size = pop_size
+        self._prob_command = prob_command
+        self._prob_in_change = prob_in_change
+
+        self._n_neurons = pop_size * 4
+        self._rand_seed = rand_seed
+
+        self._time_period = time_period
+
+        # used to define size of recording region
+        self._recording_size = int((simulation_duration_ms / 1000.) * 4)
+
         # Superclasses
         MachineVertex.__init__(
             self, label, constraints, app_vertex, vertex_slice)
-        self._resource_required = resources_required
+
+    # ------------------------------------------------------------------------
+    # AbstractGeneratesDataSpecification overrides
+    # ------------------------------------------------------------------------
+    @inject_items({"machine_time_step": "MachineTimeStep",
+                   "time_scale_factor": "TimeScaleFactor",
+                   "routing_info": "MemoryRoutingInfos",
+                   "tags": "MemoryTags",
+                   "n_machine_time_steps": "DataNTimeSteps"})
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
+               additional_arguments={"machine_time_step", "time_scale_factor",
+                                     "routing_info", "tags",
+                                     "n_machine_time_steps"}
+               )
+    def generate_data_specification(self, spec, placement, machine_time_step,
+                                    time_scale_factor,
+                                    routing_info, tags, n_machine_time_steps):
+        vertex = placement.vertex
+
+        spec.comment("\n*** Spec for Recall Instance ***\n\n")
+        spec.comment("\nReserving memory space for data regions:\n\n")
+
+        # Reserve memory:
+        spec.reserve_memory_region(
+            region=self._RECALL_REGIONS.SYSTEM.value,
+            size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
+            label='setup')
+        spec.reserve_memory_region(
+            region=self._RECALL_REGIONS.RECALL.value,
+            size=self.RECALL_REGION_BYTES, label='RecallParams')
+        # reserve recording region
+        spec.reserve_memory_region(
+            self._RECALL_REGIONS.RECORDING.value,
+            recording_utilities.get_recording_header_size(1))
+        spec.reserve_memory_region(
+            region=self._RECALL_REGIONS.DATA.value,
+            size=self.DATA_REGION_BYTES, label='RecallArms')
+
+        # Write setup region
+        spec.comment("\nWriting setup region:\n")
+        spec.switch_write_focus(
+            self._RECALL_REGIONS.SYSTEM.value)
+        spec.write_array(simulation_utilities.get_simulation_header_array(
+            vertex.get_binary_file_name(), machine_time_step,
+            time_scale_factor))
+
+        # Write recall region containing routing key to transmit with
+        spec.comment("\nWriting recall region:\n")
+        spec.switch_write_focus(
+            self._RECALL_REGIONS.RECALL.value)
+        spec.write_value(routing_info.get_first_key_from_pre_vertex(
+            vertex, constants.SPIKE_PARTITION_ID))
+
+        # Write recording region for score
+        spec.comment("\nWriting recall recording region:\n")
+        spec.switch_write_focus(
+            self._RECALL_REGIONS.RECORDING.value)
+        ip_tags = tags.get_ip_tags_for_vertex(self) or []
+        spec.write_array(recording_utilities.get_recording_header_array(
+            [self._recording_size], ip_tags=ip_tags))
+
+        # Write probabilites for arms
+        spec.comment("\nWriting recall data region:\n")
+        spec.switch_write_focus(
+            self._RECALL_REGIONS.DATA.value)
+        spec.write_value(self._time_period, data_type=DataType.UINT32)
+        spec.write_value(self._pop_size, data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._rate_on, data_type=DataType.UINT32)
+        spec.write_value(self._rate_off, data_type=DataType.UINT32)
+        spec.write_value(self._stochastic, data_type=DataType.UINT32)
+        spec.write_value(self._reward, data_type=DataType.UINT32)
+        spec.write_value(self._prob_command, data_type=DataType.S1615)
+        spec.write_value(self._prob_in_change, data_type=DataType.S1615)
+
+        # End-of-Spec:
+        spec.end_specification()
 
     @property
     def resources_required(self):
@@ -47,10 +176,6 @@ class RecallMachineVertex(MachineVertex, AbstractReceiveBuffersToHost,
         :return: The region numbers that have active recording
         :rtype: iterable(int) """
         return [0]
-
-#     This would need to be here if it was different from the number of atoms
-#     def get_n_keys_for_partition(self, partition):
-#         return self._n_neurons  # 2  # two for control IDs
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
