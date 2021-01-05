@@ -15,6 +15,7 @@ from pacman.model.constraints.key_allocator_constraints import \
 # from pacman.model.resources.variable_sdram import VariableSDRAM
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
 
 # from data_specification.enums.data_type import DataType
 
@@ -151,10 +152,12 @@ class Logic(AbstractOneAppOneMachineVertex,
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
             self._recording_size)
 
+        vertex_slice=Slice(0, self._n_neurons-1)
+
         # Superclasses
         super(Logic, self).__init__(
             LogicMachineVertex(
-                resources_required, constraints, label, self,
+                vertex_slice, resources_required, constraints, label, self,
                 truth_table, input_sequence, rate_on, rate_off, score_delay,
                 stochastic, incoming_spike_buffer_size, simulation_duration_ms,
                 rand_seed),
@@ -203,6 +206,7 @@ class Logic(AbstractOneAppOneMachineVertex,
     @property
     @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
+        print("n_atoms for logic is ", self._n_neurons)
         return self._n_neurons
 
     # ------------------------------------------------------------------------

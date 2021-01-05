@@ -18,6 +18,7 @@ from pacman.model.constraints.key_allocator_constraints import (
 # from pacman.model.resources.variable_sdram import VariableSDRAM
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
 
 # SpinnFrontEndCommon imports
 # from spinn_front_end_common.interface.buffer_management \
@@ -129,8 +130,8 @@ class Breakout(AbstractOneAppOneMachineVertex,
         self._width_bits = numpy.uint32(numpy.ceil(numpy.log2(self._width)))
         self._height_bits = numpy.uint32(numpy.ceil(numpy.log2(self._height)))
 
-        self._n_neurons = (1 << (self._width_bits + self._height_bits +
-                                 self._colour_bits))
+        self._n_neurons = int(1 << (self._width_bits + self._height_bits +
+                                    self._colour_bits))
         self._bricking = bricking
         self._rand_seed = random_seed
 
@@ -150,11 +151,13 @@ class Breakout(AbstractOneAppOneMachineVertex,
             self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES +
             self._recording_size)
 
+        vertex_slice = Slice(0, self._n_neurons-1)
+
         # Superclasses
         super(Breakout, self).__init__(
             BreakoutMachineVertex(
-                resources_required, constraints, self._label, self,
-                x_factor, y_factor, width, height, colour_bits,
+                vertex_slice, resources_required, constraints, self._label,
+                self, x_factor, y_factor, width, height, colour_bits,
                 incoming_spike_buffer_size, simulation_duration_ms, bricking,
                 random_seed),
             label=label, constraints=constraints)

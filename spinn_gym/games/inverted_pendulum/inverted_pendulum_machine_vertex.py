@@ -45,8 +45,8 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, resources_required, constraints, label, app_vertex,
-                 encoding, time_increment, pole_length, pole_angle,
+    def __init__(self, vertex_slice, resources_required, constraints, label,
+                 app_vertex, encoding, time_increment, pole_length, pole_angle,
                  reward_based, force_increments, max_firing_rate,
                  number_of_bins, central, bin_overlap, tau_force,
                  incoming_spike_buffer_size, simulation_duration_ms,
@@ -90,7 +90,8 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
         # Superclasses
-        MachineVertex.__init__(self, label, constraints, app_vertex)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides

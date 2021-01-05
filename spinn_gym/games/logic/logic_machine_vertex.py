@@ -46,9 +46,9 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, resources_required, constraints, label, app_vertex,
-                 truth_table, input_sequence, rate_on, rate_off, score_delay,
-                 stochastic, incoming_spike_buffer_size,
+    def __init__(self, vertex_slice, resources_required, constraints, label,
+                 app_vertex, truth_table, input_sequence, rate_on, rate_off,
+                 score_delay, stochastic, incoming_spike_buffer_size,
                  simulation_duration_ms, rand_seed):
 
         # resources required
@@ -83,7 +83,8 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
         # Superclasses
-        MachineVertex.__init__(self, label, constraints, app_vertex)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -133,7 +134,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
             self._LOGIC_REGIONS.LOGIC.value)
-        print("key for logic region: ",
+        print("vertex, key for logic region: ", vertex,
               routing_info.get_first_key_from_pre_vertex(
                   vertex, constants.SPIKE_PARTITION_ID))
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
@@ -183,8 +184,8 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
 
-#     def get_n_keys_for_partition(self, partition):
-#         return self._no_inputs  # for control IDs
+    def get_n_keys_for_partition(self, partition):
+        return 8  # for control IDs
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

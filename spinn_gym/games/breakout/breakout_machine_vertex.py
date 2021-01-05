@@ -44,8 +44,8 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self, resources_required, constraints, label, app_vertex,
-                 x_factor, y_factor, width, height, colour_bits,
+    def __init__(self, vertex_slice, resources_required, constraints, label,
+                 app_vertex, x_factor, y_factor, width, height, colour_bits,
                  incoming_spike_buffer_size, simulation_duration_ms, bricking,
                  random_seed):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -80,7 +80,8 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
 
         # Superclasses
-        MachineVertex.__init__(self, label, constraints, app_vertex)
+        MachineVertex.__init__(
+            self, label, constraints, app_vertex, vertex_slice)
 #         self._resource_required = resources_required
 
     # ------------------------------------------------------------------------

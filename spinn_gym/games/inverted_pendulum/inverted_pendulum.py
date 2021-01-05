@@ -15,6 +15,7 @@ from pacman.model.constraints.key_allocator_constraints \
 # from pacman.model.resources.variable_sdram import VariableSDRAM
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
 
 # SpiNNFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
@@ -157,10 +158,12 @@ class Pendulum(AbstractOneAppOneMachineVertex,
             self.PENDULUM_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
             self._recording_size)
 
+        vertex_slice = Slice(0, self._n_neurons-1)
+
         # Superclasses
         super(Pendulum, self).__init__(
             PendulumMachineVertex(
-                resources_required, constraints, label, self,
+                vertex_slice, resources_required, constraints, label, self,
                 encoding, time_increment, pole_length, pole_angle,
                 reward_based, force_increments, max_firing_rate,
                 number_of_bins, central, bin_overlap, tau_force,
