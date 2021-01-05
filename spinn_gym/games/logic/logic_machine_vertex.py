@@ -129,9 +129,6 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
             self._LOGIC_REGIONS.LOGIC.value)
-        print("vertex, key for logic region: ", vertex,
-              routing_info.get_first_key_from_pre_vertex(
-                  vertex, constants.SPIKE_PARTITION_ID))
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -178,6 +175,15 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
+
+    def get_n_keys_for_partition(self, partition):
+        n_keys = 0
+        # The way this has been written, there should only be one edge, but
+        # better to be safe than sorry
+        for edge in partition.edges:
+            if edge.pre_vertex is not edge.post_vertex:
+                n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
+        return n_keys
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

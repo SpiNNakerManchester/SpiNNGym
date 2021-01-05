@@ -181,6 +181,15 @@ class BanditMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._BANDIT_REGIONS.RECORDING.value, txrx)
 
+    def get_n_keys_for_partition(self, partition):
+        n_keys = 0
+        # The way this has been written, there should only be one edge, but
+        # better to be safe than sorry
+        for edge in partition.edges:
+            if edge.pre_vertex is not edge.post_vertex:
+                n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
+        return n_keys
+
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "bandit.aplx"
