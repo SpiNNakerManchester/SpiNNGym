@@ -63,8 +63,6 @@ jobs:
     - name: Lint with flake8
       run: flake8 examples spinn_gym
     - name: Lint with pylint
-      # Code not yet updated to self-partitioning
-      if: false
       uses: ./support/actions/pylint
       with: 
         package: examples spinn_gym
