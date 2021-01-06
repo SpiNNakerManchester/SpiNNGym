@@ -1,43 +1,30 @@
 from __future__ import print_function
+import math
+import numpy
 
 from spinn_utilities.overrides import overrides
 
-from data_specification.enums.data_type import DataType
-
 # PACMAN imports
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import \
-    ContiguousKeyRangeContraint
-from pacman.model.graphs.application import ApplicationVertex
-from pacman.model.resources.cpu_cycles_per_tick_resource import \
-    CPUCyclesPerTickResource
-from pacman.model.resources.dtcm_resource import DTCMResource
-from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.variable_sdram import VariableSDRAM
+from pacman.model.constraints.key_allocator_constraints import (
+    ContiguousKeyRangeContraint)
+from pacman.model.graphs.application.abstract import (
+    AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
 
 # SpinnFrontEndCommon imports
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.abstract_models \
-    .abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
-from spinn_front_end_common.interface.simulation import simulation_utilities
-from spinn_front_end_common.utilities import constants as \
-    front_end_common_constants
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
     AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
@@ -45,18 +32,20 @@ from spynnaker.pyNN.models.common.simple_population_settable \
 from spinn_gym.games.breakout.breakout_machine_vertex import \
     BreakoutMachineVertex
 
-import numpy
-
 
 # ----------------------------------------------------------------------------
 # Breakout
 # ----------------------------------------------------------------------------
-class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
-               AbstractHasAssociatedBinary,
+class Breakout(AbstractOneAppOneMachineVertex,
                AbstractProvidesOutgoingPartitionConstraints,
-               AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-               SimplePopulationSettable
-               ):
+               AbstractAcceptsIncomingSynapses,
+               AbstractNeuronRecordable,
+               SimplePopulationSettable):
+
+    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
+    def verify_splitter(self, splitter):
+        # Need to ignore this verify
+        pass
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
     def get_connections_from_machine(
@@ -123,8 +112,8 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         self._width_bits = numpy.uint32(numpy.ceil(numpy.log2(self._width)))
         self._height_bits = numpy.uint32(numpy.ceil(numpy.log2(self._height)))
 
-        self._n_neurons = (1 << (self._width_bits + self._height_bits +
-                                 self._colour_bits))
+        self._n_neurons = int(1 << (self._width_bits + self._height_bits +
+                                    self._colour_bits))
         self._bricking = bricking
         self._rand_seed = random_seed
 
@@ -138,9 +127,22 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         # Define size of recording region
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
 
+        # (static) resources required
+        # technically as using OneAppOneMachine this is not necessary?
+        resources_required = (
+            self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES +
+            self._recording_size)
+
+        vertex_slice = Slice(0, self._n_neurons - 1)
+
         # Superclasses
-        ApplicationVertex.__init__(
-            self, label, constraints, self.n_atoms)
+        super(Breakout, self).__init__(
+            BreakoutMachineVertex(
+                vertex_slice, resources_required, constraints, self._label,
+                self, x_factor, y_factor, width, height, colour_bits,
+                incoming_spike_buffer_size, simulation_duration_ms, bricking,
+                random_seed),
+            label=label, constraints=constraints)
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
@@ -160,107 +162,13 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
         # Breakout has no synapses so can simulate only one time step of delay
         return machine_time_step / 1000.0
 
-    # ------------------------------------------------------------------------
-    # ApplicationVertex overrides
-    # ------------------------------------------------------------------------
-    @overrides(ApplicationVertex.get_resources_used_by_atoms)
-    def get_resources_used_by_atoms(self, vertex_slice):
-        # **HACK** only way to force no partitioning is to zero dtcm and cpu
-        container = ResourceContainer(
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
-            dtcm=DTCMResource(0),
-            cpu_cycles=CPUCyclesPerTickResource(0))
-
-        return container
-
-    @overrides(ApplicationVertex.create_machine_vertex)
-    def create_machine_vertex(self, vertex_slice, resources_required,
-                              label=None, constraints=None):
-        # Return suitable machine vertex
-        return BreakoutMachineVertex(resources_required, constraints,
-                                     self._label, self, vertex_slice)
-
     @property
-    @overrides(ApplicationVertex.n_atoms)
+    @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
 
         # **TODO** should we calculate this automatically
         # based on log2 of width and height?
         return self._n_neurons
-
-    # ------------------------------------------------------------------------
-    # AbstractGeneratesDataSpecification overrides
-    # ------------------------------------------------------------------------
-    @inject_items({"machine_time_step": "MachineTimeStep",
-                   "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags",
-                   "n_machine_time_steps": "DataNTimeSteps"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "routing_info", "tags",
-                                     "n_machine_time_steps"}
-               )
-    def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor,
-                                    routing_info, tags, n_machine_time_steps):
-        vertex = placement.vertex
-
-        spec.comment("\n*** Spec for Breakout Instance ***\n\n")
-        spec.comment("\nReserving memory space for data regions:\n\n")
-
-        # Reserve memory:
-        spec.reserve_memory_region(
-            region=BreakoutMachineVertex._BREAKOUT_REGIONS.SYSTEM.value,
-            size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
-            label='setup')
-        spec.reserve_memory_region(
-            region=BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value,
-            size=self.BREAKOUT_REGION_BYTES, label='BreakoutKey')
-        # Reserve recording region
-        spec.reserve_memory_region(
-            BreakoutMachineVertex._BREAKOUT_REGIONS.RECORDING.value,
-            recording_utilities.get_recording_header_size(1))
-        spec.reserve_memory_region(
-            region=BreakoutMachineVertex._BREAKOUT_REGIONS.PARAMS.value,
-            size=self.PARAM_REGION_BYTES, label='Parameters')
-
-        # Write setup region
-        spec.comment("\nWriting setup region:\n")
-        spec.switch_write_focus(
-            BreakoutMachineVertex._BREAKOUT_REGIONS.SYSTEM.value)
-        spec.write_array(simulation_utilities.get_simulation_header_array(
-            vertex.get_binary_file_name(), machine_time_step,
-            time_scale_factor))
-
-        # Write breakout region containing routing key to transmit with
-        spec.comment("\nWriting breakout region:\n")
-        spec.switch_write_focus(
-            BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value)
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
-
-        # Write recording region for score
-        spec.comment("\nWriting breakout recording region:\n")
-        spec.switch_write_focus(
-            BreakoutMachineVertex._BREAKOUT_REGIONS.RECORDING.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
-        spec.write_array(recording_utilities.get_recording_header_array(
-            [self._recording_size], ip_tags=ip_tags))
-
-        spec.comment("\nWriting breakout param region:\n")
-        spec.switch_write_focus(
-            BreakoutMachineVertex._BREAKOUT_REGIONS.PARAMS.value)
-        spec.write_value(self._x_factor, data_type=DataType.UINT32)
-        spec.write_value(self._y_factor, data_type=DataType.UINT32)
-        spec.write_value(self._bricking, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
-
-        # End-of-Spec:
-        spec.end_specification()
 
     # ------------------------------------------------------------------------
     # AbstractHasAssociatedBinary overrides
@@ -320,6 +228,12 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
                       indexes=None):
         pass
 
+    @overrides(AbstractNeuronRecordable.get_expected_n_rows)
+    def get_expected_n_rows(
+            self, n_machine_time_steps, sampling_rate, vertex, variable):
+        # Just copying what's in NeuronRecorder for now...
+        return int(math.ceil(n_machine_time_steps / sampling_rate))
+
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
         return 10000  # 10 seconds hard coded in bkout.c
@@ -357,3 +271,9 @@ class Breakout(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     def reset_ring_buffer_shifts(self):
         pass
+
+    def __str__(self):
+        return "{} with {} atoms".format(self._label, self.n_atoms)
+
+    def __repr__(self):
+        return self.__str__()
