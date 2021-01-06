@@ -14,13 +14,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 name: Python Actions
-
 on: [push]
-env:
-  DEPENDENCIES: SpiNNUtils SpiNNMachine SpiNNMan PACMAN DataSpecification spalloc SpiNNFrontEndCommon sPyNNaker sPyNNaker8
-  SPINNAKER_BOARD_ADDRESS: spinn-4.cs.man.ac.uk
-  SPINNAKER_BOARD_VERSION: 5
-  CODE_PATHS: examples spinn_gym
 
 jobs:
   build:
@@ -33,12 +27,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install pip and test tools
-      run: |
-        python -m pip install --upgrade pip setuptools wheel
-        pip install 'pylint<2.5' python-coveralls 'coverage>=4.4,<5.0'
-    - name: Install XML validation tools
-      run: sudo apt-get install libxml2-utils
     - name: Checkout
       uses: actions/checkout@v2
     - name: Checkout SupportScripts
@@ -46,48 +34,40 @@ jobs:
       with:
         repository: SpiNNakerManchester/SupportScripts
         path: support
-
-    - name: Checkout Spinnaker Dependencies
-      run: |
-        for repo in $DEPENDENCIES; do
-            support/gitclone2.sh https://github.com/SpiNNakerManchester/$repo.git
-        done
+    - name: Install pip, etc
+      uses: ./support/actions/python-tools
     - name: Install Spinnaker Dependencies
-      run: |
-        for repo in $DEPENDENCIES; do
-            echo "::group::Installing $repo"
-            (cd $repo && exec python setup.py develop)
-            echo "::endgroup::"
-        done
+      uses: ./support/actions/checkout-spinn-deps
+      with:
+        repositories: >
+          SpiNNUtils SpiNNMachine SpiNNMan PACMAN DataSpecification spalloc
+          SpiNNFrontEndCommon sPyNNaker sPyNNaker8
+        install: true
     - name: Setup
-      run: python setup.py develop
-    - name: Install requirements-test
-      run: pip install -r requirements-test.txt
+      uses: ./support/actions/run-setup
 
 #    # Add this when tests are built
 #    - name: Create a spynnaker.cfg
-#      run: |
-#        echo '[Machine]' > ~/.spynnaker.cfg
-#        echo "machineName = $SPINNAKER_BOARD_ADDRESS" >> ~/.spynnaker.cfg
-#        echo "version = $SPINNAKER_BOARD_VERSION" >> ~/.spynnaker.cfg
-#        echo '[Database]' >> ~/.spynnaker.cfg
-#        echo '[Simulation]' >> ~/.spynnaker.cfg
-#        echo '[Buffers]' >> ~/.spynnaker.cfg
+#      uses: ./support/actions/configure-spynnaker
+#      with:
+#        board-address: spinn-4.cs.man.ac.uk
 #
-#    - name: Run unit tests
-#      run: |
-#        if [ -d unittests ]; then
-#            pytest unittests
-#        else
-#            echo "::warning::No unit tests defined"
-#        fi
+#    - name: Test with pytest
+#      uses: ./support/actions/pytest
+#      with:
+#        tests: unittests
+#        coverage: ${{ matrix.python-version == 3.6 }}
+#        cover-packages: ${{ env.CODE_PATHS }}
+#        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     - name: Lint with flake8
-      run: flake8 $CODE_PATHS
-
+      run: flake8 examples spinn_gym
     - name: Lint with pylint
-      run: pylint --output-format=colorized --disable=R,C $CODE_PATHS || exit $(($? & 35))
+      uses: ./support/actions/pylint
+      with: 
+        package: examples spinn_gym
 
-    - name: Validate algorithm descriptors
-      run: |
-        (for dir in $CODE_PATHS; do find $dir -name '*.xml' -print; done) | xargs -r -n 1 support/validate-xml.sh
+    - name: Validate XML
+      uses: ./support/actions/validate-xml
+      with:
+        base-path: examples spinn_gym
