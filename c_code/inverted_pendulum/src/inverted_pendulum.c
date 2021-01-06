@@ -261,7 +261,10 @@ static bool initialize(uint32_t *timer_period)
     temp_accum.u = pend_region[14];
     tau_force = temp_accum.a;
 
+//    io_printf(IO_BUF, "tau_force %f", tau_force);
+
     force_increment = (float)((max_motor_force - min_motor_force) / (float)force_increment);
+
 
     //Print variable for inspection if needed
 //    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)pend_region[0]);
@@ -291,11 +294,11 @@ static bool initialize(uint32_t *timer_period)
 //    io_printf(IO_BUF, "force %u\n", pend_region[5]);
 //    io_printf(IO_BUF, "d %d\n", pend_region[5]);
 //    io_printf(IO_BUF, "max %u\n", pend_region[6]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[6]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[6]);
 //    io_printf(IO_BUF, "bins %u\n", pend_region[7]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[7]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[7]);
 //    io_printf(IO_BUF, "central %u\n", pend_region[8]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[8]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[8]);
 //    io_printf(IO_BUF, "re %d\n", reward_based);
 //    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
 //    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);
