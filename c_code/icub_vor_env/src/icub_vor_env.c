@@ -254,7 +254,7 @@ void test_the_head(void) {
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
     accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
-    error_value = (error_pos + error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
+    error_value = (0.8k * error_pos + 0.2k * error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
