@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 # non-SpiNNaker imports
 import matplotlib.pyplot as plt
 import numpy as np
