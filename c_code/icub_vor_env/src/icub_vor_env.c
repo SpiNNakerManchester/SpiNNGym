@@ -52,6 +52,9 @@ typedef enum {
 //  SPECIAL_EVENT_INPUT_8,
 //} special_event_t;
 
+// printing info during run is enabled
+#define PRINT_LOGS false
+
 // These are the keys to be received for left/right choice
 typedef enum {
   KEY_CHOICE_LEFT  = 0x0,
@@ -74,6 +77,7 @@ static uint32_t infinite_run;
 // - perfect eye position, perfect eye velocity arrays
 uint32_t error_window_size;
 uint32_t output_size;
+accum mid_neuron;
 uint32_t number_of_inputs;
 accum *perfect_eye_pos;
 accum *perfect_eye_vel;
@@ -185,12 +189,14 @@ static bool initialize(uint32_t *timer_period)
     perfect_eye_pos = (accum *)&icub_vor_env_data_region[8];
     perfect_eye_vel = (accum *)&icub_vor_env_data_region[8 + number_of_inputs];
     // End of initialise
+    mid_neuron = (accum) (output_size) * 0.5k;
+
     io_printf(IO_BUF, "Initialise: completed successfully\n");
 
     return true;
 }
 
-void update_count(uint32_t index) {
+static inline void update_count(uint32_t index) {
     // Update the count values in here when a mc packet is received
 //    io_printf(IO_BUF, "At time %u, update index %u \n", _time, index);
     spike_counters[index] += 1;
@@ -199,24 +205,25 @@ void update_count(uint32_t index) {
 // when a packet is received, update the error
 void mc_packet_received_callback(uint keyx, uint payload)
 {
-    uint32_t compare;
-    compare = keyx & 0x1;  // This is an odd and even check.
+    update_count(keyx & 0x1);
 
-    // If no payload has been set, make sure the loop will run
-    if (payload == 0) { payload = 1; }
-
-    // Update the spike counters based on the key value
-    for (uint count = payload; count > 0; count--) {
-        if (compare == KEY_CHOICE_LEFT) {
-            update_count(0);
-        }
-        else if (compare == KEY_CHOICE_RIGHT) {
-            update_count(1);
-        }
-        else {
-            io_printf(IO_BUF, "Unexpected key value %d\n", key);
-        }
-    }
+//    uint32_t compare;
+//    compare = keyx & 0x1;  // This is an odd and even check.
+//    // If no payload has been set, make sure the loop will run
+//    if (payload == 0) { payload = 1; }
+//
+//    // Update the spike counters based on the key value
+//    for (uint count = payload; count > 0; count--) {
+//        if (compare == KEY_CHOICE_LEFT) {
+//            update_count(0);
+//        }
+//        else if (compare == KEY_CHOICE_RIGHT) {
+//            update_count(1);
+//        }
+//        else {
+//            io_printf(IO_BUF, "Unexpected key value %d\n", key);
+//        }
+//    }
 }
 
 // Test the counters for the head after this loop
@@ -250,18 +257,24 @@ void test_the_head(void) {
 
     // Compute the current velocity
     current_eye_vel = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
+    // Check speed bounds
+    if (current_eye_vel < -1.0k) {
+        current_eye_vel = -1.0k;
+    }
+    else if (current_eye_vel > 1.0k) {
+        current_eye_vel = 1.0k;
+    }
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
     accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
-    error_value = (0.8k * error_pos + 0.2k * error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
+//    error_value = (0.9k * error_pos + 0.1k * error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
+    error_value = (error_pos + error_vel);
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
     // been worked out how the spike counters at L and R translate to head/eye movement
 
-
-    accum mid_neuron = (accum) (output_size) * 0.5k;
     accum low_threshold = absk(error_value) * mid_neuron;
     accum up_threshold = low_threshold - mid_neuron;
 
@@ -326,7 +339,7 @@ void timer_callback(uint unused, uint dummy)
         _time -= 1;
         return;
     }
-    // Otherwise
+    // Otherwise the simulation is still running
     else {
         // Increment ticks for head loop and error window
         tick_in_head_loop++;
