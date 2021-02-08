@@ -244,7 +244,10 @@ void test_the_head(void) {
 
     // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
     pos_diff = kbits(counter_diff) * gain;
-    accum previous_eye_pos = current_eye_pos;
+    current_eye_vel = pos_diff * 16.5494949k; // TODO why should this scaling factor be cca. 15? 16.54949.. when gain=20
+    current_eye_pos = current_eye_pos + MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
+
+//    accum previous_eye_pos = current_eye_pos;
     current_eye_pos = current_eye_pos + pos_diff;
     // Check bounds
     if (current_eye_pos < -1.0k) {
@@ -253,10 +256,11 @@ void test_the_head(void) {
     else if (current_eye_pos > 1.0k) {
         current_eye_pos = 1.0k;
     }
-    pos_diff = current_eye_pos - previous_eye_pos;
+//    pos_diff = current_eye_pos - previous_eye_pos;
 
     // Compute the current velocity
-    current_eye_vel = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
+    // Version in which the position is modified by the spikes
+//    current_eye_vel = MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
     // Check speed bounds
     if (current_eye_vel < -1.0k) {
         current_eye_vel = -1.0k;
@@ -267,9 +271,11 @@ void test_the_head(void) {
 
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
+//    accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
     accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
 //    error_value = (0.9k * error_pos + 0.1k * error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
-    error_value = (error_pos + error_vel);
+//    error_value = (error_pos + error_vel);
+    error_value = (error_pos);
 
     // The above could easily be replaced by a comparison to the perfect eye
     // position and velocity at the current value of tick_in_head_loop, once it has
