@@ -366,10 +366,10 @@ static void update_frame (uint32_t time)
 
     // Update bat and clamp
     if (move_direction == KEY_LEFT && --x_bat < 0) {
-        x_bat = 0;
+        x_bat = 1;
     }
     else if (move_direction == KEY_RIGHT && ++x_bat > GAME_WIDTH-bat_len) {
-        x_bat = GAME_WIDTH-bat_len;
+        x_bat = GAME_WIDTH - bat_len - 1;
     }
 
     // Clear keystate
