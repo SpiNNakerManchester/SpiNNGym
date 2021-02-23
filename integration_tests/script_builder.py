@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2017-2019 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,15 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-SpiNNUtilities >= 1!5.0.1, < 1!6.0.0
-SpiNNMachine >= 1!5.0.1, < 1!6.0.0
-SpiNNMan >= 1!5.0.1, < 1!6.0.0
-SpiNNaker_PACMAN >= 1!5.0.1, < 1!6.0.0
-SpiNNaker_DataSpecification >= 1!5.0.1, < 1!6.0.0
-SpiNNFrontEndCommon >= 1!5.0.1, < 1!6.0.0
-sPyNNaker >= 1!5.0.1, < 1!6.0.0
-numpy == 1.19; python_version == '3.6'
-numpy >= 1.19, <= 1.20; python_version == '3.7'
-numpy; python_version >= '3.8'
-lxml
-opencv-python
+from spinnaker_testbase import RootScriptBuilder
+
+
+class ScriptBuilder(RootScriptBuilder):
+    """
+    This file will recreate the test_scripts.py file
+    """
+
+    def build_intro_labs_scripts(self):
+        # create_test_scripts supports test that are too long or exceptions
+        self.create_test_scripts(["examples"])
+
+
+if __name__ == '__main__':
+    builder = ScriptBuilder()
+    builder.build_intro_labs_scripts()
