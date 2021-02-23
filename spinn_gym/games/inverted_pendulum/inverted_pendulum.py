@@ -1,58 +1,88 @@
+# from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
+#
+# from pacman.executor.injection_decorator import inject_items
+# from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
+# from pacman.model.decorators.overrides import overrides
+# from pacman.model.graphs.application import ApplicationVertex
+# from pacman.model.resources.cpu_cycles_per_tick_resource import \
+#     CPUCyclesPerTickResource
+# from pacman.model.resources.dtcm_resource import DTCMResource
+# from pacman.model.resources.resource_container import ResourceContainer
+# from pacman.model.resources.sdram_resource import SDRAMResource
+# from pacman.model.resources.variable_sdram import VariableSDRAM
+#
+# from spinn_front_end_common.interface.buffer_management \
+#     import recording_utilities
+# from spinn_front_end_common.abstract_models \
+#     .abstract_generates_data_specification \
+#     import AbstractGeneratesDataSpecification
+# from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
+#     import AbstractHasAssociatedBinary
+# from spinn_front_end_common.abstract_models. \
+#     abstract_provides_outgoing_partition_constraints import \
+#     AbstractProvidesOutgoingPartitionConstraints
+# from spinn_front_end_common.utilities import globals_variables
+#
+# from spinn_front_end_common.interface.simulation import simulation_utilities
+# from spinn_front_end_common.utilities import constants as \
+#     front_end_common_constants
+#
+# from spinn_front_end_common.utilities.utility_objs import ExecutableType
+#
+# # from spinn_front_end_common.utilities.utility_objs.executable_start_type \
+# #     import ExecutableStartType
+#
+# from spinn_front_end_common.utilities import globals_variables
+#
+# # sPyNNaker imports
+# from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
+# from spynnaker.pyNN.models.common import AbstractNeuronRecordable
+# from spynnaker.pyNN.models.common import NeuronRecorder
+# from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
+# from spynnaker.pyNN.utilities import constants
+# from spynnaker.pyNN.models.common.simple_population_settable \
+#     import SimplePopulationSettable
+#
+# from spinn_front_end_common.abstract_models\
+#    .abstract_provides_n_keys_for_partition \
+#    import AbstractProvidesNKeysForPartition
+#
+# # Pendulum imports
+# from inverted_pendulum_machine_vertex import PendulumMachineVertex
+#
+# import numpy
+#
+# from data_specification.enums.data_type import DataType
+
+import numpy
+import math
+
+from spinn_utilities.overrides import overrides
+
+# PACMAN imports
+from pacman.model.constraints.key_allocator_constraints \
+    import ContiguousKeyRangeContraint
+from pacman.model.graphs.application.abstract import (
+    AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
+
+# SpiNNFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-from pacman.model.decorators.overrides import overrides
-from pacman.model.graphs.application import ApplicationVertex
-from pacman.model.resources.cpu_cycles_per_tick_resource import \
-    CPUCyclesPerTickResource
-from pacman.model.resources.dtcm_resource import DTCMResource
-from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.sdram_resource import SDRAMResource
-from pacman.model.resources.variable_sdram import VariableSDRAM
-
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
-from spinn_front_end_common.abstract_models \
-    .abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities import globals_variables
 
-from spinn_front_end_common.interface.simulation import simulation_utilities
-from spinn_front_end_common.utilities import constants as \
-    front_end_common_constants
-
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.abstract_models \
+    import AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
-from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
-from spinn_front_end_common.abstract_models\
-   .abstract_provides_n_keys_for_partition \
-   import AbstractProvidesNKeysForPartition
-
 # Pendulum imports
-from inverted_pendulum_machine_vertex import PendulumMachineVertex
-
-import numpy
-
-from data_specification.enums.data_type import DataType
+from spinn_gym.games.inverted_pendulum.inverted_pendulum_machine_vertex \
+    import PendulumMachineVertex
 
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
@@ -96,9 +126,9 @@ class Pendulum(ApplicationVertex,
     def get_synapse_id_by_target(self, target):
         return 0
 
-    PENDULUM_REGION_BYTES = 24
-    DATA_REGION_BYTES = 80
-    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7 # 1 week
+    PENDULUM_REGION_BYTES = 4    # changed from BN
+    BASE_DATA_REGION_BYTES = 15 * 4
+    MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7  # 1 week
 
     # parameters expected by PyNN
     default_parameters = {
