@@ -1,9 +1,13 @@
-import spynnaker8 as p
+# non-SpiNNaker imports
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
+
+# SpiNNaker imports
+import spynnaker8 as p
 import spinn_gym as gym
 from spinn_front_end_common.utilities.globals_variables import get_simulator
+
 
 def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
@@ -30,78 +34,83 @@ outputs = 2
 
 p.setup(timestep=1.0, min_delay=1, max_delay=127)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
-input_model = gym.Pendulum(encoding=encoding,
-                           time_increment=time_increment,
-                           pole_length=pole_length,
-                           pole_angle=pole_angle,
-                           reward_based=reward_based,
-                           force_increments=force_increments,
-                           max_firing_rate=max_firing_rate,
-                           number_of_bins=number_of_bins,
-                           central=central,
-                           rand_seed=[np.random.randint(0xffff) for i in range(4)],
-                           bin_overlap=3,
-                           label='pendulum_pop')
+input_model = gym.Pendulum(
+    encoding=encoding, time_increment=time_increment, pole_length=pole_length,
+    pole_angle=pole_angle, reward_based=reward_based,
+    force_increments=force_increments, max_firing_rate=max_firing_rate,
+    number_of_bins=number_of_bins, central=central,
+    rand_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
+    label='pendulum_pop')
 
 pendulum_pop_size = input_model.neurons()
 pendulum = p.Population(pendulum_pop_size, input_model)
 null_pop = p.Population(4*number_of_bins, p.IF_cond_exp(), label='null')
-p.Projection(pendulum, null_pop, p.OneToOneConnector(), p.StaticSynapse(weight=0.09))
+p.Projection(pendulum, null_pop, p.OneToOneConnector(),
+             p.StaticSynapse(weight=0.09))
 null_pop.record(['spikes', 'v', 'gsyn_exc'])
 # null_pop.record(['spikes', 'v'])
 # null_pops = []
 # for i in range(4*number_of_bins):
-#     null_pops.append(p.Population(1, p.IF_cond_exp(), label='null {}'.format(i)))
+#     null_pops.append(p.Population(1, p.IF_cond_exp(),
+#                                   label='null {}'.format(i)))
 #     null_pops[i].record(['spikes', 'v'])
-#     p.Projection(pendulum, null_pops[i], p.FromListConnector([[i, 0, weight, 1]]))
+#     p.Projection(pendulum, null_pops[i],
+#                  p.FromListConnector([[i, 0, weight, 1]]))
 
 arm_collection = []
 # input_spikes = []
 rate = 5
-print 'rate = ', rate
+print('rate = ', rate)
 input_spikes = p.Population(force_increments, p.SpikeSourcePoisson(rate=rate))
 p.Projection(input_spikes, pendulum, p.AllToAllConnector(), p.StaticSynapse())
 weight = 0.1
 label = '64 0.55'
-from_list_conn_left = [[0, 0, weight, 1], [6, 0, weight, 1], [3, 0, weight, 1], [11, 0, weight, 1]]
-from_list_conn_right = [[2, 0, weight, 1], [8, 0, weight, 1], [5, 0, weight, 1], [9, 0, weight, 1]]
+from_list_conn_left = [[0, 0, weight, 1], [6, 0, weight, 1],
+                       [3, 0, weight, 1], [11, 0, weight, 1]]
+from_list_conn_right = [[2, 0, weight, 1], [8, 0, weight, 1],
+                        [5, 0, weight, 1], [9, 0, weight, 1]]
 left = 0
 right = 1
-from_list_conn_out = [[0, left, weight, 1], [6, left, weight, 1], [3, left, weight, 1], [11, left, weight, 1],
-                      [2, right, weight, 1], [8, right, weight, 1], [5, right, weight, 1], [9, right, weight, 1]]
-output_pop = p.Population(outputs, p.IF_cond_exp(
-                                            tau_m=0.5, tau_refrac=0
-                                           , v_thresh=-64
-                                           , tau_syn_E=1, tau_syn_I=1
-                                           ), label='out')
+from_list_conn_out = [[0, left, weight, 1], [6, left, weight, 1],
+                      [3, left, weight, 1], [11, left, weight, 1],
+                      [2, right, weight, 1], [8, right, weight, 1],
+                      [5, right, weight, 1], [9, right, weight, 1]]
+output_pop = p.Population(
+    outputs, p.IF_cond_exp(
+        tau_m=0.5, tau_refrac=0, v_thresh=-64, tau_syn_E=1, tau_syn_I=1),
+    label='out')
 output_pop.record(['spikes', 'v', 'gsyn_exc'])
 p.Projection(pendulum, output_pop, p.FromListConnector(from_list_conn_out))
-output_pop2 = p.Population(outputs, p.IF_cond_exp(
-                                            tau_m=0.5, tau_refrac=0
-                                            , v_thresh=-64
-                                            , tau_syn_E=0.5, tau_syn_I=0.5
-                                            ), label='out2')
+output_pop2 = p.Population(
+    outputs, p.IF_cond_exp(
+        tau_m=0.5, tau_refrac=0, v_thresh=-64, tau_syn_E=0.5, tau_syn_I=0.5),
+    label='out2')
 output_pop2.record(['spikes', 'v', 'gsyn_exc'])
 p.Projection(null_pop, output_pop2, p.FromListConnector(from_list_conn_out))
 # from_list_conn_right = [[2, 0, weight, 1], [5, 0, weight, 1], [8, 0, weight, 1], [9, 0, weight, 1]]
 # from_list_conn_left = [[0, 0, weight, 1], [3, 0, weight, 1], [6, 0, weight, 1], [11, 0, weight, 1]]
 arm_conns = [from_list_conn_left, from_list_conn_right]
 # for j in range(outputs):
-#     arm_collection.append(p.Population(int(np.ceil(np.log2(outputs))),
-#                                        Arm(arm_id=j, reward_delay=exposure_time,
-#                                            rand_seed=[np.random.randint(0xffff) for k in range(4)],
-#                                            no_arms=outputs, arm_prob=1),
-#                                            label='arm_pop{}'.format(j)))
-#     p.Projection(arm_collection[j], pendulum, p.AllToAllConnector(), p.StaticSynapse())
-    # p.Projection(null_pop, arm_collection[j], p.AllToAllConnector())
-    # input_spikes.append(p.Population(1, p.SpikeSourcePoisson(rate=rates[j])))
-    # p.Projection(input_spikes[j], arm_collection[j], p.AllToAllConnector(), p.StaticSynapse())
-    # p.Projection(null_pop, arm_collection[j], p.FromListConnector(arm_conns[j]))
+#     arm_collection.append(p.Population(
+#         int(np.ceil(np.log2(outputs))),
+#         Arm(arm_id=j, reward_delay=exposure_time,
+#             rand_seed=[np.random.randint(0xffff) for k in range(4)],
+#             no_arms=outputs, arm_prob=1),
+#         label='arm_pop{}'.format(j)))
+#     p.Projection(arm_collection[j], pendulum, p.AllToAllConnector(),
+#                  p.StaticSynapse())
+#     p.Projection(null_pop, arm_collection[j], p.AllToAllConnector())
+#     input_spikes.append(p.Population(1, p.SpikeSourcePoisson(rate=rates[j])))
+#     p.Projection(input_spikes[j], arm_collection[j], p.AllToAllConnector(),
+#                  p.StaticSynapse())
+#     p.Projection(null_pop, arm_collection[j],
+#                  p.FromListConnector(arm_conns[j]))
 # for conn in from_list_conn_left:
-#     p.Projection(null_pops[conn[0]], arm_collection[0], p.AllToAllConnector())
+#     p.Projection(null_pops[conn[0]], arm_collection[0],
+#                  p.AllToAllConnector())
 # for conn in from_list_conn_right:
-#     p.Projection(null_pops[conn[0]], arm_collection[1], p.AllToAllConnector())
-
+#     p.Projection(null_pops[conn[0]], arm_collection[1],
+#                  p.AllToAllConnector())
 
 simulator = get_simulator()
 p.run(runtime)
@@ -109,12 +118,12 @@ p.run(runtime)
 scores = []
 scores.append(get_scores(game_pop=pendulum, simulator=simulator))
 if reward_based:
-    print scores
+    print(scores)
 else:
     i = 0
-    print "cart  \t\t|\t\t  angle"
+    print("cart  \t\t|\t\t  angle")
     while i < len(scores[0]):
-        print "{:8}\t{:8}".format(scores[0][i], scores[0][i+1])
+        print("{:8}\t{:8}".format(scores[0][i], scores[0][i+1]))
         i += 2
 
 spikes_n = null_pop.get_data('spikes').segments[0].spiketrains
@@ -138,5 +147,5 @@ Figure(
 )
 plt.show()
 
-print 'rate = ', rate
+print('rate = ', rate)
 p.end()
