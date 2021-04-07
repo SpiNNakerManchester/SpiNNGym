@@ -27,7 +27,7 @@ install_requires = [
     'SpiNNaker_PACMAN == 1!6.0.0',
     'SpiNNaker_DataSpecification == 1!6.0.0',
     'spalloc == 1!6.0.0',
-    'SpiNNFrontEndCommon == x1!6.0.0',
+    'SpiNNFrontEndCommon == 1!6.0.0',
     "numpy == 1.19; python_version == '3.6'",
     "numpy >= 1.19, <= 1.20; python_version == '3.7'",
     "numpy; python_version >= '3.8'",
