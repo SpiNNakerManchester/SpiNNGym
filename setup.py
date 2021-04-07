@@ -17,17 +17,17 @@ import os
 from setuptools import setup
 from collections import defaultdict
 
-__version__ = 1.0
+__version__ = '1!6.0.0'
 assert __version__
 
 install_requires = [
-    'SpiNNUtilities >= 1!5.0.1, < 1!6.0.0',
-    'SpiNNMachine >= 1!5.0.1, < 1!6.0.0',
-    'SpiNNMan >= 1!5.0.1, < 1!6.0.0',
-    'SpiNNaker_PACMAN >= 1!5.0.1, < 1!6.0.0',
-    'SpiNNaker_DataSpecification >= 1!5.0.1, < 1!6.0.0',
-    'spalloc >= 2.0.2, < 3.0.0',
-    'SpiNNFrontEndCommon >= 1!5.0.1, < 1!6.0.0',
+    'SpiNNUtilities == 1!6.0.0',
+    'SpiNNMachine == 1!6.0.0',
+    'SpiNNMan == 1!6.0.0',
+    'SpiNNaker_PACMAN == 1!6.0.0',
+    'SpiNNaker_DataSpecification == 1!6.0.0',
+    'spalloc == 1!6.0.0',
+    'SpiNNFrontEndCommon == x1!6.0.0',
     "numpy == 1.19; python_version == '3.6'",
     "numpy >= 1.19, <= 1.20; python_version == '3.7'",
     "numpy; python_version >= '3.8'",
