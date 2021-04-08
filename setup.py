@@ -17,7 +17,8 @@ import os
 from setuptools import setup
 from collections import defaultdict
 
-__version__ = '1!6.0.0'
+__version__ = None
+exec(open("spinn_gym/_version.py").read())
 assert __version__
 
 install_requires = [
