@@ -113,14 +113,13 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     @inject_items({"machine_time_step": "MachineTimeStep",
                    "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags"})
+                   "routing_info": "MemoryRoutingInfos"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "routing_info", "tags"}
+                                     "routing_info"}
                )
     def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, routing_info, tags):
+                                    time_scale_factor, routing_info):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Pendulum Instance ***\n\n")
@@ -161,9 +160,8 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting pendulum recording region:\n")
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.RECORDING.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
         spec.write_array(recording_utilities.get_recording_header_array(
-            [self._recording_size], ip_tags=ip_tags))
+            [self._recording_size]))
 
         # Write pendulum data
         spec.comment("\nWriting pendulum data region:\n")
