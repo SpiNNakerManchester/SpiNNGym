@@ -43,7 +43,7 @@ jobs:
       with:
         repositories: >
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN DataSpecification spalloc
-          SpiNNFrontEndCommon sPyNNaker sPyNNaker8
+          SpiNNFrontEndCommon sPyNNaker TestBase
         install: true
     - name: Setup
       uses: ./support/actions/run-setup
