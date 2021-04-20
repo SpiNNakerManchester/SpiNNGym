@@ -25,6 +25,7 @@ from pacman.model.constraints.key_allocator_constraints import (
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 from pacman.model.graphs.common import Slice
+from pacman.utilities.config_holder import get_config_int
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
@@ -33,7 +34,6 @@ from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
-from spinn_front_end_common.utilities import globals_variables
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
 # sPyNNaker imports
@@ -163,12 +163,9 @@ class Breakout(AbstractOneAppOneMachineVertex,
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
-        # get config from simulator
-        config = globals_variables.get_simulator().config
-
         if incoming_spike_buffer_size is None:
-            self._incoming_spike_buffer_size = config.getint(
-                                    "Simulation", "incoming_spike_buffer_size")
+            self._incoming_spike_buffer_size = get_config_int(
+                "Simulation", "incoming_spike_buffer_size")
 
     def neurons(self):
         return self._n_neurons
