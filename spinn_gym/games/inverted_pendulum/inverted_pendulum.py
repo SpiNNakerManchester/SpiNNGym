@@ -245,6 +245,11 @@ class Pendulum(AbstractOneAppOneMachineVertex,
     def get_neuron_sampling_interval(self, variable):
         return 10000  # 10 seconds hard coded in inverted_pendulum.c
 
+    @overrides(AbstractNeuronRecordable.get_rewires)
+    def get_rewires(self, placements, buffer_manager, machine_time_step):
+        # not implemented yet for SpiNNGym
+        return numpy.zeros((0, 4), dtype="float")
+
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, placements,
                  buffer_manager, machine_time_step):
