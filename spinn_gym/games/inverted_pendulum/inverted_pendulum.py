@@ -24,7 +24,7 @@ from pacman.model.constraints.key_allocator_constraints \
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 from pacman.model.graphs.common import Slice
-from pacman.config_holder import get_config_int
+from spinn_utilities.config_holder import get_config_int
 
 # SpiNNFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
