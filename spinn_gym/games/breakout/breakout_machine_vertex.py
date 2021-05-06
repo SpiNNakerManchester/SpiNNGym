@@ -103,15 +103,11 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"machine_time_step": "MachineTimeStep",
-                   "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "MemoryRoutingInfos"})
+    @inject_items({"routing_info": "MemoryRoutingInfos"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "routing_info"}
+               additional_arguments={"routing_info"}
                )
-    def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, routing_info):
+    def generate_data_specification(self, spec, placement, routing_info):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Breakout Instance ***\n\n")
@@ -138,8 +134,7 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            vertex.get_binary_file_name(), machine_time_step,
-            time_scale_factor))
+            vertex.get_binary_file_name()))
 
         # Write breakout region containing routing key to transmit with
         spec.comment("\nWriting breakout region:\n")
