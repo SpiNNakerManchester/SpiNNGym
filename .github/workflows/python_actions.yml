@@ -48,12 +48,12 @@ jobs:
     - name: Setup
       uses: ./support/actions/run-setup
 
-#    # Add this when tests are built
-#    - name: Create a spynnaker.cfg
-#      uses: ./support/actions/configure-spynnaker
-#      with:
-#        board-address: spinn-4.cs.man.ac.uk
-#
+    # Add this when tests are built
+    - name: Create a spynnaker.cfg
+      uses: ./support/actions/configure-spynnaker
+      with:
+        board-address: spinn-4.cs.man.ac.uk
+
     - name: Test with pytest
       uses: ./support/actions/pytest
       with:
