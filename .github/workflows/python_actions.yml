@@ -54,13 +54,13 @@ jobs:
 #      with:
 #        board-address: spinn-4.cs.man.ac.uk
 #
-#    - name: Test with pytest
-#      uses: ./support/actions/pytest
-#      with:
-#        tests: unittests
-#        coverage: ${{ matrix.python-version == 3.6 }}
-#        cover-packages: ${{ env.CODE_PATHS }}
-#        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+    - name: Test with pytest
+      uses: ./support/actions/pytest
+      with:
+        tests: unittests
+        coverage: ${{ matrix.python-version == 3.6 }}
+        cover-packages: ${{ env.CODE_PATHS }}
+        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     - name: Lint with flake8
       run: flake8 examples spinn_gym
