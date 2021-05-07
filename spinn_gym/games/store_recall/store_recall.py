@@ -238,8 +238,8 @@ class Recall(AbstractOneAppOneMachineVertex,
         return 10000  # 10 seconds hard coded in store_recall.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps, placements,
-                 buffer_manager, machine_time_step):
+    def get_data(
+            self, variable, n_machine_time_steps, placements, buffer_manager):
         vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
