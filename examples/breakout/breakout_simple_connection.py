@@ -22,6 +22,7 @@ import subprocess
 import sys
 
 # SpiNNaker imports
+from spinn_utilities.config_holder import get_config_int
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
@@ -67,7 +68,8 @@ def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        simulator.buffer_manager,
+        get_config_int("Machine", "machine_time_step"))
 
     return scores.tolist()
 
