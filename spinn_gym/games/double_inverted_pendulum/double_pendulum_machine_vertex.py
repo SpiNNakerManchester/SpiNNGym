@@ -142,7 +142,7 @@ class DoublePendulumMachineVertex(MachineVertex,
         spec.switch_write_focus(
             self._DOUBLE_PENDULUM_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            vertex.get_binary_file_name())
+            vertex.get_binary_file_name()))
 
         # Write pendulum region containing routing key to transmit with
         spec.comment("\nWriting double pendulum region:\n")
