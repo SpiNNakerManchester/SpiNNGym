@@ -172,10 +172,6 @@ class Logic(AbstractOneAppOneMachineVertex,
     def neurons(self):
         return self._n_neurons
 
-    def get_maximum_delay_supported_in_ms(self, machine_time_step):
-        # Logic has no synapses so can simulate only one time step of delay
-        return machine_time_step / 1000.0
-
     @property
     @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
