@@ -107,7 +107,7 @@ class BanditMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     @inject_items({"machine_time_step": "MachineTimeStep",
                    "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "MemoryRoutingInfos"})
+                   "routing_info": "RoutingInfos"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"machine_time_step", "time_scale_factor",
                                      "routing_info"}
