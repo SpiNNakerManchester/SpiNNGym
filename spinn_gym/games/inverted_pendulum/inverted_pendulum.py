@@ -182,10 +182,6 @@ class Pendulum(AbstractOneAppOneMachineVertex,
     def neurons(self):
         return self._n_neurons
 
-    def get_maximum_delay_supported_in_ms(self, machine_time_step):
-        # Pendulum has no synapses so can simulate only one time step of delay
-        return machine_time_step / 1000.0
-
     @property
     @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
@@ -246,8 +242,8 @@ class Pendulum(AbstractOneAppOneMachineVertex,
         return 10000  # 10 seconds hard coded in inverted_pendulum.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps, placements,
-                 buffer_manager, machine_time_step):
+    def get_data(
+            self, variable, n_machine_time_steps, placements, buffer_manager):
         vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
