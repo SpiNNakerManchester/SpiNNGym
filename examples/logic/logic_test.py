@@ -26,7 +26,7 @@ def get_scores(logic_pop, simulator):
     b_vertex = logic_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        simulator.buffer_manager)
     return scores.tolist()
 
 

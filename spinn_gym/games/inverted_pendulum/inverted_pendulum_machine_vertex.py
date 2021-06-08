@@ -111,15 +111,11 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"machine_time_step": "MachineTimeStep",
-                   "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "RoutingInfos"})
+    @inject_items({"routing_info": "RoutingInfos"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "routing_info"}
+               additional_arguments={"routing_info"}
                )
-    def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, routing_info):
+    def generate_data_specification(self, spec, placement, routing_info):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Pendulum Instance ***\n\n")
@@ -146,8 +142,7 @@ class PendulumMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.SYSTEM.value)
         spec.write_array(simulation_utilities.get_simulation_header_array(
-            vertex.get_binary_file_name(), machine_time_step,
-            time_scale_factor))
+            vertex.get_binary_file_name()))
 
         # Write pendulum region containing routing key to transmit with
         spec.comment("\nWriting pendulum region:\n")
