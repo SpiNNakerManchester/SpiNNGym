@@ -221,12 +221,6 @@ class Logic(AbstractOneAppOneMachineVertex,
                       indexes=None):
         pass
 
-    @overrides(AbstractNeuronRecordable.get_expected_n_rows)
-    def get_expected_n_rows(
-            self, n_machine_time_steps, sampling_rate, vertex, variable):
-        # Just copying what's in NeuronRecorder for now...
-        return int(math.ceil(n_machine_time_steps / sampling_rate))
-
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
         return 10000  # 10 seconds hard coded in logic.c
