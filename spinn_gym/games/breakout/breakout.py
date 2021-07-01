@@ -14,7 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
-import math
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -235,12 +234,6 @@ class Breakout(AbstractOneAppOneMachineVertex,
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
         pass
-
-    @overrides(AbstractNeuronRecordable.get_expected_n_rows)
-    def get_expected_n_rows(
-            self, n_machine_time_steps, sampling_rate, vertex, variable):
-        # Just copying what's in NeuronRecorder for now...
-        return int(math.ceil(n_machine_time_steps / sampling_rate))
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
