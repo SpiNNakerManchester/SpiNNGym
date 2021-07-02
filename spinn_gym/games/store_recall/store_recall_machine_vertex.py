@@ -100,7 +100,7 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "MemoryRoutingInfos"})
+    @inject_items({"routing_info": "RoutingInfos"})
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
                additional_arguments={"routing_info"}
                )
