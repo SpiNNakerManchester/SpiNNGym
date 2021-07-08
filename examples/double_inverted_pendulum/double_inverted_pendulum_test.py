@@ -69,7 +69,7 @@ bin_overlap = 2
 inputs = 2
 outputs = 2
 
-p.setup(timestep=1.0, min_delay=1, max_delay=127)
+p.setup(timestep=1.0, min_delay=1)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
 # One of these variables can be replaced with test_data
 # depending on what needs to be tested

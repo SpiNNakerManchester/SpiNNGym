@@ -47,7 +47,7 @@ bin_overlap = 3
 inputs = 2
 outputs = 2
 
-p.setup(timestep=1.0, min_delay=1, max_delay=127)
+p.setup(timestep=1.0, min_delay=1)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
 input_model = gym.Pendulum(
     encoding=encoding, time_increment=time_increment, pole_length=pole_length,
