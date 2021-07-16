@@ -174,7 +174,6 @@ class Visualiser(object):
         # Show animated plot (blocking)
         try:
             plt.ion()
-<<<<<<< HEAD
 #             plt.show()
 #             plt.draw()
 #             plt.pause(0.001)
@@ -182,13 +181,7 @@ class Visualiser(object):
             self.fig.canvas.draw()
 #             self.
 #             plt.draw()
-        except:
-=======
-            plt.show()
-            plt.draw()
-            print("Visualiser displayed")
         except Exception:
->>>>>>> master
             pass
 
     def handle_close(self, evt):
@@ -247,15 +240,9 @@ class Visualiser(object):
                             self.image_data[y1, x1] = c1
 
                         elif b1 == 1:
-<<<<<<< HEAD
                             self.image_data[
                                 y1:(y1 + self.BRICK_HEIGHT),
                                 x1:(x1 + self.BRICK_WIDTH)] = c1 * 2 # to show individual bricks
-=======
-                            self.image_data[y1:(y1 + self.BRICK_HEIGHT),
-                                            x1:(x1 + self.BRICK_WIDTH)] = c1
-                            # * np.random.randint(2, 6)  # to show bricks
->>>>>>> master
 
                     # if c>0:
                     # self.video_data[:] = 0
