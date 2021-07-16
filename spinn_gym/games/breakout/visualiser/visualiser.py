@@ -119,7 +119,6 @@ class Visualiser(object):
         reprogram_tag(self.connection, tag, strip=True)
 
         # Make awesome CRT palette
-<<<<<<< HEAD
         self.cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
         # Create image plot to display game screen
@@ -127,14 +126,6 @@ class Visualiser(object):
         self.gs = gridspec.GridSpec(ncols=1, nrows=1, figure=self.fig)
         self.axis = self.fig.add_subplot(self.gs[0, 0])
         self.fig.set_tight_layout(True)
-=======
-        cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED,
-                                   BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
-
-        # Create image plot to display game screen
-        self.fig = plt.figure("BreakOut", figsize=(8, 6))
-        self.axis = plt.subplot(1, 1, 1)
->>>>>>> master
         self.image_data = np.zeros((self.y_res, self.x_res))
         self.image = self.axis.imshow(self.image_data, interpolation="nearest",
                                       cmap=self.cmap, vmin=0.0, vmax=5.0)
