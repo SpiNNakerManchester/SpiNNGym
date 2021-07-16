@@ -1,0 +1,75 @@
+# Copyright (c) 2020 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: C Actions
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Install Ubuntu packages
+      run: sudo apt-get install doxygen gcc-arm-none-eabi --fix-missing
+    - name: Configure Python 3.8
+      # Note: Python is needed for spinn_utilities.make_tools when building
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkout SupportScripts
+      uses: actions/checkout@v2
+      with:
+        repository: SpiNNakerManchester/SupportScripts
+        path: support
+    - name: Checkout Spinnaker Dependencies
+      uses: ./support/actions/checkout-spinn-deps
+      with:
+        # Note: SpiNNUtils needed for spinn_utilities.make_tools
+        repositories: >
+          spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker SpiNNUtils
+    - name: Install SpiNNUtils
+      run: python setup.py install
+      working-directory: SpiNNUtils
+
+    - name: Lint C code using Vera++
+      # Note: run this before building to avoid linting modified_src directories
+      uses: ./support/actions/vera
+      with:
+        base-dir: c_code
+
+    - name: Set SPINN_DIRS and NEURAL_MODELLING
+      run: |
+        echo "SPINN_DIRS=$PWD/spinnaker_tools" >> $GITHUB_ENV
+        echo "NEURAL_MODELLING_DIRS=$PWD/sPyNNaker/neural_modelling" >> $GITHUB_ENV
+    - name: Build SpiNNaker C dependencies
+      run: |
+        make -C $SPINN_DIRS
+        make -C spinn_common install
+        make -C SpiNNFrontEndCommon/c_common install
+
+    - name: Build C code
+      run: make
+      working-directory: c_code
+      env:
+        CFLAGS: -fdiagnostics-color=always
+
+    # To be added: Documentation building
+#    - name: Build documentation using doxygen
+#      run: make doxysetup doxygen
+#      working-directory: neural_modelling
+
+    # Note: This workflow does not run the C code; that'd be an integration test

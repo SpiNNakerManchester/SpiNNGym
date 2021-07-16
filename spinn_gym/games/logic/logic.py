@@ -1,77 +1,47 @@
-# PACMAN imports
-# from spynnaker.pyNN.models.common.population_settable_change_requires_mapping import \
-#     PopulationSettableChangeRequiresMapping
-
-# from spynnaker.pyNN.models.abstract_models import AbstractPopulationSettable
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
-from pacman.executor.injection_decorator import inject_items
-from pacman.model.constraints.key_allocator_constraints import ContiguousKeyRangeContraint
-from pacman.model.decorators.overrides import overrides
-from pacman.model.graphs.application import ApplicationVertex
-from pacman.model.resources.cpu_cycles_per_tick_resource import \
-    CPUCyclesPerTickResource
-from pacman.model.resources.dtcm_resource import DTCMResource
-from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.constant_sdram import ConstantSDRAM
-from pacman.model.resources.variable_sdram import VariableSDRAM
-
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
-
-# SpinnFrontEndCommon imports
-# from spinn_front_end_common.abstract_models \
-#     .abstract_binary_uses_simulation_run import AbstractBinaryUsesSimulationRun
-from spinn_front_end_common.abstract_models \
-    .abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
-from spinn_front_end_common.utilities import globals_variables
-
-from spinn_front_end_common.interface.simulation import simulation_utilities
-from spinn_front_end_common.utilities import constants as \
-    front_end_common_constants
-
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
-
-# from spinn_front_end_common.utilities.utility_objs.executable_start_type \
-#     import ExecutableStartType
-
-from spinn_front_end_common.utilities import globals_variables
-
-# sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common import NeuronRecorder
-from spynnaker.pyNN.models.neuron import AbstractPopulationVertex
-from spynnaker.pyNN.utilities import constants
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
-
-from spinn_front_end_common.abstract_models\
-   .abstract_provides_n_keys_for_partition \
-   import AbstractProvidesNKeysForPartition
-
-# Logic imports
-from logic_machine_vertex import LogicMachineVertex
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import numpy
 
-from data_specification.enums.data_type import DataType
+from spinn_utilities.overrides import overrides
+
+# PACMAN imports
+from pacman.model.constraints.key_allocator_constraints import \
+    ContiguousKeyRangeContraint
+from pacman.model.graphs.application.abstract import (
+    AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
+from spinn_utilities.config_holder import get_config_int
+
+# SpinnFrontEndCommon imports
+from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
+from spinn_front_end_common.abstract_models. \
+    abstract_provides_outgoing_partition_constraints import \
+    AbstractProvidesOutgoingPartitionConstraints
+
+# sPyNNaker imports
+from spynnaker.pyNN.models.abstract_models import \
+    AbstractAcceptsIncomingSynapses
+from spynnaker.pyNN.models.common import AbstractNeuronRecordable
+from spynnaker.pyNN.models.common.simple_population_settable \
+    import SimplePopulationSettable
+
+# Logic imports
+from spinn_gym.games.logic.logic_machine_vertex import LogicMachineVertex
 
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
-# ----------------------------------------------------------------------------
-# Logic
-# ----------------------------------------------------------------------------
-# **HACK** for Projection to connect a synapse type is required
-# class LogicSynapseType(object):
-#     def get_synapse_id_by_target(self, target):
-#         return 0
 
 
 class Bad_Table(Exception):
@@ -81,53 +51,41 @@ class Bad_Table(Exception):
     def __str__(self):
         return repr(self.value)
 
+
 # ----------------------------------------------------------------------------
 # Logic
 # ----------------------------------------------------------------------------
-class Logic(ApplicationVertex,
-                AbstractGeneratesDataSpecification,
-                AbstractHasAssociatedBinary,
-                AbstractProvidesOutgoingPartitionConstraints,
-                AbstractAcceptsIncomingSynapses,
-                AbstractNeuronRecordable,
-                SimplePopulationSettable,
-                AbstractProvidesNKeysForPartition
-                # AbstractBinaryUsesSimulationRun
-                ):
+class Logic(AbstractOneAppOneMachineVertex,
+            AbstractProvidesOutgoingPartitionConstraints,
+            AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+            SimplePopulationSettable):
 
-    def get_connections_from_machine(self, transceiver, placement, edge, graph_mapper,
-                                     routing_infos, synapse_information, machine_time_step):
+    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
+    def verify_splitter(self, splitter):
+        # Need to ignore this verify
+        pass
 
-        super(Logic, self).get_connections_from_machine(transceiver, placement, edge,
-                                                           graph_mapper, routing_infos,
-                                                           synapse_information,
-                                                           machine_time_step)
+    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
+    def get_connections_from_machine(
+            self, transceiver, placements, app_edge, synapse_info):
+
+        # TODO: make this work properly (the following call does nothing)
+
+        super(Logic, self).get_connections_from_machine(
+            transceiver, placements, app_edge, synapse_info)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
 
-    def add_pre_run_connection_holder(self, connection_holder, projection_edge, synapse_information):
-        super(Logic, self).add_pre_run_connection_holder(connection_holder, projection_edge, synapse_information)
-
-    # def get_binary_start_type(self):
-    #     super(Logic, self).get_binary_start_type()
-    #
-    # def requires_mapping(self):
-    #     pass
-
     def clear_connection_cache(self):
         pass
-
-    @overrides(AbstractProvidesNKeysForPartition.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, partition, graph_mapper):
-        return 8  # 2  # two for control IDs
 
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
 
-    LOGIC_REGION_BYTES = 200
-    DATA_REGION_BYTES = 200
+    LOGIC_REGION_BYTES = 4
+    BASE_DATA_REGION_BYTES = 9 * 4
     MAX_SIM_DURATION = 1000 * 60 * 60 * 24  # 1 day
 
     # parameters expected by PyNN
@@ -142,11 +100,9 @@ class Logic(ApplicationVertex,
         'incoming_spike_buffer_size': None,
         'duration': MAX_SIM_DURATION,
         'truth_table': [0, 1, 1, 0],
-        'random_seed': [numpy.random.randint(10000), numpy.random.randint(10000),
-                        numpy.random.randint(10000), numpy.random.randint(10000)]}
-
-    # **HACK** for Projection to connect a synapse type is required
-    # synapse_type = LogicSynapseType()
+        'random_seed': [
+            numpy.random.randint(10000), numpy.random.randint(10000),
+            numpy.random.randint(10000), numpy.random.randint(10000)]}
 
     def __init__(self, truth_table, input_sequence,
                  rate_on=default_parameters['rate_on'],
@@ -155,7 +111,8 @@ class Logic(ApplicationVertex,
                  stochastic=default_parameters['stochastic'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters['incoming_spike_buffer_size'],
+                 incoming_spike_buffer_size=default_parameters[
+                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -175,8 +132,8 @@ class Logic(ApplicationVertex,
             try:
                 raise Bad_Table('table and input sequence are not compatible')
             except Bad_Table as e:
-                print "ERROR: ", e
-                
+                print("ERROR: ", e)
+
         self._n_neurons = self._no_inputs
         self._rand_seed = rand_seed
 
@@ -185,158 +142,39 @@ class Logic(ApplicationVertex,
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
+        # (static) resources required
+        # technically as using OneAppOneMachine this is not necessary?
+        resources_required = (
+            self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
+            self._recording_size)
+
+        vertex_slice = Slice(0, self._n_neurons - 1)
+
         # Superclasses
-        ApplicationVertex.__init__(
-            self, label, constraints, self.n_atoms)
+        super(Logic, self).__init__(
+            LogicMachineVertex(
+                vertex_slice, resources_required, constraints, label, self,
+                truth_table, input_sequence, rate_on, rate_off, score_delay,
+                stochastic, incoming_spike_buffer_size, simulation_duration_ms,
+                rand_seed),
+            label=label, constraints=constraints)
+
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
-        # get config from simulator
-        config = globals_variables.get_simulator().config
-
         if incoming_spike_buffer_size is None:
-            self._incoming_spike_buffer_size = config.getint(
+            self._incoming_spike_buffer_size = get_config_int(
                 "Simulation", "incoming_spike_buffer_size")
-
-        # PopulationSettableChangeRequiresMapping.__init__(self)
-        # self.width = width
-        # self.height = height
 
     def neurons(self):
         return self._n_neurons
 
-    def get_maximum_delay_supported_in_ms(self, machine_time_step):
-        # Logic has no synapses so can simulate only one time step of delay
-        return machine_time_step / 1000.0
-
-    #    def get_max_atoms_per_core(self):
-    #       return self.n_atoms
-
-    # ------------------------------------------------------------------------
-    # ApplicationVertex overrides
-    # ------------------------------------------------------------------------
-    @overrides(ApplicationVertex.get_resources_used_by_atoms)
-    def get_resources_used_by_atoms(self, vertex_slice):
-        # **HACK** only way to force no partitioning is to zero dtcm and cpu
-        container = ResourceContainer(
-            # sdram=ConstantSDRAM(
-            #     self.LOGIC_REGION_BYTES +
-            #     front_end_common_constants.SYSTEM_BYTES_REQUIREMENT),
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=4),
-            dtcm=DTCMResource(0),
-            cpu_cycles=CPUCyclesPerTickResource(0))
-
-        return container
-
-    @overrides(ApplicationVertex.create_machine_vertex)
-    def create_machine_vertex(self, vertex_slice, resources_required,
-                              label=None, constraints=None):
-        # Return suitable machine vertex
-        return LogicMachineVertex(resources_required, constraints, self._label)
-
     @property
-    @overrides(ApplicationVertex.n_atoms)
+    @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
         return self._n_neurons
-
-    # ------------------------------------------------------------------------
-    # AbstractGeneratesDataSpecification overrides
-    # ------------------------------------------------------------------------
-    @inject_items({"machine_time_step": "MachineTimeStep",
-                   "time_scale_factor": "TimeScaleFactor",
-                   "graph_mapper": "MemoryGraphMapper",
-                   "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "graph_mapper", "routing_info", "tags"}
-               )
-    def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, graph_mapper,
-                                    routing_info, tags):
-        vertex = placement.vertex
-        vertex_slice = graph_mapper.get_slice(vertex)
-
-        spec.comment("\n*** Spec for Logic Instance ***\n\n")
-        spec.comment("\nReserving memory space for data regions:\n\n")
-
-        # Reserve memory:
-        spec.reserve_memory_region(
-            region=LogicMachineVertex._LOGIC_REGIONS.SYSTEM.value,
-            size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
-            label='setup')
-        spec.reserve_memory_region(
-            region=LogicMachineVertex._LOGIC_REGIONS.LOGIC.value,
-            size=self.LOGIC_REGION_BYTES, label='LogicParams')
-        # vertex.reserve_provenance_data_region(spec)
-        # reserve recording region
-        spec.reserve_memory_region(
-            LogicMachineVertex._LOGIC_REGIONS.RECORDING.value,
-            recording_utilities.get_recording_header_size(1))
-        spec.reserve_memory_region(
-            region=LogicMachineVertex._LOGIC_REGIONS.DATA.value,
-            size=self.DATA_REGION_BYTES, label='LogicArms')
-
-        # Write setup region
-        spec.comment("\nWriting setup region:\n")
-        spec.switch_write_focus(
-            LogicMachineVertex._LOGIC_REGIONS.SYSTEM.value)
-        spec.write_array(simulation_utilities.get_simulation_header_array(
-            self.get_binary_file_name(), machine_time_step,
-            time_scale_factor))
-
-        # Write logic region containing routing key to transmit with
-        spec.comment("\nWriting logic region:\n")
-        spec.switch_write_focus(
-            LogicMachineVertex._LOGIC_REGIONS.LOGIC.value)
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
-
-        # Write recording region for score
-        spec.comment("\nWriting logic recording region:\n")
-        spec.switch_write_focus(
-            LogicMachineVertex._LOGIC_REGIONS.RECORDING.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
-        spec.write_array(recording_utilities.get_recording_header_array(
-            [self._recording_size], ip_tags=ip_tags))
-
-        # Write probabilites for arms
-        spec.comment("\nWriting arm probability region region:\n")
-        spec.switch_write_focus(
-            LogicMachineVertex._LOGIC_REGIONS.DATA.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
-        spec.write_value(self._score_delay, data_type=DataType.UINT32)
-        spec.write_value(self._no_inputs, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
-        spec.write_value(self._rate_on, data_type=DataType.UINT32)
-        spec.write_value(self._rate_off, data_type=DataType.UINT32)
-        spec.write_value(self._stochastic, data_type=DataType.UINT32)
-        # Write the data - Arrays must be 32-bit values, so convert
-        data = numpy.array(self._input_sequence, dtype=numpy.uint32)
-        spec.write_array(data.view(numpy.uint32))
-        data = numpy.array(self._truth_table, dtype=numpy.uint32)
-        spec.write_array(data.view(numpy.uint32))
-
-
-        # End-of-Spec:
-        spec.end_specification()
-
-    # ------------------------------------------------------------------------
-    # AbstractHasAssociatedBinary overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
-        return "logic.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
@@ -366,10 +204,8 @@ class Logic(ApplicationVertex,
     @overrides(
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(
-            self, variable, buffer_manager, placements, graph_mapper):
-        self._clear_recording_region(
-            buffer_manager, placements, graph_mapper,
-            0)
+            self, variable, buffer_manager, placements):
+        self._clear_recording_region(buffer_manager, placements, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -382,27 +218,48 @@ class Logic(ApplicationVertex,
     @overrides(AbstractNeuronRecordable.set_recording)
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
-        a = 1
+        pass
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
+        return 10000  # 10 seconds hard coded in logic.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps, placements,
-                 graph_mapper, buffer_manager, machine_time_step):
-        vertex = graph_mapper.get_machine_vertices(self).pop()
+    def get_data(
+            self, variable, n_machine_time_steps, placements, buffer_manager):
+        vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
-        data = data_values#.read_all()
+        data = data_values
 
         numpy_format = list()
         numpy_format.append(("Score", numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
 
-        # return formatted_data
         return output_data
 
+    def _clear_recording_region(
+            self, buffer_manager, placements, recording_region_id):
+        """ Clear a recorded data region from the buffer manager.
+
+        :param buffer_manager: the buffer manager object
+        :param placements: the placements object
+        :param recording_region_id: the recorded region ID for clearing
+        :rtype: None
+        """
+        for machine_vertex in self.machine_vertices:
+            placement = placements.get_placement_of_vertex(machine_vertex)
+            buffer_manager.clear_recorded_data(
+                placement.x, placement.y, placement.p, recording_region_id)
+
+    def reset_ring_buffer_shifts(self):
+        pass
+
+    def __str__(self):
+        return "{} with {} atoms".format(self._label, self.n_atoms)
+
+    def __repr__(self):
+        return self.__str__()

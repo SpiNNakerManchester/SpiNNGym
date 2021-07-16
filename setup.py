@@ -1,20 +1,38 @@
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 from setuptools import setup
 from collections import defaultdict
 
-__version__ = 1.0
+__version__ = None
+exec(open("spinn_gym/_version.py").read())
 assert __version__
 
 install_requires = [
-    'SpiNNUtilities >= 1!4.0.1, < 1!5.0.0',
-    'SpiNNStorageHandlers >= 1!4.0.1, < 1!5.0.0',
-    'SpiNNMachine >= 1!4.0.1, < 1!5.0.0',
-    'SpiNNMan >= 1!4.0.1, < 1!5.0.0',
-    'SpiNNaker_PACMAN >= 1!4.0.1, < 1!5.0.0',
-    'SpiNNaker_DataSpecification >= 1!4.0.1, < 1!5.0.0',
-    'spalloc >= 1.0.1, < 2.0.0',
-    'SpiNNFrontEndCommon >= 1!4.0.1, < 1!5.0.0',
-    'numpy', 'lxml', 'six', 'csa']
+    'SpiNNUtilities == 1!6.0.1',
+    'SpiNNMachine == 1!6.0.1',
+    'SpiNNMan == 1!6.0.1',
+    'SpiNNaker_PACMAN == 1!6.0.1',
+    'SpiNNaker_DataSpecification == 1!6.0.1',
+    'spalloc == 1!6.0.1',
+    'SpiNNFrontEndCommon == 1!6.0.1',
+    "numpy == 1.19; python_version == '3.6'",
+    "numpy >= 1.19, <= 1.20; python_version == '3.7'",
+    "numpy; python_version >= '3.8'",
+    'lxml']
 if os.environ.get('READTHEDOCS', None) != 'True':
 
     # scipy must be added in config.py as a mock

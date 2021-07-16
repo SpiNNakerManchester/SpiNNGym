@@ -1,38 +1,44 @@
-from __future__ import print_function
-import spynnaker8 as p
-import spinn_gym as gym
-from spynnaker.pyNN.connections.\
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spinn_front_end_common.utilities.globals_variables import get_simulator
-from spinn_front_end_common.utilities.database.database_connection \
-    import DatabaseConnection
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import pylab
+# non-SpiNNaker imports
 import matplotlib.pyplot as plt
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
-from spynnaker import plot_utils
-import threading
-import time
-from multiprocessing.pool import ThreadPool
-import socket
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
-import matplotlib.pyplot as plt
 import functools
-
 import subprocess
 import sys
 
+# SpiNNaker imports
+from spinn_front_end_common.utilities.globals_variables import get_simulator
+from spinn_front_end_common.utilities.database.database_connection \
+    import DatabaseConnection
+from spynnaker.pyNN.connections.\
+    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
+from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
+    SpynnakerExternalDevicePluginManager as ex
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
-
+import spynnaker8 as p
+import spinn_gym as gym
 
 # -----------------------------------------------------------------------------
 #  Globals
 # -----------------------------------------------------------------------------
-vis_proc = None # Visuliser process (global)
+vis_proc = None  # Visualiser process (global)
+
 
 # -----------------------------------------------------------------------------
 #  Helper Functions
@@ -40,7 +46,7 @@ vis_proc = None # Visuliser process (global)
 def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
-    
+
     print("Calling \'start_visualiser\'")
 
     # Calling visualiser - must be done as process rather than on thread due to
@@ -56,14 +62,15 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
          ])
     # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
-def get_scores(breakout_pop,simulator):
+
+def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
     scores = b_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.graph_mapper, simulator.buffer_manager,
-        simulator.machine_time_step)
+        simulator.buffer_manager)
 
     return scores.tolist()
+
 
 def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
                               colour_bits=2, row_start=0):
@@ -85,7 +92,6 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
 
 def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                          weight, coord_map_func):
-
     # subY_BITS=int(np.ceil(np.log2(y_res/subsamp_factor)))
     connection_list_on = []
     connection_list_off = []
@@ -103,13 +109,10 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                                        subsampidx, weight, 1.))
 
             # OFF channels only on segment borders
-            # if((j+1)%(y_res/subsamp_factor)==0 or
-            #(i+1)%(x_res/subsamp_factor)==0 or j==0 or i==0):
             connection_list_off.append((coord_map_func(j, i, 0, row_bits),
                                         subsampidx, weight, 1.))
 
     return connection_list_on, connection_list_off
-
 
 
 # -----------------------------------------------------------------------------
@@ -133,11 +136,9 @@ x_factor1 = 2
 y_factor1 = x_factor1
 bricking = 1
 
-
 # -----------------------------------------------------------------------------
 # Create Spiking Neural Network
 # -----------------------------------------------------------------------------
-
 
 # Create breakout population and activate live output
 b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
@@ -155,7 +156,7 @@ p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
-                            label="input_connect")
+                           label="input_connect")
 p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 
@@ -167,22 +168,20 @@ weight = 0.1
 # Create population of neurons to receive input from Breakout
 receive_pop_size = int(X_RESOLUTION/x_factor1) * int(Y_RESOLUTION/y_factor1)
 receive_pop = p.Population(receive_pop_size, p.IF_cond_exp(),
-                             label="receive_pop")
+                           label="receive_pop")
 p.Projection(breakout_pop, receive_pop, p.FromListConnector(Connections_on),
              p.StaticSynapse(weight=weight))
 
 # Create population to receive reward signal from Breakout (n0: rew, n1: pun)
 receive_reward_pop = p.Population(2, p.IF_cond_exp(),
-                             label="receive_rew_pop")
-p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(), 
+                                  label="receive_rew_pop")
+p.Projection(breakout_pop, receive_reward_pop, p.OneToOneConnector(),
              p.StaticSynapse(weight=0.1 * weight))
-       
 
 # Setup recording
 spike_input.record('spikes')
 receive_pop.record('spikes')
 receive_reward_pop.record('all')
-
 
 # -----------------------------------------------------------------------------
 # Configure Visualiser
@@ -205,7 +204,6 @@ d_conn.add_database_callback(functools.partial(
 
 p.external_devices.add_database_socket_address(
      "localhost", d_conn.local_port, None)
-
 
 # -----------------------------------------------------------------------------
 # Run Simulation
@@ -232,12 +230,13 @@ Figure(
     Panel(receive_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
     Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
-          ylabel="gsyn excitatory (mV)", 
-          data_labels=[receive_reward_pop.label], 
-          yticks=True, 
+          ylabel="gsyn excitatory (mV)",
+          data_labels=[receive_reward_pop.label],
+          yticks=True,
           xlim=(0, runtime)
-          )
-    # title="Simple Breakout Example"
+          ),
+    title="Simple Breakout Example",
+    annotations="Simulated with {}".format(p.name())
 )
 
 plt.show()
@@ -245,10 +244,7 @@ plt.show()
 scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
 
-
 # End simulation
 p.end()
 vis_proc.terminate()
 print("Simulation Complete")
-
-

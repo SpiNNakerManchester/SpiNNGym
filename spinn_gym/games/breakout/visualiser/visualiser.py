@@ -1,19 +1,30 @@
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from spinnman.connections.udp_packet_connections import SCAMPConnection
 from spinnman.utilities.utility_functions import reprogram_tag
-from spinnman.exceptions import SpinnmanIOException
 
 import enum
 import numpy as np
 
-import matplotlib.animation as animation
 import matplotlib.colors as col
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 import datetime
 import time
 
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import cv2
 import os
 import sys
@@ -54,8 +65,8 @@ class Visualiser(object):
     # How many bits are used to represent colour and brick
     colour_bits = 2
 
-    def __init__(self, machine_address, tag, key_input_connection=None, scale=4,
-                 x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
+    def __init__(self, machine_address, tag, key_input_connection=None,
+                 scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
         # Reset input state
         self.input_state = InputState.idle
 
@@ -108,6 +119,7 @@ class Visualiser(object):
         reprogram_tag(self.connection, tag, strip=True)
 
         # Make awesome CRT palette
+<<<<<<< HEAD
         self.cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED, BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
 
         # Create image plot to display game screen
@@ -115,6 +127,14 @@ class Visualiser(object):
         self.gs = gridspec.GridSpec(ncols=1, nrows=1, figure=self.fig)
         self.axis = self.fig.add_subplot(self.gs[0, 0])
         self.fig.set_tight_layout(True)
+=======
+        cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED,
+                                   BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
+
+        # Create image plot to display game screen
+        self.fig = plt.figure("BreakOut", figsize=(8, 6))
+        self.axis = plt.subplot(1, 1, 1)
+>>>>>>> master
         self.image_data = np.zeros((self.y_res, self.x_res))
         self.image = self.axis.imshow(self.image_data, interpolation="nearest",
                                       cmap=self.cmap, vmin=0.0, vmax=5.0)
@@ -136,35 +156,25 @@ class Visualiser(object):
 
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         self.video_data = np.zeros((self.y_res, self.x_res, 3), dtype='uint8')
-        # self.video_data = cv2.imread("temp_frame.png")
         self.video_shape = (self.x_res * self.scale, self.y_res * self.scale)
         self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
         filename = os.path.join(os.getcwd(), "breakout_output_%s.m4v" %
-                    datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S"))
-        # print filename
+                                datetime.datetime.now().strftime(
+                                    "%Y-%m-%d___%H-%M-%S"))
         self.video_writer = cv2.VideoWriter(
-            filename,
-            fourcc, self.fps,
-            self.video_shape,
-            isColor=True)
-        self.video_writer.open(filename,
-            fourcc, self.fps,
-            self.video_shape,
-            isColor=True)
+            filename, fourcc, self.fps, self.video_shape, isColor=True)
+        self.video_writer.open(
+            filename, fourcc, self.fps, self.video_shape, isColor=True)
 
     # ------------------------------------------------------------------------
     # Public methods
     # ------------------------------------------------------------------------
     def show(self):
-        # Play animation
-        interval = (1000. / self.fps)
-#         self.animation = animation.FuncAnimation(self.fig, self._update,
-#                                                  interval=interval,
-#                                                  blit=False)
         # Show animated plot (blocking)
         try:
             plt.ion()
+<<<<<<< HEAD
 #             plt.show()
 #             plt.draw()
 #             plt.pause(0.001)
@@ -173,6 +183,12 @@ class Visualiser(object):
 #             self.
 #             plt.draw()
         except:
+=======
+            plt.show()
+            plt.draw()
+            print("Visualiser displayed")
+        except Exception:
+>>>>>>> master
             pass
 
     def handle_close(self, evt):
@@ -208,10 +224,12 @@ class Visualiser(object):
 
                 # Payload is a pixel:
 
-                # Create mask to select vision (rather than special event) packets
+                # Create mask to select vision (rather than event) packets
                 # Extract coordinates
                 'const uint32_t spike_key = ' \
-                    'key | (SPECIAL_EVENT_MAX + (i << (game_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);'
+                    'key | (SPECIAL_EVENT_MAX + ' \
+                    '(i << (game_bits + 2)) + (j << 2) + ' \
+                    '(bricked<<1) + colour_bit);'
 
                 vision_payload = payload_value[
                                      vision_event_mask] - SpecialEvent.max
@@ -221,29 +239,23 @@ class Visualiser(object):
                 c = (vision_payload & self.colour_mask)
                 b = (vision_payload & self.bricked_mask) >> 1
 
-#                 '''if y.any() == self.y_res-1:
-#                     if c[np.where(y==self.y_res-1)].any()==1:
-#                         #add remaining bat pixels to image
-#                         x_pos=x[np.where(y==self.y_res-1)]
-#                         for i in range(1,self.bat_width):
-#                             np.hstack((y,self.y_res-1))
-#                             np.hstack((c,1))
-#                             np.hstack((x,x_pos+i))'''
-
                 # Set valid pixels
                 try:
                     for x1, y1, c1, b1 in zip(x, y, c, b):
-                        # self.image_data[:] = 0
-
-#                         print "valid pixels = x:{}\ty:{}\tc:{}\tb:{}".format(x, y, c, b)
 
                         if b1 == 0:
                             self.image_data[y1, x1] = c1
 
                         elif b1 == 1:
+<<<<<<< HEAD
                             self.image_data[
                                 y1:(y1 + self.BRICK_HEIGHT),
                                 x1:(x1 + self.BRICK_WIDTH)] = c1 * 2 # to show individual bricks
+=======
+                            self.image_data[y1:(y1 + self.BRICK_HEIGHT),
+                                            x1:(x1 + self.BRICK_WIDTH)] = c1
+                            # * np.random.randint(2, 6)  # to show bricks
+>>>>>>> master
 
                     # if c>0:
                     # self.video_data[:] = 0
@@ -253,8 +265,7 @@ class Visualiser(object):
                 except IndexError as e:
                     print("Packet contains invalid pixels:",
                           vision_payload, "X:", x, "  Y:", y, " c:", c, " b:",
-                          b)
-                    # self.image_data[:-1, :] = 0
+                          b, e)
 
                 # Create masks to select score events and count them
                 num_score_up_events = np.sum(
@@ -338,10 +349,11 @@ class Visualiser(object):
             print("Left key pressed!\n")
             self.input_state = InputState.left
         elif event.key == "right":
+            print("Right key pressed!\n")
             self.input_state = InputState.right
 
     def _on_key_release(self, event):
-        print("Right key pressed!\n")
+        print("Key released!\n")
         # If either key is released set state to idle
         if event.key == "left" or event.key == "right":
             self.input_state = InputState.idle
@@ -368,7 +380,6 @@ if __name__ == "__main__":
 
     refresh_time = 0.001
     while True:
-#         print("updating...")
         score = vis._update(None)
         time.sleep(refresh_time)
 

@@ -1,0 +1,80 @@
+# Copyright (c) 2020 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+name: Python Actions
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Checkout SupportScripts
+      uses: actions/checkout@v2
+      with:
+        repository: SpiNNakerManchester/SupportScripts
+        path: support
+    - name: Install pip, etc
+      uses: ./support/actions/python-tools
+    - name: Install matplotlib
+      uses: ./support/actions/install-matplotlib
+    - name: Install Spinnaker Dependencies
+      uses: ./support/actions/checkout-spinn-deps
+      with:
+        repositories: >
+          SpiNNUtils SpiNNMachine SpiNNMan PACMAN DataSpecification spalloc
+          SpiNNFrontEndCommon sPyNNaker TestBase
+        install: true
+    - name: Setup
+      uses: ./support/actions/run-setup
+
+    # Add this when tests are built
+    - name: Create a spynnaker.cfg
+      uses: ./support/actions/configure-spynnaker
+      with:
+        board-address: spinn-4.cs.man.ac.uk
+
+    - name: Test with pytest
+      uses: ./support/actions/pytest
+      with:
+        tests: unittests
+        coverage: ${{ matrix.python-version == 3.6 }}
+        cover-packages: ${{ env.CODE_PATHS }}
+        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
+    - name: Lint with flake8
+      run: flake8 examples spinn_gym
+    - name: Lint with pylint
+      uses: ./support/actions/pylint
+      with: 
+        package: examples spinn_gym
+
+    - name: Validate XML
+      if: matrix.python-version == 3.8
+      uses: ./support/actions/validate-xml
+      with:
+        base-path: examples spinn_gym
+
+    - name: Run rat copyright enforcement
+      if: matrix.python-version == 3.8
+      uses: ./support/actions/check-copyrights
