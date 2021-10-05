@@ -12,6 +12,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import sys
+import subprocess
 import numpy
 from spinn_gym.games.breakout.breakout import Breakout
 import spynnaker8 as p
@@ -67,6 +69,144 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
                                         subsampidx, weight, 1.))
 
     return connection_list_on, connection_list_off
+
+
+def separate_connections(ball_population_size, connections_on):
+    # Separates the ball and pad connections in different populations
+    paddle_list = []
+    ball_list = []
+
+    for idx, val in enumerate(connections_on):
+        if idx < ball_population_size:
+            ball_list.append(val)
+        else:
+            index_in_paddle_pop = idx - ball_population_size
+            new_el_connection = (val[0], index_in_paddle_pop, val[2], val[3])
+            paddle_list.append(new_el_connection)
+
+    return ball_list, paddle_list
+
+
+@DeprecationWarning
+def map_to_one_neuron_per_paddle(
+        pop_size, no_paddle_neurons, syn_weight, paddle_connections):
+    # Get connections of compressed PADDLE population to one neuron each
+    connections = []
+
+    no_paddle_neurons = int(no_paddle_neurons)
+    offset = no_paddle_neurons // 2
+
+    for val in paddle_connections:
+        from_neuron = val[1] - offset
+        to_neuron = val[1] + offset + 1
+
+        for neuron_no in range(from_neuron, to_neuron):
+            if 0 <= neuron_no < pop_size:
+                connections.append((val[0], neuron_no, syn_weight, val[3]))
+
+    return connections
+
+
+@DeprecationWarning
+def create_lateral_inhibitory_paddle_connections(
+        pop_size, no_paddle_neurons, syn_weight):
+    lat_connections = []
+
+    no_paddle_neurons = int(no_paddle_neurons)
+    # just a precaution
+    no_paddle_neurons += 2
+    paddle_neurons_offset = no_paddle_neurons // 2
+
+    # If the no_pad_neurons is even
+    # then recalculate the offset
+    if no_paddle_neurons % 2 == 0:
+        paddle_neurons_offset -= 1
+
+    paddle_neurons_offset *= 2
+
+    for neuron in range(0, pop_size):
+        for paddle_neuron in range(
+                neuron - paddle_neurons_offset,
+                neuron + paddle_neurons_offset + 1):
+            if paddle_neuron != neuron and 0 <= paddle_neuron < pop_size:
+                # I used to calculate the weight based on the number of
+                # excitatory input connections
+                new_weight = syn_weight * (
+                    no_paddle_neurons - abs(neuron - paddle_neuron))
+                lat_connections.append((neuron, paddle_neuron, new_weight, 1.))
+
+    return lat_connections
+
+
+def compress_to_x_axis(connections, x_resolution):
+    # Get connections of compressed BALL population to the X axis
+    compressed_connections = []
+
+    for val in connections:
+        new_el_connection = (val[0], val[1] % x_resolution, val[2], val[3])
+        compressed_connections.append(new_el_connection)
+
+    return compressed_connections
+
+
+def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight):
+    left_connections = []
+    right_connections = []
+
+    for ball_neuron in range(0, pop_size):
+        # Connect the ball neuron to all the neurons to the left of it in the
+        # left hidden population
+        for left_hidden_neuron in range(0, ball_neuron):
+            right_connections.append(
+                (ball_neuron, left_hidden_neuron, ball_presence_weight, 1.))
+        # Connect the ball neuron to all the neurons to the right of it in the
+        # right hidden population
+        for right_hidden_neuron in range(ball_neuron + 1, pop_size):
+            left_connections.append(
+                (ball_neuron, right_hidden_neuron, ball_presence_weight, 1.))
+
+    return left_connections, right_connections
+
+
+def generate_decision_connections(pop_size, decision_weight):
+    left_conn = []
+    right_conn = []
+
+    for neuron in range(0, pop_size):
+        left_conn.append((neuron, 0, decision_weight, 1.))
+        right_conn.append((neuron, 1, decision_weight, 1.))
+
+    return left_conn, right_conn
+
+
+def clean_connection(data):
+    clean_conn = []
+    for i in range(0, len(data.connections)):
+        for c in data.connections[i]:
+            new_c = (int(c[0]), int(c[1]), float(c[2]), float(c[3]))
+            clean_conn.append(new_c)
+
+    return clean_conn
+
+
+def start_external_visualiser(
+        database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
+    _, _, _, board_address, tag = database.get_live_output_details(
+        pop_label, "LiveSpikeReceiver")
+
+    print("Calling \'start_visualiser\'")
+
+    # Calling visualiser - must be done as process rather than on thread due to
+    # OS security (Mac)
+    return subprocess.Popen(
+        [sys.executable,
+         '../../spinn_gym/games/breakout/visualiser/visualiser.py',
+         board_address,
+         tag.__str__(),
+         xb.__str__(),
+         yb.__str__()
+         ])
+    # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 
 def make_simulation(
