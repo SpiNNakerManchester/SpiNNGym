@@ -149,7 +149,10 @@ ex.activate_live_output_for(breakout_pop)
 
 # Connect key spike injector to breakout population
 key_input = p.Population(2, SpikeInjector, label="key_input")
-key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
+key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"], 
+                                                     local_port=None)
+p.external_devices.add_database_socket_address(
+     "localhost", key_input_connection.local_port, None)
 p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
              p.StaticSynapse(weight=0.1))
 

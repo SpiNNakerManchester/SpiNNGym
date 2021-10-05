@@ -290,8 +290,8 @@ class Visualiser(object):
         # been updated or not to prevent overdraw
         # self.first_update = False
 #         print("redrawing...")
-        plt.draw()
-        plt.pause(0.01)
+        #plt.draw()
+        #plt.pause(0.01)
         return [self.image, self.score_text]
 
     def _on_key_press(self, event):
