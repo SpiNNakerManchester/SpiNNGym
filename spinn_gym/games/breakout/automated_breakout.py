@@ -1,6 +1,6 @@
 import spynnaker8 as p
 from spinn_gym import Breakout
-from examples.breakout.breakout_sim import (
+from .breakout_sim import (
     subsample_connection, row_col_to_input_breakout, separate_connections,
     compress_to_x_axis, generate_ball_to_hidden_pop_connections,
     generate_decision_connections)
@@ -156,15 +156,3 @@ class AutomatedBreakout(object):
         p.Projection(
             self.breakout_pop, self.receive_reward_pop, p.OneToOneConnector(),
             p.StaticSynapse(weight=weight))
-
-        # ----------------------------------------------------------------------------------------------------------------------
-        # Setup recording
-        # ----------------------------------------------------------------------------------------------------------------------
-
-        self.paddle_pop.record('spikes')
-        self.ball_pop.record('spikes')
-        # left_hidden_pop.record('spikes')
-        # right_hidden_pop.record('spikes')
-        self.decision_input_pop.record('spikes')
-        # random_spike_input.record('spikes')
-        self.receive_reward_pop.record('all')
