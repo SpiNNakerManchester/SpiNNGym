@@ -15,8 +15,11 @@
 import sys
 import subprocess
 import numpy
-from spinn_gym.games.breakout.breakout import Breakout
 import spynnaker8 as p
+import functools
+import threading
+import time
+from .visualiser.visualiser import Visualiser
 
 
 def get_scores(breakout_pop, simulator):
@@ -206,65 +209,48 @@ def start_external_visualiser(
          xb.__str__(),
          yb.__str__()
          ])
-    # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 
-def make_simulation(
-        x_res=160, y_res=128, x_scale=2, y_scale=2, breakout_label="Breakout",
-        key_input_label="key_input", send_key_poisson=True):
+def start_ipython_visualiser(
+        database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
+    _, _, _, board_address, tag = database.get_live_output_details(
+        pop_label, "LiveSpikeReceiver")
+    threading.Thread(
+        target=start_visualiser,
+        args=[board_address, tag, pop_label, xr, yr, xb, yb, key_conn])
 
-    # Setup pyNN simulation
-    p.setup(timestep=1.0)
-    p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
-    # -----------------------------------------------------------------------------
-    # Create Spiking Neural Network
-    # -----------------------------------------------------------------------------
+def start_visualiser(
+        board_address, tag, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
+    from IPython import display
+    from matplotlib import pyplot
+    vis = Visualiser(
+        machine_address=board_address, tag=tag, x_factor=xr, y_factor=yr,
+        x_bits=xb, y_bits=yb)
+    print("Displaying visualiser")
+    # Still testing whether it's possible to open the visualiser in a new cell\
+    # display(Javascript("Jupyter.notebook.execute_cells_below()"))
+    vis.show(),
+    refresh_time = 0.001
+    while True:
+        vis._update(None)
+        display.display(pyplot.gcf())
+        display.clear_output(wait=True)
+        time.sleep(refresh_time)
 
-    # Create breakout population and activate live output
-    b1 = Breakout(x_factor=x_scale, y_factor=y_scale, bricking=1)
-    breakout_pop = p.Population(b1.neurons(), b1, label=breakout_label)
 
-    # Live output the breakout population
-    p.external_devices.activate_live_output_for(breakout_pop)
+def configure_visualiser(
+        breakout, x_res, y_res, x_scale, y_scale, start_vis_func):
+    key_input_connection = p.external_devices.SpynnakerLiveSpikesConnection(
+        send_labels=[breakout.key_input.label], local_port=None)
 
-    # Connect key spike injector to breakout population
-    key_input = p.Population(
-        2, p.external_devices.SpikeInjector, label=key_input_label)
-    p.Projection(
-        key_input, breakout_pop, p.AllToAllConnector(),
-        p.StaticSynapse(weight=0.1))
+    print("\nRegister visualiser process")
+    key_input_connection.add_database_callback(functools.partial(
+        start_vis_func, pop_label=breakout.breakout_pop.label,
+        xr=x_scale, yr=y_scale,
+        xb=numpy.uint32(numpy.ceil(numpy.log2(x_res / x_scale))),
+        yb=numpy.uint32(numpy.ceil(numpy.log2(y_res / y_scale))),
+        key_conn=key_input_connection))
 
-    # Create random spike input and connect to Breakout pop to stimulate paddle
-    # (and enable paddle visualisation)
-    spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
-                               label="input_connect")
-    p.Projection(
-        spike_input, breakout_pop, p.AllToAllConnector(),
-        p.StaticSynapse(weight=0.1))
-
-    weight = 0.1
-    [Connections_on, _] = subsample_connection(
-        x_res / x_scale, y_res / y_scale, 1, 1, weight,
-        row_col_to_input_breakout)
-
-    # Create population of neurons to receive input from Breakout
-    receive_pop_size = int(x_res / x_scale) * int(y_res / y_scale)
-    receive_pop = p.Population(receive_pop_size, p.IF_cond_exp(),
-                               label="receive_pop")
-    p.Projection(
-        breakout_pop, receive_pop, p.FromListConnector(Connections_on),
-        p.StaticSynapse(weight=weight))
-
-    # Create population to receive reward signal from Breakout
-    # (n0: rew, n1: pun)
-    receive_reward_pop = p.Population(
-        2, p.IF_cond_exp(), label="receive_rew_pop")
-    p.Projection(
-        breakout_pop, receive_reward_pop, p.OneToOneConnector(),
-        p.StaticSynapse(weight=0.1 * weight))
-
-    # Setup recording
-    spike_input.record('spikes')
-    receive_pop.record('spikes')
-    receive_reward_pop.record('all')
+    p.external_devices.add_database_socket_address(
+        "localhost", key_input_connection.local_port, None)

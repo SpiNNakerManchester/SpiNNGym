@@ -15,61 +15,28 @@
 
 # non-SpiNNaker imports
 import matplotlib.pyplot as plt
-import numpy as np
 from pyNN.utility.plotting import Figure, Panel
-import functools
-import subprocess
-import sys
-
-from examples.breakout.breakout_sim import make_simulation
 
 # SpiNNaker imports
 from spinn_front_end_common.utilities.globals_variables import get_simulator
-from spinn_front_end_common.utilities.database.database_connection \
-    import DatabaseConnection
-from spynnaker.pyNN.connections.\
-    spynnaker_live_spikes_connection import SpynnakerLiveSpikesConnection
-from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
-    SpynnakerExternalDevicePluginManager as ex
-from spynnaker.pyNN.models.utility_models.spike_injector import \
-    SpikeInjector
+from spinn_gym.games.breakout.breakout_sim import (
+    start_external_visualiser, get_scores, configure_visualiser)
+from spinn_gym.games.breakout.random_breakout import (
+    RandomBreakout, X_RES, Y_RES, X_SCALE, Y_SCALE)
 import spynnaker8 as p
-import spinn_gym as gym
 
-# -----------------------------------------------------------------------------
-#  Globals
-# -----------------------------------------------------------------------------
-vis_proc = None  # Visualiser process (global)
+breakout = RandomBreakout()
 
-# Game resolution and scaling
-X_RESOLUTION = 160
-Y_RESOLUTION = 128
-X_SCALE = 2
-Y_SCALE = 2
-LABEL = "Breakout"
-
-make_simulation(X_RESOLUTION, Y_RESOLUTION, X_SCALE, Y_SCALE, LABEL)
-
-key_input_connection = p.external_devices.SpynnakerLiveSpikesConnection(
-    send_labels=[key_input_label], local_port=None)
-p.external_devices.add_database_socket_address(
-    "localhost", key_input_connection.local_port, None)
+# Setup recording
+breakout.spike_input.record('spikes')
+breakout.receive_pop.record('spikes')
+breakout.receive_reward_pop.record('gsyn_exc')
 
 # -----------------------------------------------------------------------------
 # Configure Visualiser
 # -----------------------------------------------------------------------------
-
-d_conn = DatabaseConnection(local_port=None)
-
-print("\nRegister visualiser process")
-d_conn.add_database_callback(functools.partial(
-    start_visualiser, pop_label=b1.label, xr=x_factor1, yr=y_factor1,
-    xb=np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-    yb=np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
-    key_conn=key_input_connection))
-
-p.external_devices.add_database_socket_address(
-     "localhost", d_conn.local_port, None)
+configure_visualiser(
+    breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # -----------------------------------------------------------------------------
 # Run Simulation
@@ -84,9 +51,9 @@ p.run(runtime)
 # -----------------------------------------------------------------------------
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
-spike_input_spikes = spike_input.get_data('spikes')
-receive_pop_spikes = receive_pop.get_data('spikes')
-receive_reward_pop_output = receive_reward_pop.get_data()
+spike_input_spikes = breakout.spike_input.get_data('spikes')
+receive_pop_spikes = breakout.receive_pop.get_data('spikes')
+receive_reward_pop_output = breakout.receive_reward_pop.get_data('gsyn_exc')
 
 figure_filename = "results.png"
 Figure(
@@ -97,7 +64,7 @@ Figure(
           yticks=True, markersize=0.2, xlim=(0, runtime)),
     Panel(receive_reward_pop_output.segments[0].filter(name='gsyn_exc')[0],
           ylabel="gsyn excitatory (mV)",
-          data_labels=[receive_reward_pop.label],
+          data_labels=[breakout.receive_reward_pop.label],
           yticks=True,
           xlim=(0, runtime)
           ),
@@ -107,10 +74,9 @@ Figure(
 
 plt.show()
 
-scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
+scores = get_scores(breakout_pop=breakout.breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
 
 # End simulation
 p.end()
-vis_proc.terminate()
 print("Simulation Complete")

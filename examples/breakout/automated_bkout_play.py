@@ -6,9 +6,9 @@ import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 
 import spynnaker8 as p
-from examples.breakout.breakout_sim import (
-    get_scores, start_external_visualiser)
-from examples.breakout.automated_breakout import (
+from spinn_gym.games.breakout.breakout_sim import (
+    get_scores, start_external_visualiser, configure_visualiser)
+from spinn_gym.games.breakout.automated_breakout import (
     AutomatedBreakout, X_RES, X_SCALE, Y_RES, Y_SCALE)
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
@@ -18,23 +18,17 @@ from spinn_front_end_common.utilities.globals_variables import get_simulator
 # ----------------------------------------------------------------------------------------------------------------------
 
 breakout = AutomatedBreakout()
+breakout.paddle_pop.record("spikes")
+breakout.ball_pop.record("spikes")
+breakout.decision_input_pop.record("spikes")
+breakout.receive_reward_pop.record("gsyn_exc")
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Configure Visualiser
 # ----------------------------------------------------------------------------------------------------------------------
-key_input_connection = p.external_devices.SpynnakerLiveSpikesConnection(
-    send_labels=[breakout.key_input.label], local_port=None)
 
-print("\nRegister visualiser process")
-key_input_connection.add_database_callback(functools.partial(
-    start_external_visualiser, pop_label=breakout.breakout_pop.label,
-    xr=X_SCALE, yr=Y_SCALE,
-    xb=np.uint32(np.ceil(np.log2(X_RES / X_SCALE))),
-    yb=np.uint32(np.ceil(np.log2(Y_RES / Y_SCALE))),
-    key_conn=key_input_connection))
-
-p.external_devices.add_database_socket_address(
-    "localhost", key_input_connection.local_port, None)
+configure_visualiser(
+    breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Run Simulation
@@ -53,11 +47,8 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 
 pad_pop_spikes = breakout.paddle_pop.get_data('spikes')
 ball_pop_spikes = breakout.ball_pop.get_data('spikes')
-# left_hidden_pop_spikes = left_hidden_pop.get_data('spikes')
-# right_hidden_pop_spikes = right_hidden_pop.get_data('spikes')
 decision_input_pop_spikes = breakout.decision_input_pop.get_data('spikes')
-# random_spike_input_spikes = random_spike_input.get_data('spikes')
-receive_reward_pop_output = breakout.receive_reward_pop.get_data()
+receive_reward_pop_output = breakout.receive_reward_pop.get_data('gsyn_exc')
 
 Figure(
     Panel(pad_pop_spikes.segments[0].spiketrains,
