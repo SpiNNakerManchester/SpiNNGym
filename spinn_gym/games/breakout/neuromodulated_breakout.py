@@ -72,10 +72,10 @@ class NeuromodulatedBreakout(object):
         # --------------------------------------------------------------------
 
         [Connections_on, _] = subsample_connection(
-            X_RES, Y_RES, 1, 1, weight, row_col_to_input_breakout)
+            X_RES_FINAL, Y_RES_FINAL, 1, 1, weight, row_col_to_input_breakout)
 
         [Ball_on_connections, Paddle_on_connections] = separate_connections(
-            X_RES * Y_RES - X_RES, Connections_on)
+            X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL, Connections_on)
 
         # --------------------------------------------------------------------
         # Paddle Population
@@ -86,13 +86,13 @@ class NeuromodulatedBreakout(object):
         paddle_to_one_neuron_weight = 0.0875 / paddle_neuron_size
 
         Compressed_paddle_connections = map_to_one_neuron_per_paddle(
-            X_RES, paddle_neuron_size, paddle_to_one_neuron_weight,
+            X_RES_FINAL, paddle_neuron_size, paddle_to_one_neuron_weight,
             Paddle_on_connections)
         Lat_inh_connections = create_lateral_inhibitory_paddle_connections(
-            X_RES, paddle_neuron_size, paddle_to_one_neuron_weight / 2)
+            X_RES_FINAL, paddle_neuron_size, paddle_to_one_neuron_weight / 2)
 
         self.paddle_pop = p.Population(
-            X_RES, p.IF_cond_exp(), label="paddle_pop")
+            X_RES_FINAL, p.IF_cond_exp(), label="paddle_pop")
         p.Projection(
             self.breakout_pop, self.paddle_pop,
             p.FromListConnector(Compressed_paddle_connections),
@@ -106,11 +106,15 @@ class NeuromodulatedBreakout(object):
         # Ball Positions Populations
         # ---------------------------------------------------------------------
 
-        ball_x_pop = p.Population(X_RES, p.IF_cond_exp(), label="ball_x_pop")
-        ball_y_pop = p.Population(Y_RES, p.IF_cond_exp(), label="ball_y_pop")
+        ball_x_pop = p.Population(
+            X_RES_FINAL, p.IF_cond_exp(), label="ball_x_pop")
+        ball_y_pop = p.Population(
+            Y_RES_FINAL, p.IF_cond_exp(), label="ball_y_pop")
 
-        Ball_x_connections = compress_to_x_axis(Ball_on_connections, X_RES)
-        Ball_y_connections = compress_to_y_axis(Ball_on_connections, Y_RES)
+        Ball_x_connections = compress_to_x_axis(
+            Ball_on_connections, X_RES_FINAL)
+        Ball_y_connections = compress_to_y_axis(
+            Ball_on_connections, Y_RES_FINAL)
 
         p.Projection(
             self.breakout_pop, ball_x_pop,

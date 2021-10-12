@@ -34,6 +34,8 @@ breakout = AutomatedBreakout()
 breakout.paddle_pop.record("spikes")
 breakout.ball_pop.record("spikes")
 breakout.decision_input_pop.record("spikes")
+breakout.left_hidden_pop.record("spikes")
+breakout.right_hidden_pop.record("spikes")
 breakout.receive_reward_pop.record("gsyn_exc")
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,6 +63,8 @@ print("\nSimulation Complete - Extracting Data and Post-Processing")
 pad_pop_spikes = breakout.paddle_pop.get_data('spikes')
 ball_pop_spikes = breakout.ball_pop.get_data('spikes')
 decision_input_pop_spikes = breakout.decision_input_pop.get_data('spikes')
+left_hidden_pop_spikes = breakout.left_hidden_pop.get_data("spikes")
+right_hidden_pop_spikes = breakout.right_hidden_pop.get_data("spikes")
 receive_reward_pop_output = breakout.receive_reward_pop.get_data('gsyn_exc')
 
 Figure(
@@ -68,6 +72,12 @@ Figure(
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(ball_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(left_hidden_pop_spikes.segments[0].spiketrains,
+          yticks=True, markersize=0.2, xlim=(0, runtime)),
+
+    Panel(right_hidden_pop_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),
 
     Panel(decision_input_pop_spikes.segments[0].spiketrains,

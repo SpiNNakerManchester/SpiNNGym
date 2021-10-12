@@ -97,30 +97,30 @@ class AutomatedBreakout(object):
         # Hidden Populations
         # ------------------------------------------------------------------
 
-        left_hidden_pop = p.Population(
+        self.left_hidden_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="left_hidden_pop")
-        right_hidden_pop = p.Population(
+        self.right_hidden_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="right_hidden_pop")
 
         # Project the paddle population on left/right hidden populations
         # so that it charges the neurons without spiking
         paddle_presence_weight = 0.01
         p.Projection(
-            self.paddle_pop, left_hidden_pop, p.OneToOneConnector(),
+            self.paddle_pop, self.left_hidden_pop, p.OneToOneConnector(),
             p.StaticSynapse(paddle_presence_weight))
         p.Projection(
-            self.paddle_pop, right_hidden_pop, p.OneToOneConnector(),
+            self.paddle_pop, self.right_hidden_pop, p.OneToOneConnector(),
             p.StaticSynapse(paddle_presence_weight))
 
         [Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
             generate_ball_to_hidden_pop_connections(
-                pop_size=X_RES_FINAL, ball_presence_weight=0.07)
+                pop_size=X_RES_FINAL, ball_presence_weight=0.2)
 
         p.Projection(
-            self.ball_pop, left_hidden_pop,
+            self.ball_pop, self.left_hidden_pop,
             p.FromListConnector(Ball_to_left_hidden_connections))
         p.Projection(
-            self.ball_pop, right_hidden_pop,
+            self.ball_pop, self.right_hidden_pop,
             p.FromListConnector(Ball_to_right_hidden_connections))
 
         # --------------------------------------------------------------------------------------
@@ -135,10 +135,10 @@ class AutomatedBreakout(object):
                 pop_size=X_RES_FINAL, decision_weight=weight)
 
         p.Projection(
-            left_hidden_pop, self.decision_input_pop,
+            self.left_hidden_pop, self.decision_input_pop,
             p.FromListConnector(Left_decision_connections))
         p.Projection(
-            right_hidden_pop, self.decision_input_pop,
+            self.right_hidden_pop, self.decision_input_pop,
             p.FromListConnector(Right_decision_connections))
 
         # Connect input Decision population to the game
