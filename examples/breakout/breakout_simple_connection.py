@@ -35,8 +35,8 @@ breakout.receive_reward_pop.record('gsyn_exc')
 # -----------------------------------------------------------------------------
 # Configure Visualiser
 # -----------------------------------------------------------------------------
-configure_visualiser(
-    breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
+# configure_visualiser(
+    # breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # -----------------------------------------------------------------------------
 # Run Simulation

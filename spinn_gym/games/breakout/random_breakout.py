@@ -30,11 +30,11 @@ class RandomBreakout(object):
         p.external_devices.activate_live_output_for(self.breakout_pop)
 
         # Connect key spike injector to breakout population
-        self.key_input = p.Population(
-            2, p.external_devices.SpikeInjector, label="key_input")
-        p.Projection(
-            self.key_input, self.breakout_pop, p.AllToAllConnector(),
-            p.StaticSynapse(weight=0.1))
+        # self.key_input = p.Population(
+            # 2, p.external_devices.SpikeInjector, label="key_input")
+        # p.Projection(
+            # self.key_input, self.breakout_pop, p.AllToAllConnector(),
+            # p.StaticSynapse(weight=0.1))
 
         # Create random spike input and connect to Breakout pop to stimulate paddle
         # (and enable paddle visualisation)

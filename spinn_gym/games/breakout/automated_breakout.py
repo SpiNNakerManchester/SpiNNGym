@@ -28,7 +28,7 @@ class AutomatedBreakout(object):
         # ----------------------------------------------------------------------------------------------------------------------
 
         # Create breakout population and activate live output
-        b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
+        b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=0)
         self.breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 
         # Live output the breakout population
@@ -36,11 +36,11 @@ class AutomatedBreakout(object):
 
         # Create random spike input and connect to Breakout pop to stimulate
         # paddle (and enable paddle visualisation)
-        random_spike_input = p.Population(
-            2, p.SpikeSourcePoisson(rate=7), label="input_connect")
-        p.Projection(
-            random_spike_input, self.breakout_pop, p.AllToAllConnector(),
-            p.StaticSynapse(weight=1.))
+        # random_spike_input = p.Population(
+            # 2, p.SpikeSourcePoisson(rate=7), label="input_connect")
+        # p.Projection(
+            # random_spike_input, self.breakout_pop, p.AllToAllConnector(),
+            # p.StaticSynapse(weight=1.))
 
         # Connect key spike injector to breakout population
         self.key_input = p.Population(
@@ -56,8 +56,11 @@ class AutomatedBreakout(object):
         [Connections_on, Connections_off] = subsample_connection(
             X_RES, Y_RES, 1, 1, weight, row_col_to_input_breakout)
 
-        [Ball_on_connections, Paddle_on_connections] = \
+        [Any_on_connections, Paddle_on_connections] = \
             separate_connections(X_RES * Y_RES - X_RES, Connections_on)
+
+        [brick_connections, Ball_on_connections] = \
+            separate_connections(X_RES * 28, Any_on_connections)
 
         [Ball_off_connections, Paddle_off_connections] = \
             separate_connections(X_RES * Y_RES - X_RES, Connections_off)

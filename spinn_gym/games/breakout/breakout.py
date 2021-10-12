@@ -127,7 +127,7 @@ class Breakout(AbstractOneAppOneMachineVertex,
         self._height_bits = numpy.uint32(numpy.ceil(numpy.log2(self._height)))
 
         self._n_neurons = int(1 << (self._width_bits + self._height_bits +
-                                    self._colour_bits))
+                                    self._colour_bits)) + 2
         self._bricking = bricking
         self._rand_seed = random_seed
 

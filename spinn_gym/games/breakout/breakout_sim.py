@@ -90,7 +90,6 @@ def separate_connections(ball_population_size, connections_on):
     return ball_list, paddle_list
 
 
-@DeprecationWarning
 def map_to_one_neuron_per_paddle(
         pop_size, no_paddle_neurons, syn_weight, paddle_connections):
     # Get connections of compressed PADDLE population to one neuron each
@@ -110,7 +109,6 @@ def map_to_one_neuron_per_paddle(
     return connections
 
 
-@DeprecationWarning
 def create_lateral_inhibitory_paddle_connections(
         pop_size, no_paddle_neurons, syn_weight):
     lat_connections = []
@@ -152,6 +150,17 @@ def compress_to_x_axis(connections, x_resolution):
     return compressed_connections
 
 
+def compress_to_y_axis(connections, y_resolution):
+    # Get connections of compressed BALL population to the Y axis
+    compressed_connections = []
+
+    for val in connections:
+        new_el_connection = (val[0], val[1] // y_resolution, val[2], val[3])
+        compressed_connections.append(new_el_connection)
+
+    return compressed_connections
+
+
 def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight):
     left_connections = []
     right_connections = []
@@ -180,6 +189,13 @@ def generate_decision_connections(pop_size, decision_weight):
         right_conn.append((neuron, 1, decision_weight, 1.))
 
     return left_conn, right_conn
+
+
+def get_hidden_to_decision_connections(pop_size, weight):
+    # Connect all elements from one pop to 0 for left and 1 for right
+
+    return [(idx, 0, weight, 1.0) for idx in range(0, pop_size)], \
+           [(idx, 1, weight, 1.0) for idx in range(0, pop_size)]
 
 
 def clean_connection(data):
