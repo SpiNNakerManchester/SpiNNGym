@@ -21,7 +21,7 @@ class AutomatedBreakout(object):
         p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
         # Weights
-        weight = 0.1
+        weight = 0.2
 
         # ----------------------------------------------------------------------------------------------------------------------
         # Breakout Population && Spike Input
