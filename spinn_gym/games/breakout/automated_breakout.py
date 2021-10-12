@@ -37,37 +37,39 @@ class AutomatedBreakout(object):
         # Create random spike input and connect to Breakout pop to stimulate
         # paddle (and enable paddle visualisation)
         # random_spike_input = p.Population(
-            # 2, p.SpikeSourcePoisson(rate=7), label="input_connect")
+        #     2, p.SpikeSourcePoisson(rate=7), label="input_connect")
         # p.Projection(
-            # random_spike_input, self.breakout_pop, p.AllToAllConnector(),
-            # p.StaticSynapse(weight=1.))
+        #     random_spike_input, self.breakout_pop, p.AllToAllConnector(),
+        #     p.StaticSynapse(weight=1.))
 
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
-            # 2, p.external_devices.SpikeInjector(), label="key_input")
+        #     2, p.external_devices.SpikeInjector(), label="key_input")
         # p.Projection(
-            # self.key_input, self.breakout_pop, p.AllToAllConnector(),
-            # p.StaticSynapse(weight=0.1))
+        #    self.key_input, self.breakout_pop, p.AllToAllConnector(),
+        #    p.StaticSynapse(weight=0.1))
 
         # --------------------------------------------------------------------------------------
         # ON/OFF Connections
         # --------------------------------------------------------------------------------------
 
         [Connections_on, Connections_off] = subsample_connection(
-            X_RES, Y_RES, 1, 1, weight, row_col_to_input_breakout)
+            X_RES_FINAL, Y_RES_FINAL, 1, 1, weight, row_col_to_input_breakout)
 
         [Ball_on_connections, Paddle_on_connections] = \
-            separate_connections(X_RES * Y_RES - X_RES, Connections_on)
+            separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
+                                 Connections_on)
 
         [Ball_off_connections, Paddle_off_connections] = \
-            separate_connections(X_RES * Y_RES - X_RES, Connections_off)
+            separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
+                                 Connections_off)
 
         # --------------------------------------------------------------------------------------
         # Paddle Population
         # --------------------------------------------------------------------------------------
 
-        self.paddle_pop = p.Population(X_RES, p.IF_cond_exp(),
-                                  label="paddle_pop")
+        self.paddle_pop = p.Population(
+            X_RES_FINAL, p.IF_cond_exp(), label="paddle_pop")
 
         p.Projection(
             self.breakout_pop, self.paddle_pop,
@@ -80,11 +82,11 @@ class AutomatedBreakout(object):
         # Ball Position Population
         # --------------------------------------------------------------------------------------
 
-        self.ball_pop = p.Population(X_RES, p.IF_cond_exp(),
-                                label="ball_pop")
+        self.ball_pop = p.Population(
+            X_RES_FINAL, p.IF_cond_exp(), label="ball_pop")
 
         Compressed_ball_connections = compress_to_x_axis(
-            Ball_on_connections, X_RES)
+            Ball_on_connections, X_RES_FINAL)
 
         p.Projection(
             self.breakout_pop, self.ball_pop,
@@ -95,10 +97,10 @@ class AutomatedBreakout(object):
         # Hidden Populations
         # ------------------------------------------------------------------
 
-        left_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
-                                       label="left_hidden_pop")
-        right_hidden_pop = p.Population(X_RES, p.IF_cond_exp(),
-                                        label="right_hidden_pop")
+        left_hidden_pop = p.Population(
+            X_RES_FINAL, p.IF_cond_exp(), label="left_hidden_pop")
+        right_hidden_pop = p.Population(
+            X_RES_FINAL, p.IF_cond_exp(), label="right_hidden_pop")
 
         # Project the paddle population on left/right hidden populations
         # so that it charges the neurons without spiking
@@ -112,7 +114,7 @@ class AutomatedBreakout(object):
 
         [Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
             generate_ball_to_hidden_pop_connections(
-                pop_size=X_RES, ball_presence_weight=0.07)
+                pop_size=X_RES_FINAL, ball_presence_weight=0.07)
 
         p.Projection(
             self.ball_pop, left_hidden_pop,
@@ -130,7 +132,7 @@ class AutomatedBreakout(object):
 
         [Left_decision_connections, Right_decision_connections] = \
             generate_decision_connections(
-                pop_size=X_RES, decision_weight=weight)
+                pop_size=X_RES_FINAL, decision_weight=weight)
 
         p.Projection(
             left_hidden_pop, self.decision_input_pop,
