@@ -4,10 +4,9 @@ import matplotlib.pyplot as plt
 from pyNN.utility.plotting import Figure, Panel
 
 import spynnaker8 as p
-from spinn_gym.games.breakout.breakout_sim import (
-    get_scores, start_external_visualiser, configure_visualiser)
+from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.neuromodulated_breakout import (
-    NeuromodulatedBreakout, X_RES, X_SCALE, Y_RES, Y_SCALE)
+    NeuromodulatedBreakout)
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
@@ -23,7 +22,7 @@ breakout.paddle_pop.record("spikes")
 # ----------------------------------------------------------------------------------------------------------------------
 
 # configure_visualiser(
-    # breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
+#    breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Run Simulation
