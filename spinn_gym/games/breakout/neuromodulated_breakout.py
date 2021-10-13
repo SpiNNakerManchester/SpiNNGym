@@ -19,7 +19,6 @@ class NeuromodulatedBreakout(object):
     def __init__(self, previous_connections=None):
         p.setup(timestep=1.0)
         p.set_number_of_neurons_per_core(p.IF_cond_exp, 32)
-        p.set_number_of_neurons_per_core(p.IF_curr_exp, 16)
 
         # Weights
         weight = 0.1
@@ -133,7 +132,7 @@ class NeuromodulatedBreakout(object):
 
         stim_rate = 3.
         stim_pop_size = hidden_pop_size
-        stim_weight = 5.
+        stim_weight = 0.01
 
         dopaminergic_weight = .1
 
@@ -166,9 +165,9 @@ class NeuromodulatedBreakout(object):
         hidden_synapse_dynamics = p.STDPMechanism(
             timing_dependence=p.SpikePairRule(
                 tau_plus=30., tau_minus=30.,
-                A_plus=0.25, A_minus=0.25),
+                A_plus=0.02, A_minus=0.02),
             weight_dependence=p.AdditiveWeightDependence(
-                w_min=0, w_max=2.0),
+                w_min=0, w_max=0.5),
             weight=.5)
 
         # Create a plastic connection between Ball X and Hidden neurons
