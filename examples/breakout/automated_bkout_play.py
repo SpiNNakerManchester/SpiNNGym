@@ -13,16 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import functools
 import matplotlib.pyplot as plt
-import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 
 import spynnaker8 as p
-from spinn_gym.games.breakout.breakout_sim import (
-    get_scores, start_external_visualiser, configure_visualiser)
-from spinn_gym.games.breakout.automated_breakout import (
-    AutomatedBreakout, X_RES, X_SCALE, Y_RES, Y_SCALE)
+from spinn_gym.games.breakout.breakout_sim import get_scores
+from spinn_gym.games.breakout.automated_breakout import AutomatedBreakout
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
@@ -43,7 +39,7 @@ breakout.receive_reward_pop.record("gsyn_exc")
 # ----------------------------------------------------------------------------------------------------------------------
 #
 # configure_visualiser(
-    # breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
+#     breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Run Simulation

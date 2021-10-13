@@ -19,10 +19,8 @@ from pyNN.utility.plotting import Figure, Panel
 
 # SpiNNaker imports
 from spinn_front_end_common.utilities.globals_variables import get_simulator
-from spinn_gym.games.breakout.breakout_sim import (
-    start_external_visualiser, get_scores, configure_visualiser)
-from spinn_gym.games.breakout.random_breakout import (
-    RandomBreakout, X_RES, Y_RES, X_SCALE, Y_SCALE)
+from spinn_gym.games.breakout.breakout_sim import get_scores
+from spinn_gym.games.breakout.random_breakout import RandomBreakout
 import spynnaker8 as p
 
 breakout = RandomBreakout()
@@ -36,7 +34,7 @@ breakout.receive_reward_pop.record('gsyn_exc')
 # Configure Visualiser
 # -----------------------------------------------------------------------------
 # configure_visualiser(
-    # breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
+#     breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
 # -----------------------------------------------------------------------------
 # Run Simulation

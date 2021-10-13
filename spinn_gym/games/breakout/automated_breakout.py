@@ -60,7 +60,7 @@ class AutomatedBreakout(object):
             separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
                                  Connections_on)
 
-        [Ball_off_connections, Paddle_off_connections] = \
+        [_Ball_off_connections, Paddle_off_connections] = \
             separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
                                  Connections_off)
 

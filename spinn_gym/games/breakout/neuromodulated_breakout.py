@@ -41,11 +41,11 @@ class NeuromodulatedBreakout(object):
         # ex is the external device plugin manager
         p.external_devices.activate_live_output_for(self.breakout_pop)
 
-        self.key_input = p.Population(
-            2, p.external_devices.SpikeInjector(), label="key_input")
-        p.Projection(
-            self.key_input, self.breakout_pop, p.AllToAllConnector(),
-            p.StaticSynapse(weight=0.1))
+        # self.key_input = p.Population(
+        #     2, p.external_devices.SpikeInjector(), label="key_input")
+        # p.Projection(
+        #     self.key_input, self.breakout_pop, p.AllToAllConnector(),
+        #     p.StaticSynapse(weight=0.1))
 
         # --------------------------------------------------------------------
         # Reward & Punishment Population
@@ -149,7 +149,7 @@ class NeuromodulatedBreakout(object):
         # ----------------------------------------------------------------
 
         left_hidden_pop = p.Population(
-            hidden_pop_size, p.IF_curr_exp(),
+            hidden_pop_size, p.IF_cond_exp(),
             label="left_hidden_pop")
 
         # Stimulate Left Hidden pop
@@ -216,7 +216,7 @@ class NeuromodulatedBreakout(object):
         # --------------------------------------------------------------------
 
         right_hidden_pop = p.Population(
-            hidden_pop_size, p.IF_curr_exp(),
+            hidden_pop_size, p.IF_cond_exp(),
             label="right_hidden_pop")
 
         # Stimulate Right Hidden pop

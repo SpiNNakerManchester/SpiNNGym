@@ -18,9 +18,9 @@ class RandomBreakout(object):
         p.setup(timestep=1.0)
         p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
-        # -----------------------------------------------------------------------------
+        # ------------------------------------------------------------
         # Create Spiking Neural Network
-        # -----------------------------------------------------------------------------
+        # ------------------------------------------------------------
 
         # Create breakout population and activate live output
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
@@ -31,13 +31,13 @@ class RandomBreakout(object):
 
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
-            # 2, p.external_devices.SpikeInjector(), label="key_input")
+        #     2, p.external_devices.SpikeInjector(), label="key_input")
         # p.Projection(
-            # self.key_input, self.breakout_pop, p.AllToAllConnector(),
-            # p.StaticSynapse(weight=0.1))
+        #     self.key_input, self.breakout_pop, p.AllToAllConnector(),
+        #     p.StaticSynapse(weight=0.1))
 
-        # Create random spike input and connect to Breakout pop to stimulate paddle
-        # (and enable paddle visualisation)
+        # Create random spike input and connect to Breakout pop to stimulate
+        # paddle (and enable paddle visualisation)
         self.spike_input = p.Population(
             2, p.SpikeSourcePoisson(rate=2), label="input_connect")
         p.Projection(
