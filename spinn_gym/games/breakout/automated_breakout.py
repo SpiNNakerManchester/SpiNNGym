@@ -36,11 +36,11 @@ class AutomatedBreakout(object):
 
         # Create random spike input and connect to Breakout pop to stimulate
         # paddle (and enable paddle visualisation)
-        random_spike_input = p.Population(
-            2, p.SpikeSourcePoisson(rate=20), label="input_connect")
-        p.Projection(
-            random_spike_input, self.breakout_pop, p.AllToAllConnector(),
-            p.StaticSynapse(weight=1.))
+        # random_spike_input = p.Population(
+        #     2, p.SpikeSourcePoisson(rate=20), label="input_connect")
+        # p.Projection(
+        #     random_spike_input, self.breakout_pop, p.AllToAllConnector(),
+        #    p.StaticSynapse(weight=1.))
 
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
