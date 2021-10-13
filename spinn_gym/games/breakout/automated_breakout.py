@@ -21,7 +21,7 @@ class AutomatedBreakout(object):
         p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
         # Weights
-        weight = 0.2
+        weight = 0.1
 
         # ----------------------------------------------------------------------------------------------------------------------
         # Breakout Population && Spike Input
@@ -36,11 +36,11 @@ class AutomatedBreakout(object):
 
         # Create random spike input and connect to Breakout pop to stimulate
         # paddle (and enable paddle visualisation)
-        # random_spike_input = p.Population(
-        #     2, p.SpikeSourcePoisson(rate=20), label="input_connect")
-        # p.Projection(
-        #     random_spike_input, self.breakout_pop, p.AllToAllConnector(),
-        #    p.StaticSynapse(weight=1.))
+        random_spike_input = p.Population(
+            2, p.SpikeSourcePoisson(rate=7), label="input_connect")
+        p.Projection(
+            random_spike_input, self.breakout_pop, p.AllToAllConnector(),
+            p.StaticSynapse(weight=1.))
 
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
@@ -116,7 +116,7 @@ class AutomatedBreakout(object):
 
         [Ball_to_left_hidden_connections, Ball_to_right_hidden_connections] = \
             generate_ball_to_hidden_pop_connections(
-                pop_size=X_RES_FINAL, ball_presence_weight=0.2)
+                pop_size=X_RES_FINAL, ball_presence_weight=0.07)
 
         p.Projection(
             self.ball_pop, self.left_hidden_pop,
