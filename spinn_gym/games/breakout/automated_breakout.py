@@ -75,8 +75,10 @@ class AutomatedBreakout(object):
             self.breakout_pop, self.paddle_pop,
             p.FromListConnector(Paddle_on_connections),
             receptor_type="excitatory")
-        p.Projection(self.breakout_pop, self.paddle_pop, p.FromListConnector(
-            Paddle_off_connections), receptor_type="inhibitory")
+        p.Projection(
+            self.breakout_pop, self.paddle_pop,
+            p.FromListConnector(Paddle_off_connections),
+            receptor_type="inhibitory")
 
         # --------------------------------------------------------------------------------------
         # Ball Position Population
@@ -85,13 +87,13 @@ class AutomatedBreakout(object):
         self.ball_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="ball_pop")
 
-        Compressed_ball_connections = compress_to_x_axis(
+        Compressed_ball_on_connections = compress_to_x_axis(
             Ball_on_connections, X_RES_FINAL)
 
         p.Projection(
             self.breakout_pop, self.ball_pop,
-            p.FromListConnector(Compressed_ball_connections),
-            p.StaticSynapse(weight=weight))
+            p.FromListConnector(Compressed_ball_on_connections),
+            receptor_type="excitatory")
 
         # ------------------------------------------------------------------
         # Hidden Populations
