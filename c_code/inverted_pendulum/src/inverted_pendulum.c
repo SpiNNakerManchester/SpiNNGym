@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2013-2019 The University of Manchester
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 // Standard includes
 #include <stdbool.h>
 #include <stdint.h>
@@ -261,7 +277,10 @@ static bool initialize(uint32_t *timer_period)
     temp_accum.u = pend_region[14];
     tau_force = temp_accum.a;
 
+//    io_printf(IO_BUF, "tau_force %f", tau_force);
+
     force_increment = (float)((max_motor_force - min_motor_force) / (float)force_increment);
+
 
     //Print variable for inspection if needed
 //    io_printf(IO_BUF, "r1 %d\n", (uint32_t *)pend_region[0]);
@@ -291,11 +310,11 @@ static bool initialize(uint32_t *timer_period)
 //    io_printf(IO_BUF, "force %u\n", pend_region[5]);
 //    io_printf(IO_BUF, "d %d\n", pend_region[5]);
 //    io_printf(IO_BUF, "max %u\n", pend_region[6]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[6]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[6]);
 //    io_printf(IO_BUF, "bins %u\n", pend_region[7]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[7]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[7]);
 //    io_printf(IO_BUF, "central %u\n", pend_region[8]);
-//    io_printf(IO_BUF, "d %d\n", pend_region[8]);
+////    io_printf(IO_BUF, "d %d\n", pend_region[8]);
 //    io_printf(IO_BUF, "re %d\n", reward_based);
 //    io_printf(IO_BUF, "r6 0x%x\n", *pend_region);
 //    io_printf(IO_BUF, "r6 0x%x\n", &pend_region);

@@ -1,47 +1,46 @@
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import numpy
+
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.executor.injection_decorator import inject_items
 from pacman.model.constraints.key_allocator_constraints \
     import ContiguousKeyRangeContraint
-from pacman.model.graphs.application import ApplicationVertex
-from pacman.model.resources.cpu_cycles_per_tick_resource import \
-    CPUCyclesPerTickResource
-from pacman.model.resources.dtcm_resource import DTCMResource
-from pacman.model.resources.resource_container import ResourceContainer
-from pacman.model.resources.variable_sdram import VariableSDRAM
+from pacman.model.graphs.application.abstract import (
+    AbstractOneAppOneMachineVertex)
+from pacman.model.graphs.common import Slice
+from spinn_utilities.config_holder import get_config_int
 
 # SpiNNFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
-from spinn_front_end_common.abstract_models \
-    .abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
-from spinn_front_end_common.utilities import globals_variables
-from spinn_front_end_common.interface.simulation import simulation_utilities
-from spinn_front_end_common.utilities import constants as \
-    front_end_common_constants
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models \
     import AbstractAcceptsIncomingSynapses
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.utilities import constants
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
-
 
 # Pendulum imports
 from spinn_gym.games.inverted_pendulum.inverted_pendulum_machine_vertex \
     import PendulumMachineVertex
-
-import numpy
-
-from data_specification.enums.data_type import DataType
 
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
@@ -49,13 +48,21 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # ----------------------------------------------------------------------------
 # Pendulum
 # ----------------------------------------------------------------------------
-class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
+class Pendulum(AbstractOneAppOneMachineVertex,
                AbstractProvidesOutgoingPartitionConstraints,
                AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
                SimplePopulationSettable):
 
+    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
+    def verify_splitter(self, splitter):
+        # Need to ignore this verify
+        pass
+
+    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
     def get_connections_from_machine(
             self, transceiver, placements, app_edge, synapse_info):
+
+        # TODO: make this work properly (the following call does nothing)
 
         super(Pendulum, self).get_connections_from_machine(
             transceiver, placements, app_edge, synapse_info)
@@ -71,7 +78,7 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
         return 0
 
     PENDULUM_REGION_BYTES = 4
-    DATA_REGION_BYTES = 15 * 4
+    BASE_DATA_REGION_BYTES = 15 * 4
     MAX_SIM_DURATION = 1000 * 60 * 60 * 24 * 7  # 1 week
 
     # parameters expected by PyNN
@@ -86,14 +93,13 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
         'max_firing_rate': 100,
         'number_of_bins': 20,
         'central': 1,
-        'rand_seed': [0, 1, 2, 3],
         'bin_overlap': 2,
         'tau_force': 0,
         'label': "pole",
         'incoming_spike_buffer_size': None,
-        'duration': MAX_SIM_DURATION}
-
-    # **HACK** for Projection to connect a synapse type is required
+        'duration': MAX_SIM_DURATION,
+        'rand_seed': [0, 1, 2, 3],
+        }
 
     def __init__(self, constraints=default_parameters['constraints'],
                  encoding=default_parameters['encoding'],
@@ -145,133 +151,40 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
+        # technically as using OneAppOneMachine this is not necessary?
+        resources_required = (
+            self.PENDULUM_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
+            self._recording_size)
+
+        vertex_slice = Slice(0, self._n_neurons - 1)
+
         # Superclasses
-        ApplicationVertex.__init__(
-            self, label, constraints, self.n_atoms)
+        super(Pendulum, self).__init__(
+            PendulumMachineVertex(
+                vertex_slice, resources_required, constraints, label, self,
+                encoding, time_increment, pole_length, pole_angle,
+                reward_based, force_increments, max_firing_rate,
+                number_of_bins, central, bin_overlap, tau_force,
+                incoming_spike_buffer_size, simulation_duration_ms, rand_seed
+                ),
+            label=label, constraints=constraints)
+
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
-        # get config from simulator
-        config = globals_variables.get_simulator().config
-
         if incoming_spike_buffer_size is None:
-            self._incoming_spike_buffer_size = config.getint(
+            self._incoming_spike_buffer_size = get_config_int(
                 "Simulation", "incoming_spike_buffer_size")
 
     def neurons(self):
         return self._n_neurons
 
-    def get_maximum_delay_supported_in_ms(self, machine_time_step):
-        # Pendulum has no synapses so can simulate only one time step of delay
-        return machine_time_step / 1000.0
-
-    # ------------------------------------------------------------------------
-    # ApplicationVertex overrides
-    # ------------------------------------------------------------------------
-    @overrides(ApplicationVertex.get_resources_used_by_atoms)
-    def get_resources_used_by_atoms(self, vertex_slice):
-        # **HACK** only way to force no partitioning is to zero dtcm and cpu
-        container = ResourceContainer(
-            sdram=VariableSDRAM(fixed_sdram=0, per_timestep_sdram=8),
-            dtcm=DTCMResource(0),
-            cpu_cycles=CPUCyclesPerTickResource(0))
-
-        return container
-
-    @overrides(ApplicationVertex.create_machine_vertex)
-    def create_machine_vertex(self, vertex_slice, resources_required,
-                              label=None, constraints=None):
-        # Return suitable machine vertex
-        return PendulumMachineVertex(
-            resources_required, constraints, self._label, self, vertex_slice)
-
     @property
-    @overrides(ApplicationVertex.n_atoms)
+    @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
         return self._n_neurons
-
-    # ------------------------------------------------------------------------
-    # AbstractGeneratesDataSpecification overrides
-    # ------------------------------------------------------------------------
-    @inject_items({"machine_time_step": "MachineTimeStep",
-                   "time_scale_factor": "TimeScaleFactor",
-                   "routing_info": "MemoryRoutingInfos",
-                   "tags": "MemoryTags"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"machine_time_step", "time_scale_factor",
-                                     "routing_info", "tags"}
-               )
-    def generate_data_specification(self, spec, placement, machine_time_step,
-                                    time_scale_factor, routing_info, tags):
-        vertex = placement.vertex
-
-        spec.comment("\n*** Spec for Pendulum Instance ***\n\n")
-        spec.comment("\nReserving memory space for data regions:\n\n")
-
-        # Reserve memory:
-        spec.reserve_memory_region(
-            region=PendulumMachineVertex._PENDULUM_REGIONS.SYSTEM.value,
-            size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
-            label='setup')
-        spec.reserve_memory_region(
-            region=PendulumMachineVertex._PENDULUM_REGIONS.PENDULUM.value,
-            size=self.PENDULUM_REGION_BYTES, label='PendulumVertex')
-        # vertex.reserve_provenance_data_region(spec)
-        # reserve recording region
-        spec.reserve_memory_region(
-            PendulumMachineVertex._PENDULUM_REGIONS.RECORDING.value,
-            recording_utilities.get_recording_header_size(1))
-        spec.reserve_memory_region(
-            region=PendulumMachineVertex._PENDULUM_REGIONS.DATA.value,
-            size=self.DATA_REGION_BYTES, label='PendulumData')
-
-        # Write setup region
-        spec.comment("\nWriting setup region:\n")
-        spec.switch_write_focus(
-            PendulumMachineVertex._PENDULUM_REGIONS.SYSTEM.value)
-        spec.write_array(simulation_utilities.get_simulation_header_array(
-            vertex.get_binary_file_name(), machine_time_step,
-            time_scale_factor))
-
-        # Write pendulum region containing routing key to transmit with
-        spec.comment("\nWriting pendulum region:\n")
-        spec.switch_write_focus(
-            PendulumMachineVertex._PENDULUM_REGIONS.PENDULUM.value)
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
-
-        # Write recording region for score
-        spec.comment("\nWriting pendulum recording region:\n")
-        spec.switch_write_focus(
-            PendulumMachineVertex._PENDULUM_REGIONS.RECORDING.value)
-        ip_tags = tags.get_ip_tags_for_vertex(self) or []
-        spec.write_array(recording_utilities.get_recording_header_array(
-            [self._recording_size], ip_tags=ip_tags))
-
-        # Write probabilites for arms
-        spec.comment("\nWriting pendulum data region:\n")
-        spec.switch_write_focus(
-            PendulumMachineVertex._PENDULUM_REGIONS.DATA.value)
-        spec.write_value(self._encoding, data_type=DataType.UINT32)
-        spec.write_value(self._time_increment, data_type=DataType.UINT32)
-        spec.write_value(self._pole_length, data_type=DataType.S1615)
-        spec.write_value(self._pole_angle, data_type=DataType.S1615)
-        spec.write_value(self._reward_based, data_type=DataType.UINT32)
-        spec.write_value(self._force_increments, data_type=DataType.UINT32)
-        spec.write_value(self._max_firing_rate, data_type=DataType.UINT32)
-        spec.write_value(self._number_of_bins, data_type=DataType.UINT32)
-        spec.write_value(self._central, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
-        spec.write_value(self._bin_overlap, data_type=DataType.S1615)
-        spec.write_value(self._tau_force, data_type=DataType.S1615)
-
-        # End-of-Spec:
-        spec.end_specification()
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides
@@ -322,8 +235,8 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
         return 10000  # 10 seconds hard coded in inverted_pendulum.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps, placements,
-                 buffer_manager, machine_time_step):
+    def get_data(
+            self, variable, n_machine_time_steps, placements, buffer_manager):
         vertex = self.machine_vertices.pop()
         placement = placements.get_placement_of_vertex(vertex)
 
@@ -355,3 +268,9 @@ class Pendulum(ApplicationVertex, AbstractGeneratesDataSpecification,
 
     def reset_ring_buffer_shifts(self):
         pass
+
+    def __str__(self):
+        return "{} with {} atoms".format(self._label, self.n_atoms)
+
+    def __repr__(self):
+        return self.__str__()

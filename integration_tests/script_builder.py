@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2017-2019 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,9 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
--r requirements.txt
-SpiNNakerTestBase == 1!6.0.1
-flake8
-pytest>=2.8
-pytest-cov
-sphinx >= 2
+from spinnaker_testbase import RootScriptBuilder
+
+
+class ScriptBuilder(RootScriptBuilder):
+    """
+    This file will recreate the test_scripts.py file
+    """
+
+    def build_intro_labs_scripts(self):
+        # create_test_scripts supports test that are too long or exceptions
+        self.create_test_scripts(["examples"])
+
+
+if __name__ == '__main__':
+    builder = ScriptBuilder()
+    builder.build_intro_labs_scripts()

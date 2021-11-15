@@ -1,3 +1,18 @@
+# Copyright (c) 2019-2021 The University of Manchester
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 # non-SpiNNaker imports
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
@@ -13,7 +28,7 @@ def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
     scores = g_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        simulator.buffer_manager)
     return scores.tolist()
 
 
@@ -32,7 +47,7 @@ bin_overlap = 3
 inputs = 2
 outputs = 2
 
-p.setup(timestep=1.0, min_delay=1, max_delay=127)
+p.setup(timestep=1.0, min_delay=1)
 p.set_number_of_neurons_per_core(p.IF_cond_exp, 100)
 input_model = gym.Pendulum(
     encoding=encoding, time_increment=time_increment, pole_length=pole_length,

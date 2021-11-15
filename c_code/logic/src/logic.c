@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2013-2019 The University of Manchester
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 //
 //  logic.c
 //  Logic game
@@ -105,7 +121,7 @@ uint32_t score_change_count = 0;
 static inline void send_spike(int input)
 {
   spin1_send_mc_packet(key | (input), 0, NO_PAYLOAD);
-//  io_printf(IO_BUF, "sending spike to input %d\n", input);
+//  io_printf(IO_BUF, "sending spike to key, input %d %d %d\n", key, input, key | (input));
 //  current_score++;
 }
 
@@ -126,7 +142,7 @@ static bool initialize(uint32_t *timer_period)
       return false;
     }
 
-    // Get the timing details and set up thse simulation interface
+    // Get the timing details and set up the simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, address),
     		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
 			&infinite_run, &_time, 1, 0)) {
