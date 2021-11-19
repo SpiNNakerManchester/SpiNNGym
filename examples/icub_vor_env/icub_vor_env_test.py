@@ -12,40 +12,40 @@ def get_error(icub_vor_env_pop, simulator):
     b_vertex = icub_vor_env_pop._vertex
     error = b_vertex.get_data(
         'error', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        simulator.buffer_manager)
     return error.tolist()
 
 
 def get_l_count(icub_vor_env_pop, simulator):
     b_vertex = icub_vor_env_pop._vertex
     left_count = b_vertex.get_data(
-        'L_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        'l_count', simulator.no_machine_time_steps, simulator.placements,
+        simulator.buffer_manager)
     return left_count.tolist()
 
 
 def get_r_count(icub_vor_env_pop, simulator):
     b_vertex = icub_vor_env_pop._vertex
     right_count = b_vertex.get_data(
-        'R_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
+        'r_count', simulator.no_machine_time_steps, simulator.placements,
+        simulator.buffer_manager)
     return right_count.tolist()
 
 
-def get_head_pos(icub_vor_env_pop, simulator):
+def get_eye_pos(icub_vor_env_pop, simulator):
     b_vertex = icub_vor_env_pop._vertex
-    head_positions = b_vertex.get_data(
-        'head_pos', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
-    return head_positions.tolist()
+    eye_positions = b_vertex.get_data(
+        'eye_pos', simulator.no_machine_time_steps, simulator.placements,
+        simulator.buffer_manager)
+    return eye_positions.tolist()
 
 
-def get_head_vel(icub_vor_env_pop, simulator):
+def get_eye_vel(icub_vor_env_pop, simulator):
     b_vertex = icub_vor_env_pop._vertex
-    head_velocities = b_vertex.get_data(
-        'head_vel', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager, simulator.machine_time_step)
-    return head_velocities.tolist()
+    eye_velocities = b_vertex.get_data(
+        'eye_vel', simulator.no_machine_time_steps, simulator.placements,
+        simulator.buffer_manager)
+    return eye_velocities.tolist()
 
 
 # Setup
@@ -111,9 +111,9 @@ p.run(runtime)
 errors = get_error(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
 l_counts = get_l_count(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
 r_counts = get_r_count(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-rec_head_pos = get_head_pos(
+rec_eye_pos = get_eye_pos(
     icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-rec_head_vel = get_head_vel(
+rec_eye_vel = get_eye_vel(
     icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
 
 # get the spike data from input and output and plot
@@ -149,8 +149,8 @@ plt.legend(loc="best")
 plt.xlim([0, runtime])
 
 plt.subplot(5, 1, 3)
-plt.plot(x_plot, rec_head_pos, label="head position")
-plt.plot(x_plot, rec_head_vel, label="head velocity")
+plt.plot(x_plot, rec_eye_pos, label="eye position")
+plt.plot(x_plot, rec_eye_vel, label="eye velocity")
 # plt.plot(perfect_eye_pos, label="eye position", ls='--')
 # plt.plot(perfect_eye_vel, label="eye velocity", ls='--')
 plt.legend(loc="best")
