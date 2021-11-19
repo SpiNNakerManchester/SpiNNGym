@@ -205,6 +205,7 @@ static inline void update_count(uint32_t index) {
 // when a packet is received, update the error
 void mc_packet_received_callback(uint keyx, uint payload)
 {
+	use(payload);
     update_count(keyx & 0x1);
 
 //    uint32_t compare;
@@ -236,7 +237,8 @@ void test_the_head(void) {
     int32_t counter_diff;
 
     if (wta_decision) {
-        counter_diff = spike_counters[0] > spike_counters[1] ? spike_counters[0] : -spike_counters[1];
+        counter_diff = spike_counters[0] > spike_counters[1] ?
+        		spike_counters[0] : -spike_counters[1];
     }
     else {
         counter_diff = (spike_counters[0] - spike_counters[1]);
@@ -244,7 +246,8 @@ void test_the_head(void) {
 
     // Compute the contribution to position (1 bit set in counter_diff = 2**-15)
     pos_diff = kbits(counter_diff) * gain;
-    current_eye_vel = pos_diff * 16.5494949k; // TODO why should this scaling factor be cca. 15? 16.54949.. when gain=20
+    // TODO why should this scaling factor be cca. 15? 16.54949.. when gain=20
+    current_eye_vel = pos_diff * 16.5494949k;
     current_eye_pos = current_eye_pos + MULT_NO_ROUND_CUSTOM_ACCUM(pos_diff, pos_to_vel);
 
 //    accum previous_eye_pos = current_eye_pos;
@@ -272,8 +275,8 @@ void test_the_head(void) {
     // Error is relative (in both cases) as the test is done based on > or < 0.0
     accum error_pos = perfect_eye_pos[tick_in_head_loop] - current_eye_pos;
 //    accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
-    accum error_vel = perfect_eye_vel[tick_in_head_loop] - current_eye_vel;
-//    error_value = (0.9k * error_pos + 0.1k * error_vel); // TODO what should happen if error_pos and error_vel cancel each other out?
+    // TODO what should happen if error_pos and error_vel cancel each other out?
+//    error_value = (0.9k * error_pos + 0.1k * error_vel);
 //    error_value = (error_pos + error_vel);
     error_value = (error_pos);
 
