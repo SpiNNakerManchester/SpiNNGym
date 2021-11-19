@@ -40,6 +40,7 @@ from spinn_front_end_common.abstract_models \
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
+from spinn_front_end_common.utilities.exceptions import ConfigurationException
 
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
@@ -127,8 +128,7 @@ class ICubVorEnvMachineVertex(MachineVertex,
             size=front_end_common_constants.SYSTEM_BYTES_REQUIREMENT,
             label='setup')
         spec.reserve_memory_region(
-            region=self._ICUB_VOR_ENV_REGIONS
-                .ICUB_VOR_ENV.value,
+            region=self._ICUB_VOR_ENV_REGIONS.ICUB_VOR_ENV.value,
             size=self.ICUB_VOR_ENV_REGION_BYTES, label='ICubVorEnvParams')
         # reserve recording region
         spec.reserve_memory_region(

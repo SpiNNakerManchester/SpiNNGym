@@ -50,7 +50,7 @@ from spinn_front_end_common.abstract_models. \
 # from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
-# from spinn_front_end_common.utilities.exceptions import ConfigurationException
+from spinn_front_end_common.utilities.exceptions import ConfigurationException
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -101,8 +101,8 @@ class ICubVorEnv(AbstractOneAppOneMachineVertex,
 
     # key value
     ICUB_VOR_ENV_REGION_BYTES = 4
-    # error_window_size, output_size, number_of_inputs, gain, pos_to_vel, wta_decision
-    # low_error_rate and high_error_rate
+    # error_window_size, output_size, number_of_inputs, gain, pos_to_vel,
+    # wta_decision, low_error_rate and high_error_rate
     BASE_DATA_REGION_BYTES = 8 * 4
     # not sure this is entirely necessary but keeping it for now
     MAX_SIM_DURATION = 10000
@@ -116,8 +116,10 @@ class ICubVorEnv(AbstractOneAppOneMachineVertex,
     # parameters expected by PyNN
     default_parameters = {
         'error_window_size': 10,
-        'gain': 20,  # boosts the effect of individual spikes
-        'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),  # magic multiplier to convert movement delta to speed
+        # boosts the effect of individual spikes
+        'gain': 20,
+        # magic multiplier to convert movement delta to speed
+        'pos_to_vel': 1 / (0.001 * 2 * numpy.pi * 10),
         'wta_decision': False,
         'low_error_rate': 2,  # Hz
         'high_error_rate': 20,  # Hz
@@ -143,17 +145,20 @@ class ICubVorEnv(AbstractOneAppOneMachineVertex,
         """
         :param head_pos: array of head positions
         :param head_vel: array of head velocities
-        :param perfect_eye_pos: array of ideal eye positions to produce the VOR
-        :param perfect_eye_vel: array of ideal eye velocities to produce the VOR
+        :param perfect_eye_pos: array of ideal eye positions to produce VOR
+        :param perfect_eye_vel: array of ideal eye velocities to produce VOR
         :param error_window_size: how often the environment changes
-        :param output_size: numbers of neurons encoding the error transmitted via combing fibres
+        :param output_size: numbers of neurons encoding the error transmitted \
+            via combing fibres
         :param gain: boosts the effect of individual spikes
         :param pos_to_vel: magic multiplier to convert movement delta to speed
-        :param wta_decision: whether eye movement takes into account the difference in number of spikes between L / R
+        :param wta_decision: whether eye movement takes into account the \
+            difference in number of spikes between L and R
         :param constraints: usual sPyNNaker constraints
         :param label: name of the population
         :param incoming_spike_buffer_size:
-        :param simulation_duration_ms: maximum simulation duration for this application vertex
+        :param simulation_duration_ms: maximum simulation duration for this \
+            application vertex
         """
         # **NOTE** n_neurons currently ignored - width and height will be
         # specified as additional parameters, forcing their product to be
