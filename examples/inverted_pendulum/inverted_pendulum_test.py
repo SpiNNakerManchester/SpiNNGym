@@ -21,13 +21,15 @@ import matplotlib.pyplot as plt
 # SpiNNaker imports
 import spynnaker8 as p
 import spinn_gym as gym
+from spinn_front_end_common.data import FecDataView
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
+    view = FecDataView()
     scores = g_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
+        'score', view.current_run_timesteps, simulator.placements,
         simulator.buffer_manager)
     return scores.tolist()
 

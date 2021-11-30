@@ -22,6 +22,7 @@ import subprocess
 import sys
 
 # SpiNNaker imports
+from spinn_front_end_common.data import FecDataView
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
@@ -65,8 +66,9 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
 def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
+    view = FecDataView()
     scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
+        'score', view.current_run_timesteps, simulator.placements,
         simulator.buffer_manager)
 
     return scores.tolist()
