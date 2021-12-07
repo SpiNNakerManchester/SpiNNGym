@@ -190,9 +190,9 @@ class DoublePendulumMachineVertex(MachineVertex,
     def get_minimum_buffer_sdram_usage(self):
         return 0  # probably should make this a user input
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value, txrx)
+            placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value)
 
     def get_recorded_region_ids(self):
         """ Get the recording region IDs that have been recorded with buffering

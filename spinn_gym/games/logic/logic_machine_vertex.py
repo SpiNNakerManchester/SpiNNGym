@@ -180,9 +180,9 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     def get_recorded_region_ids(self):
         return [0]
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
+            placement, self._LOGIC_REGIONS.RECORDING.value)
 
     def get_n_keys_for_partition(self, partition):
         n_keys = 0

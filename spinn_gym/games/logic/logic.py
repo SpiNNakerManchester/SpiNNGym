@@ -67,12 +67,12 @@ class Logic(AbstractOneAppOneMachineVertex,
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
     def get_connections_from_machine(
-            self, transceiver, placements, app_edge, synapse_info):
+            self, placements, app_edge, synapse_info):
 
         # TODO: make this work properly (the following call does nothing)
 
         super(Logic, self).get_connections_from_machine(
-            transceiver, placements, app_edge, synapse_info)
+            placements, app_edge, synapse_info)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass

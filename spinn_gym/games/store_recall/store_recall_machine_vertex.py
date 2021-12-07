@@ -171,9 +171,9 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     def resources_required(self):
         return self._resource_required
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._RECALL_REGIONS.RECORDING.value, txrx)
+            placement, self._RECALL_REGIONS.RECORDING.value)
 
     def get_recorded_region_ids(self):
         """ Get the recording region IDs that have been recorded with buffering
