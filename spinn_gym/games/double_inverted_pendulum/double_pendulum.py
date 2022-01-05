@@ -30,6 +30,7 @@ from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
+from spinn_front_end_common.data import FecDataView
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -59,13 +60,12 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
         pass
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
-    def get_connections_from_machine(
-            self, placements, app_edge, synapse_info):
+    def get_connections_from_machine(self, app_edge, synapse_info):
 
         # TODO: make this work properly (the following call does nothing)
 
         super(DoublePendulum, self).get_connections_from_machine(
-            placements, app_edge, synapse_info)
+            app_edge, synapse_info)
 
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
@@ -217,9 +217,8 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
     # ------------------------------------------------------------------------
     @overrides(
         AbstractNeuronRecordable.clear_recording)
-    def clear_recording(
-            self, variable, buffer_manager, placements):
-        self._clear_recording_region(buffer_manager, placements, 0)
+    def clear_recording(self, variable, buffer_manager):
+        self._clear_recording_region(buffer_manager,  0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -239,10 +238,9 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
         return 10000  # 10 seconds hard coded in bkout.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
+    def get_data(self, variable, n_machine_time_steps, buffer_manager):
         vertex = self.machine_vertices.pop()
-        placement = placements.get_placement_of_vertex(vertex)
+        placement = FecDataView().placements.get_placement_of_vertex(vertex)
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
@@ -256,15 +254,14 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
         # return formatted_data
         return output_data
 
-    def _clear_recording_region(
-            self, buffer_manager, placements, recording_region_id):
+    def _clear_recording_region(self, buffer_manager, recording_region_id):
         """ Clear a recorded data region from the buffer manager.
 
         :param buffer_manager: the buffer manager object
-        :param placements: the placements object
         :param recording_region_id: the recorded region ID for clearing
         :rtype: None
         """
+        placements = FecDataView().placements
         for machine_vertex in self.machine_vertices:
             placement = placements.get_placement_of_vertex(machine_vertex)
             buffer_manager.clear_recorded_data(

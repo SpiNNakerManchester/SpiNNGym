@@ -29,8 +29,7 @@ def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
     view = FecDataView()
     scores = g_vertex.get_data(
-        'score', view.current_run_timesteps, simulator.placements,
-        simulator.buffer_manager)
+        'score', view.current_run_timesteps, simulator.buffer_manager)
     return scores.tolist()
 
 

@@ -27,8 +27,7 @@ def get_scores(bandit_pop, simulator):
     b_vertex = bandit_pop._vertex
     view = FecDataView()
     scores = b_vertex.get_data(
-        'score', view.current_run_timesteps, simulator.placements,
-        simulator.buffer_manager)
+        'score', view.current_run_timesteps, simulator.buffer_manager)
     return scores.tolist()
 
 

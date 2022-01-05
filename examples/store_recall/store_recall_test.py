@@ -27,8 +27,7 @@ def get_scores(recall_pop, simulator):
     b_vertex = recall_pop._vertex
     view = FecDataView()
     scores = b_vertex.get_data(
-        'score', view.current_run_timesteps, simulator.placements,
-        simulator.buffer_manager)
+        'score', view.current_run_timesteps, simulator.buffer_manager)
     return scores.tolist()
 
 
