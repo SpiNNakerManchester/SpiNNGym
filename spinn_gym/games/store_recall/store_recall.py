@@ -228,7 +228,7 @@ class Recall(AbstractOneAppOneMachineVertex,
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(self, variable, n_machine_time_steps, buffer_manager):
         vertex = self.machine_vertices.pop()
-        placement = FecDataView().placements.get_placement_of_vertex(vertex)
+        placement = FecDataView.get_placement_of_vertex(vertex)
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
@@ -249,9 +249,8 @@ class Recall(AbstractOneAppOneMachineVertex,
         :param recording_region_id: the recorded region ID for clearing
         :rtype: None
         """
-        placements = FecDataView().placements
         for machine_vertex in self.machine_vertices:
-            placement = placements.get_placement_of_vertex(machine_vertex)
+            placement = FecDataView.get_placement_of_vertex(machine_vertex)
             buffer_manager.clear_recorded_data(
                 placement.x, placement.y, placement.p, recording_region_id)
 
