@@ -27,9 +27,9 @@ from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 def get_scores(game_pop, simulator):
     g_vertex = game_pop._vertex
-    view = FecDataView()
     scores = g_vertex.get_data(
-        'score', view.current_run_timesteps, simulator.buffer_manager)
+        'score', FecDataView.get_current_run_timesteps(),
+        simulator.buffer_manager)
     return scores.tolist()
 
 

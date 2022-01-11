@@ -66,9 +66,9 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
 def get_scores(breakout_pop, simulator):
     b_vertex = breakout_pop._vertex
-    view = FecDataView()
     scores = b_vertex.get_data(
-        'score', view.current_run_timesteps, simulator.buffer_manager)
+        'score', FecDataView.get_current_run_timesteps(),
+        simulator.buffer_manager)
 
     return scores.tolist()
 
