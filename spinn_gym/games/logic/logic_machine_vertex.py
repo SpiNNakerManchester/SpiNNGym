@@ -42,6 +42,7 @@ from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 
@@ -100,7 +101,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
-    def generate_data_specification(self, spec, placement, routing_info):
+    def generate_data_specification(self, spec, placement):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Logic Instance ***\n\n")
@@ -135,6 +136,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
             self._LOGIC_REGIONS.LOGIC.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
