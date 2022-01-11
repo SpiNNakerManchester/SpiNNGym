@@ -99,10 +99,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
     def generate_data_specification(self, spec, placement, routing_info):
         vertex = placement.vertex
 

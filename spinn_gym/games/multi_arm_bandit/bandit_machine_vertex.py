@@ -21,7 +21,6 @@ from spinn_utilities.overrides import overrides
 from data_specification.enums.data_type import DataType
 
 # PACMAN imports
-from pacman.executor.injection_decorator import inject_items
 from pacman.model.graphs.machine import MachineVertex
 from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
@@ -34,6 +33,7 @@ from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
+from spinn_front_end_common.data import FecDataView
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
@@ -105,11 +105,8 @@ class BanditMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
-    def generate_data_specification(self, spec, placement, routing_info):
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
+    def generate_data_specification(self, spec, placement):
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Bandit Instance ***\n\n")
@@ -143,6 +140,7 @@ class BanditMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         spec.comment("\nWriting bandit region:\n")
         spec.switch_write_focus(
             self._BANDIT_REGIONS.BANDIT.value)
+        routing_info = FecDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
