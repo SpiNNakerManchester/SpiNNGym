@@ -21,7 +21,6 @@ from spinn_utilities.overrides import overrides
 from data_specification.enums.data_type import DataType
 
 # PACMAN imports
-from pacman.executor.injection_decorator import inject_items
 from pacman.model.graphs.machine import MachineVertex
 from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
