@@ -241,7 +241,7 @@ class Recall(AbstractOneAppOneMachineVertex,
 
         return output_data
 
-    def _clear_recording_region(self,recording_region_id):
+    def _clear_recording_region(self, recording_region_id):
         """ Clear a recorded data region from the buffer manager.
 
         :param placements: the placements object

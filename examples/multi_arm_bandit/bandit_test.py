@@ -20,7 +20,6 @@ from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
 from spinn_front_end_common.data import FecDataView
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 def get_scores(bandit_pop):

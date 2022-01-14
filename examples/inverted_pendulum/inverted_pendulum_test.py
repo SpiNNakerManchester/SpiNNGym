@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 import spynnaker8 as p
 import spinn_gym as gym
 from spinn_front_end_common.data import FecDataView
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 def get_scores(game_pop):
