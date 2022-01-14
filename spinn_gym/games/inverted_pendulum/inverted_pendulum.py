@@ -211,10 +211,9 @@ class Pendulum(AbstractOneAppOneMachineVertex,
     # ------------------------------------------------------------------------
     # Recording overrides
     # ------------------------------------------------------------------------
-    @overrides(
-        AbstractNeuronRecordable.clear_recording)
-    def clear_recording(self, variable, buffer_manager):
-        self._clear_recording_region(buffer_manager, 0)
+    @overrides(AbstractNeuronRecordable.clear_recording)
+    def clear_recording(self, variable):
+        self._clear_recording_region(0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -234,11 +233,12 @@ class Pendulum(AbstractOneAppOneMachineVertex,
         return 10000  # 10 seconds hard coded in inverted_pendulum.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps, buffer_manager):
+    def get_data(self, variable, n_machine_time_steps):
         vertex = self.machine_vertices.pop()
         placement = FecDataView.get_placement_of_vertex(vertex)
 
         # Read the data recorded
+        buffer_manager = FecDataView.get_buffer_manager()
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
         data = data_values
 
@@ -250,7 +250,7 @@ class Pendulum(AbstractOneAppOneMachineVertex,
         # return formatted_data
         return output_data
 
-    def _clear_recording_region(self, buffer_manager, recording_region_id):
+    def _clear_recording_region(self, recording_region_id):
         """ Clear a recorded data region from the buffer manager.
 
         :param buffer_manager: the buffer manager object
@@ -258,6 +258,7 @@ class Pendulum(AbstractOneAppOneMachineVertex,
         :param recording_region_id: the recorded region ID for clearing
         :rtype: None
         """
+        buffer_manager = FecDataView.get_buffer_manager()
         for machine_vertex in self.machine_vertices:
             placement = FecDataView.get_placement_of_vertex(machine_vertex)
             buffer_manager.clear_recorded_data(

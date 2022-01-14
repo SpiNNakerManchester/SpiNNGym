@@ -23,11 +23,10 @@ from spinn_front_end_common.data import FecDataView
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-def get_scores(bandit_pop, simulator):
+def get_scores(bandit_pop):
     b_vertex = bandit_pop._vertex
     scores = b_vertex.get_data(
-        'score', FecDataView.get_current_run_timesteps(),
-        simulator.buffer_manager)
+        'score', FecDataView.get_current_run_timesteps())
     return scores.tolist()
 
 
@@ -63,12 +62,10 @@ i2o1 = p.Projection(arms_pop, output_pop1, p.AllToAllConnector(),
 i2o2 = p.Projection(arms_pop, output_pop2, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
-simulator = get_simulator()
-
 runtime = 10000
 p.run(runtime)
 
-scores = get_scores(bandit_pop=arms_pop, simulator=simulator)
+scores = get_scores(bandit_pop=arms_pop)
 
 print(scores)
 
