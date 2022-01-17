@@ -20,7 +20,6 @@ import matplotlib.pyplot as plt
 import spinn_gym as gym
 # from spinn_arm.python_models.arm import Arm
 from spinn_front_end_common.data import FecDataView
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 def get_scores(game_pop):
