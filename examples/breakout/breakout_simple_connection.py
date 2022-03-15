@@ -23,7 +23,6 @@ import sys
 
 # SpiNNaker imports
 from spinn_front_end_common.data import FecDataView
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spynnaker.pyNN.connections.\
@@ -64,7 +63,7 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
     # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 
-def get_scores(breakout_pop, simulator):
+def get_scores(breakout_pop):
     b_vertex = breakout_pop._vertex
     scores = b_vertex.get_data(
         'score', FecDataView.get_current_run_timesteps())
@@ -209,7 +208,6 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # -----------------------------------------------------------------------------
 runtime = 1000 * 60
-simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 
@@ -241,7 +239,7 @@ Figure(
 
 plt.show()
 
-scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
+scores = get_scores(breakout_pop=breakout_pop)
 print("Scores: {}".format(scores))
 
 # End simulation
