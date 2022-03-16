@@ -69,11 +69,11 @@ jobs:
       with: 
         package: examples spinn_gym
 
-    - name: Validate XML
-      if: matrix.python-version == 3.8
-      uses: ./support/actions/validate-xml
-      with:
-        base-path: examples spinn_gym
+    #- name: Validate XML
+    #  if: matrix.python-version == 3.8
+    #  uses: ./support/actions/validate-xml
+    #  with:
+    #    base-path: examples spinn_gym
 
     - name: Run rat copyright enforcement
       if: matrix.python-version == 3.8
