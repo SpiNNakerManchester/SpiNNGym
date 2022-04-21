@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ from spynnaker.pyNN.spynnaker_external_device_plugin_manager import \
     SpynnakerExternalDevicePluginManager as ex
 from spynnaker.pyNN.models.utility_models.spike_injector import \
     SpikeInjector
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 import spinn_gym as gym
 
 # -----------------------------------------------------------------------------

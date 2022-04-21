@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 
 # SpiNNaker imports
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 import spinn_gym as gym
 from spinn_front_end_common.data import FecDataView
 
