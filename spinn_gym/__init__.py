@@ -25,7 +25,7 @@ import os
 # Put model_binaries directory on path
 from spynnaker.pyNN.data import SpynnakerDataView
 binary_path = os.path.join(os.path.split(__file__)[0], 'model_binaries')
-SpynnakerDataView.get_executable_finder().add_path(binary_path)
+SpynnakerDataView.register_binary_search_path(binary_path)
 
 __all__ = ['Breakout', 'Bandit', 'Pendulum', 'Logic', 'Recall',
            'DoublePendulum']
