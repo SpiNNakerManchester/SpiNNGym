@@ -16,7 +16,7 @@
 import matplotlib.pyplot as plt
 from pyNN.utility.plotting import Figure, Panel
 
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.automated_breakout import AutomatedBreakout
 from spinn_front_end_common.utilities.globals_variables import get_simulator

@@ -3,7 +3,7 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 from pyNN.utility.plotting import Figure, Panel
 
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.neuromodulated_breakout import (
     NeuromodulatedBreakout)

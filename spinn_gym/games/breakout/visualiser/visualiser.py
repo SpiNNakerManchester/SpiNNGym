@@ -64,8 +64,11 @@ class Visualiser(object):
     # How many bits are used to represent colour and brick
     colour_bits = 2
 
-    def __init__(self, machine_address, tag, key_input_connection=None,
+    def __init__(self, key_input_connection=None,
                  scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
+        self._connection_ready = False
+        self.running = True
+        
         # Reset input state
         self.input_state = InputState.idle
 
@@ -113,10 +116,6 @@ class Visualiser(object):
         print("\tBrick Width {}".format(self.BRICK_WIDTH))
         print("\tBrick Height {}".format(self.BRICK_HEIGHT))
 
-        # Open socket to receive datagrams
-        self.connection = SCAMPConnection(remote_host=machine_address)
-        reprogram_tag(self.connection, tag, strip=True)
-
         # Make awesome CRT palette
         cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED,
                                    BRIGHT_PURPLE, BRIGHT_BLUE, BRIGHT_ORANGE])
@@ -129,7 +128,7 @@ class Visualiser(object):
                                       cmap=cmap, vmin=0.0, vmax=5.0)
 
         # Draw score using textbox
-        self.score_text = self.axis.text(0.5, 1.0, "0", color=BRIGHT_GREEN,
+        self.score_text = self.axis.text(0.5, 1.0, "Waiting for simulation to start...", color=BRIGHT_GREEN,
                                          transform=self.axis.transAxes,
                                          horizontalalignment="right",
                                          verticalalignment="top")
@@ -155,6 +154,12 @@ class Visualiser(object):
             filename, fourcc, self.fps, self.video_shape, isColor=True)
         self.video_writer.open(
             filename, fourcc, self.fps, self.video_shape, isColor=True)
+        
+    def set_remote_end(self, machine_address, tag):
+        # Open socket to receive datagrams
+        self.connection = SCAMPConnection(remote_host=machine_address)
+        reprogram_tag(self.connection, tag, strip=True)
+        self._connection_ready = True
 
     # ------------------------------------------------------------------------
     # Public methods
@@ -170,14 +175,14 @@ class Visualiser(object):
             pass
 
     def handle_close(self, evt):
+        self.close()
+        
+    def close(self):
+        self.score_text.set_text("Simulation finished")
+        self.running = False
         self.video_writer.release()
 
-    # ------------------------------------------------------------------------
-    # Private methods
-    # ------------------------------------------------------------------------
-    def _update(self, frame):
-        # print "trying to update interval = ", (1000. / self.fps)
-
+    def update(self, frame):
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
             self.key_input_connection.send_spike("key_input", self.input_state)
@@ -185,6 +190,10 @@ class Visualiser(object):
         # Read all datagrams received during last frame
         message_received = False
         while True:
+            if not self._connection_ready:
+                break
+            if not self.running:
+                break
             if not self.connection.is_ready_to_receive(0):
                 break
             else:
@@ -269,29 +278,10 @@ class Visualiser(object):
 
         # try:
         if message_received:
-            #     if not self.first_update:
-            #         buf = io.BytesIO()
-            #         plt.savefig(buf, format='png', dpi=100)
-            #         buf.seek(0)
-            #         self.video_data[:] = cv2.imdecode(
-            #             np.fromstring(buf.read(), np.uint8),
-            #             cv2.IMREAD_COLOR)
-            #     self.video_writer.write(self.video_data)
 
             self.video_writer.write(
                 cv2.resize(self.video_data, self.video_shape,
                            interpolation=cv2.INTER_NEAREST))
-        # except:
-        #     pass
-
-        # Return list of artists which we have updated
-        # **YUCK** order of these dictates sort order
-        # **YUCK** score_text must be returned whether it has
-        # been updated or not to prevent overdraw
-        # self.first_update = False
-        #  print("redrawing...")
-        # plt.draw()
-        # plt.pause(0.01)
         return [self.image, self.score_text]
 
     def _on_key_press(self, event):
@@ -323,15 +313,16 @@ if __name__ == "__main__":
     yb = int(sys.argv[4])
 
     # Create visualiser
-    vis = Visualiser(machine_address=machine, tag=tag, x_factor=2, y_factor=2,
-                     x_bits=xb, y_bits=yb)
+    vis = Visualiser(x_factor=2, y_factor=2, x_bits=xb, y_bits=yb)
+    vis.set_remote_end(machine_address=machine, tag=tag)
     print("\nDisplaying visualiser")
     vis.show()
     print("...awaiting game signals")
 
     refresh_time = 0.001
-    while True:
-        score = vis._update(None)
+    while vis.running:
+        score = vis.update(None)
         time.sleep(refresh_time)
+    vis.update(None)
 
     print("visualiser gets to here?")
