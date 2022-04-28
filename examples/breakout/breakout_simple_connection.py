@@ -31,16 +31,9 @@ breakout.receive_pop.record('spikes')
 breakout.receive_reward_pop.record('gsyn_exc')
 
 # -----------------------------------------------------------------------------
-# Configure Visualiser
-# -----------------------------------------------------------------------------
-# configure_visualiser(
-#     breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
-
-# -----------------------------------------------------------------------------
 # Run Simulation
 # -----------------------------------------------------------------------------
 runtime = 1000 * 60
-simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 
@@ -53,7 +46,6 @@ spike_input_spikes = breakout.spike_input.get_data('spikes')
 receive_pop_spikes = breakout.receive_pop.get_data('spikes')
 receive_reward_pop_output = breakout.receive_reward_pop.get_data('gsyn_exc')
 
-figure_filename = "results.png"
 Figure(
     # raster plot of the presynaptic neuron spike times
     Panel(spike_input_spikes.segments[0].spiketrains,
@@ -72,6 +64,7 @@ Figure(
 
 plt.show()
 
+simulator = get_simulator()
 scores = get_scores(breakout_pop=breakout.breakout_pop, simulator=simulator)
 print("Scores: {}".format(scores))
 

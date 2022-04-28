@@ -12,14 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import sys
-import subprocess
 import numpy
-import spynnaker8 as p
-import functools
-import threading
-import time
-from .visualiser.visualiser import Visualiser
 
 
 def get_scores(breakout_pop, simulator):
@@ -206,67 +199,3 @@ def clean_connection(data):
             clean_conn.append(new_c)
 
     return clean_conn
-
-
-def start_external_visualiser(
-        database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
-    _, _, _, board_address, tag = database.get_live_output_details(
-        pop_label, "LiveSpikeReceiver")
-
-    print("Calling \'start_visualiser\'")
-
-    # Calling visualiser - must be done as process rather than on thread due to
-    # OS security (Mac)
-    return subprocess.Popen(
-        [sys.executable,
-         '../../spinn_gym/games/breakout/visualiser/visualiser.py',
-         board_address,
-         tag.__str__(),
-         xb.__str__(),
-         yb.__str__()
-         ])
-
-
-def start_ipython_visualiser(
-        database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
-    _, _, _, board_address, tag = database.get_live_output_details(
-        pop_label, "LiveSpikeReceiver")
-    threading.Thread(
-        target=start_visualiser,
-        args=[board_address, tag, pop_label, xr, yr, xb, yb, key_conn])
-
-
-def start_visualiser(
-        board_address, tag, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
-    from IPython import display
-    from matplotlib import pyplot
-    vis = Visualiser(
-        machine_address=board_address, tag=tag, x_factor=xr, y_factor=yr,
-        x_bits=xb, y_bits=yb)
-    print("Displaying visualiser")
-    # Still testing whether it's possible to open the visualiser in a new cell\
-    # display(Javascript("Jupyter.notebook.execute_cells_below()"))
-    vis.show(),
-    refresh_time = 0.001
-    while True:
-        vis._update(None)
-        display.display(pyplot.gcf())
-        display.clear_output(wait=True)
-        time.sleep(refresh_time)
-
-
-def configure_visualiser(
-        breakout, x_res, y_res, x_scale, y_scale, start_vis_func):
-    key_input_connection = p.external_devices.SpynnakerLiveSpikesConnection(
-        send_labels=[breakout.key_input.label], local_port=None)
-
-    print("\nRegister visualiser process")
-    key_input_connection.add_database_callback(functools.partial(
-        start_vis_func, pop_label=breakout.breakout_pop.label,
-        xr=x_scale, yr=y_scale,
-        xb=numpy.uint32(numpy.ceil(numpy.log2(x_res / x_scale))),
-        yb=numpy.uint32(numpy.ceil(numpy.log2(y_res / y_scale))),
-        key_conn=key_input_connection))
-
-    p.external_devices.add_database_socket_address(
-        "localhost", key_input_connection.local_port, None)
