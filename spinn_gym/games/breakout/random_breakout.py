@@ -40,9 +40,6 @@ class RandomBreakout(object):
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
         self.breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
 
-        # Live output the breakout population
-        p.external_devices.activate_live_output_for(self.breakout_pop)
-
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
         #     2, p.external_devices.SpikeInjector(), label="key_input")

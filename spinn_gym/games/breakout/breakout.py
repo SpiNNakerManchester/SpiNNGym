@@ -33,6 +33,8 @@ from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
+from spinn_front_end_common.abstract_models.impl \
+    import ProvidesKeyToAtomMappingImpl
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -53,7 +55,8 @@ class Breakout(AbstractOneAppOneMachineVertex,
                AbstractProvidesOutgoingPartitionConstraints,
                AbstractAcceptsIncomingSynapses,
                AbstractNeuronRecordable,
-               SimplePopulationSettable):
+               SimplePopulationSettable,
+               ProvidesKeyToAtomMappingImpl):
 
     @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
     def verify_splitter(self, splitter):

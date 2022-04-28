@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 try:
@@ -35,7 +35,7 @@ def start_vis_thread(database, pop_label, vis):
 
 
 def start_visualiser(vis, display_handle):
-    refresh_time = 0.001
+    refresh_time = 0.05
     while vis.running:
         vis.update(None)
         display_handle.update(plt.gcf())
@@ -49,27 +49,52 @@ def stop_visualiser(label, conn, vis, display_handle):
     print("Visualiser closed")
 
 
-def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale):
-    key_input_connection = p.external_devices.SpynnakerLiveSpikesConnection(
-        local_port=None, send_labels=[breakout.breakout_pop.label])
+def handle_vis_spikes(label, time, neuron_ids, vis):
+    vis.handle_breakout_spikes(neuron_ids)
+
+
+def handle_live_spikes(label, time, neuron_ids, vis):
+    vis.handle_live_spikes(label, time, neuron_ids)
+
+
+def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale, live_spikes_pops=None):
+    # Live output the breakout population
+    p.external_devices.activate_live_output_for(breakout.breakout_pop)
+    live_pop_labels = []
+    if live_spikes_pops:
+        for pop in live_spikes_pops:
+            p.external_devices.activate_live_output_for(pop)
+        live_pop_labels = [pop.label for pop in live_spikes_pops]
+    else:
+        live_spikes_pops = []
+    
+    vis_connection = p.external_devices.SpynnakerLiveSpikesConnection(
+        local_port=None, receive_labels=[
+            breakout.breakout_pop.label, *live_pop_labels])
 
     # Create visualiser
     xb = np.uint32(np.ceil(np.log2(x_res / x_scale)))
     yb = np.uint32(np.ceil(np.log2(y_res / y_scale)))
-    vis = Visualiser(x_factor=2, y_factor=2, x_bits=xb, y_bits=yb)
+    vis = Visualiser(
+        x_factor=2, y_factor=2, x_bits=xb, y_bits=yb, 
+        live_pops=live_spikes_pops)
     display.clear_output(wait=True)
     vis.update(None)
     display_handle = display.display(plt.gcf(), display_id=True)
 
-    key_input_connection.add_database_callback(functools.partial(
-        start_vis_thread, pop_label=breakout.breakout_pop.label, vis=vis))
-    key_input_connection.add_pause_stop_callback(
+    vis_connection.add_receive_callback(
+        breakout.breakout_pop.label,
+        functools.partial(handle_vis_spikes, vis=vis))
+    vis_connection.add_pause_stop_callback(
         breakout.breakout_pop.label,
         functools.partial(stop_visualiser, vis=vis,
                           display_handle=display_handle))
+    for label in live_pop_labels:
+        vis_connection.add_receive_callback(
+            label, functools.partial(handle_live_spikes, vis=vis))
 
     p.external_devices.add_database_socket_address(
-        "localhost", key_input_connection.local_port, None)
+        "localhost", vis_connection.local_port, None)
 
     vis_thread = threading.Thread(target=start_visualiser,
                                   args=[vis, display_handle])
