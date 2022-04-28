@@ -10,7 +10,8 @@ from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 try:
     from IPython import display
 except ModuleNotFoundError:
-    print("WARNING: Not in an IPython Environment; this visualisation code won't work!")
+    print("WARNING: Not in an IPython Environment;"
+          " this visualisation code won't work!")
 
 
 def start_vis_thread(database, pop_label, vis):
@@ -18,7 +19,7 @@ def start_vis_thread(database, pop_label, vis):
         pop_label, "LiveSpikeReceiver")
     vis.set_remote_end(board_address, tag)
 
-    
+
 def start_visualiser(vis, display_handle):
     refresh_time = 0.001
     while vis.running:
@@ -50,10 +51,12 @@ def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale):
         start_vis_thread, pop_label=breakout.breakout_pop.label, vis=vis))
     key_input_connection.add_pause_stop_callback(
         breakout.breakout_pop.label,
-        functools.partial(stop_visualiser, vis=vis, display_handle=display_handle))
+        functools.partial(stop_visualiser, vis=vis, 
+                          display_handle=display_handle))
 
     p.external_devices.add_database_socket_address(
         "localhost", key_input_connection.local_port, None)
 
-    vis_thread = threading.Thread(target=start_visualiser, args=[vis, display_handle])
+    vis_thread = threading.Thread(target=start_visualiser, 
+                                  args=[vis, display_handle])
     vis_thread.start()

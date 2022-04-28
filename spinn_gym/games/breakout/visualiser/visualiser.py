@@ -68,7 +68,7 @@ class Visualiser(object):
                  scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60):
         self._connection_ready = False
         self.running = True
-        
+
         # Reset input state
         self.input_state = InputState.idle
 
@@ -128,10 +128,11 @@ class Visualiser(object):
                                       cmap=cmap, vmin=0.0, vmax=5.0)
 
         # Draw score using textbox
-        self.score_text = self.axis.text(0.5, 1.0, "Waiting for simulation to start...", color=BRIGHT_GREEN,
-                                         transform=self.axis.transAxes,
-                                         horizontalalignment="right",
-                                         verticalalignment="top")
+        self.score_text = self.axis.text(
+            0.5, 1.0, "Waiting for simulation to start...", 
+            color=BRIGHT_GREEN, transform=self.axis.transAxes, 
+            horizontalalignment="right", verticalalignment="top")
+        
         # Hook key listeners
         self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
         self.fig.canvas.mpl_connect("key_release_event", self._on_key_release)
@@ -154,7 +155,7 @@ class Visualiser(object):
             filename, fourcc, self.fps, self.video_shape, isColor=True)
         self.video_writer.open(
             filename, fourcc, self.fps, self.video_shape, isColor=True)
-        
+
     def set_remote_end(self, machine_address, tag):
         # Open socket to receive datagrams
         self.connection = SCAMPConnection(remote_host=machine_address)
@@ -176,7 +177,7 @@ class Visualiser(object):
 
     def handle_close(self, evt):
         self.close()
-        
+
     def close(self):
         self.score_text.set_text("Simulation finished")
         self.running = False
