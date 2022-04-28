@@ -129,10 +129,10 @@ class Visualiser(object):
 
         # Draw score using textbox
         self.score_text = self.axis.text(
-            0.5, 1.0, "Waiting for simulation to start...", 
-            color=BRIGHT_GREEN, transform=self.axis.transAxes, 
+            0.5, 1.0, "Waiting for simulation to start...",
+            color=BRIGHT_GREEN, transform=self.axis.transAxes,
             horizontalalignment="right", verticalalignment="top")
-        
+
         # Hook key listeners
         self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
         self.fig.canvas.mpl_connect("key_release_event", self._on_key_release)

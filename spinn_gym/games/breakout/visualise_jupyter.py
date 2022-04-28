@@ -23,7 +23,7 @@ def start_vis_thread(database, pop_label, vis):
 def start_visualiser(vis, display_handle):
     refresh_time = 0.001
     while vis.running:
-        score = vis.update(None)
+        vis.update(None)
         display_handle.update(plt.gcf())
         time.sleep(refresh_time)
 
@@ -51,12 +51,12 @@ def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale):
         start_vis_thread, pop_label=breakout.breakout_pop.label, vis=vis))
     key_input_connection.add_pause_stop_callback(
         breakout.breakout_pop.label,
-        functools.partial(stop_visualiser, vis=vis, 
+        functools.partial(stop_visualiser, vis=vis,
                           display_handle=display_handle))
 
     p.external_devices.add_database_socket_address(
         "localhost", key_input_connection.local_port, None)
 
-    vis_thread = threading.Thread(target=start_visualiser, 
+    vis_thread = threading.Thread(target=start_visualiser,
                                   args=[vis, display_handle])
     vis_thread.start()
