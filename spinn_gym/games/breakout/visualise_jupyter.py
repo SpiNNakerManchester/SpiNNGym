@@ -7,7 +7,10 @@ import time
 import spynnaker8 as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
-from IPython import display
+try:
+    from IPython import display
+except ModuleNotFoundError:
+    print("WARNING: Not in an IPython Environment; this visualisation code won't work!")
 
 
 def start_vis_thread(database, pop_label, vis):
