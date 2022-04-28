@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@ from pyNN.utility.plotting import Figure, Panel
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.random_breakout import RandomBreakout
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 
 breakout = RandomBreakout()
 

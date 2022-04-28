@@ -47,6 +47,8 @@ jobs:
       uses: ./support/actions/install-matplotlib
     - name: Setup
       uses: ./support/actions/run-setup
+    - name: Setup PyNN
+      uses: ./support/actions/pynn-setup
 
     # Add this when tests are built
     - name: Create a spynnaker.cfg
@@ -69,11 +71,11 @@ jobs:
       with: 
         package: examples spinn_gym
 
-    - name: Validate XML
-      if: matrix.python-version == 3.8
-      uses: ./support/actions/validate-xml
-      with:
-        base-path: examples spinn_gym
+    #- name: Validate XML
+    #  if: matrix.python-version == 3.8
+    #  uses: ./support/actions/validate-xml
+    #  with:
+    #    base-path: examples spinn_gym
 
     - name: Run rat copyright enforcement
       if: matrix.python-version == 3.8
