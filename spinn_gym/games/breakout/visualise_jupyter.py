@@ -59,19 +59,23 @@ def handle_live_spikes(label, time, neuron_ids, vis):
 
 def jupyter_visualiser(
         breakout, x_res, x_scale, y_res, y_scale, live_spikes_pops=None):
-    # Live output the breakout population
-    p.external_devices.activate_live_output_for(breakout.breakout_pop)
     live_pop_labels = []
     if live_spikes_pops:
-        for pop in live_spikes_pops:
-            p.external_devices.activate_live_output_for(pop)
         live_pop_labels = [pop.label for pop in live_spikes_pops]
-    else:
-        live_spikes_pops = []
 
     vis_connection = p.external_devices.SpynnakerLiveSpikesConnection(
         local_port=None, receive_labels=[
             breakout.breakout_pop.label, *live_pop_labels])
+
+    p.external_devices.activate_live_output_for(
+        breakout.breakout_pop,
+        database_notify_port_num=vis_connection.local_port)
+    if live_spikes_pops:
+        for pop in live_spikes_pops:
+            p.external_devices.activate_live_output_for(
+                pop, database_notify_port_num=vis_connection.local_port)
+    else:
+        live_spikes_pops = []
 
     # Create visualiser
     xb = np.uint32(np.ceil(np.log2(x_res / x_scale)))
@@ -93,9 +97,6 @@ def jupyter_visualiser(
     for label in live_pop_labels:
         vis_connection.add_receive_callback(
             label, functools.partial(handle_live_spikes, vis=vis))
-
-    p.external_devices.add_database_socket_address(
-        "localhost", vis_connection.local_port, None)
 
     vis_thread = threading.Thread(target=start_visualiser,
                                   args=[vis, display_handle])
