@@ -18,11 +18,9 @@ import numpy as np
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
 import datetime
-import time
 
 import cv2
 import os
-import sys
 
 from collections import deque
 
@@ -127,12 +125,11 @@ class Visualiser(object):
         width = 8
         if live_pops:
             width = 16
-            breakouts = ["Breakout"] * len(live_pops)
             axes_names = [["Breakout", pop.label] for pop in live_pops]
-        
+
         self.fig, self.axes = plt.subplot_mosaic(
             axes_names, figsize=(width, 6), constrained_layout=True)
-        
+
         if live_pops:
             self.live_spike_range = (0, live_duration)
             self.live_spike_data = {pop.label: deque() for pop in live_pops}
@@ -145,11 +142,12 @@ class Visualiser(object):
                 self.axes[pop.label].set_xticks([])
                 self.axes[pop.label].set_yticks([])
             self.live_duration = live_duration
-        
+
         breakout_axis = self.axes["Breakout"]
         self.image_data = np.zeros((self.y_res, self.x_res))
-        self.image = breakout_axis.imshow(self.image_data, interpolation="nearest",
-                                      cmap=cmap, vmin=0.0, vmax=5.0)
+        self.image = breakout_axis.imshow(
+            self.image_data, interpolation="nearest", cmap=cmap,
+            vmin=0.0, vmax=5.0)
 
         # Draw score using textbox
         self.score_text = breakout_axis.text(
@@ -161,17 +159,19 @@ class Visualiser(object):
         self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
         self.fig.canvas.mpl_connect("key_release_event", self._on_key_release)
         self.fig.canvas.mpl_connect('close_event', self.handle_close)
-        
+
         # Hide grid
         breakout_axis.grid(False)
         breakout_axis.set_xticklabels([])
         breakout_axis.set_yticklabels([])
         breakout_axis.axes.get_xaxis().set_visible(False)
-        
+
         if video_out:
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            self.video_data = np.zeros((self.y_res, self.x_res, 3), dtype='uint8')
-            self.video_shape = (self.x_res * self.scale, self.y_res * self.scale)
+            self.video_data = np.zeros(
+                (self.y_res, self.x_res, 3), dtype='uint8')
+            self.video_shape = (
+                self.x_res * self.scale, self.y_res * self.scale)
             self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
             filename = os.path.join(os.getcwd(), "breakout_output_%s.m4v" %
@@ -285,7 +285,7 @@ class Visualiser(object):
 
             # Update displayed score count
             self.score_text.set_text("%u" % self.score)
-            
+
         if self.video_data is not None:
             if self.score > 0:
                 # print("pos score %d"%self.score)

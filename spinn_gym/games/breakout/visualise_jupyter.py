@@ -57,7 +57,8 @@ def handle_live_spikes(label, time, neuron_ids, vis):
     vis.handle_live_spikes(label, time, neuron_ids)
 
 
-def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale, live_spikes_pops=None):
+def jupyter_visualiser(
+        breakout, x_res, x_scale, y_res, y_scale, live_spikes_pops=None):
     # Live output the breakout population
     p.external_devices.activate_live_output_for(breakout.breakout_pop)
     live_pop_labels = []
@@ -67,7 +68,7 @@ def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale, live_spikes_pop
         live_pop_labels = [pop.label for pop in live_spikes_pops]
     else:
         live_spikes_pops = []
-    
+
     vis_connection = p.external_devices.SpynnakerLiveSpikesConnection(
         local_port=None, receive_labels=[
             breakout.breakout_pop.label, *live_pop_labels])
@@ -76,7 +77,7 @@ def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale, live_spikes_pop
     xb = np.uint32(np.ceil(np.log2(x_res / x_scale)))
     yb = np.uint32(np.ceil(np.log2(y_res / y_scale)))
     vis = Visualiser(
-        x_factor=2, y_factor=2, x_bits=xb, y_bits=yb, 
+        x_factor=2, y_factor=2, x_bits=xb, y_bits=yb,
         live_pops=live_spikes_pops)
     display.clear_output(wait=True)
     vis.update()
