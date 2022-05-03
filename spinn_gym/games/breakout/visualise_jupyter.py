@@ -35,22 +35,22 @@ def start_vis_thread(database, pop_label, vis):
 
 
 def start_visualiser(vis, display_handle):
-    refresh_time = 0.05
+    refresh_time = 0.01
     while vis.running:
-        vis.update(None)
-        display_handle.update(plt.gcf())
+        if vis.update():
+            display_handle.update(plt.gcf())
         time.sleep(refresh_time)
 
 
 def stop_visualiser(label, conn, vis, display_handle):
     vis.close()
-    vis.update(None)
+    vis.update()
     display_handle.update(plt.gcf())
     print("Visualiser closed")
 
 
 def handle_vis_spikes(label, time, neuron_ids, vis):
-    vis.handle_breakout_spikes(neuron_ids)
+    vis.handle_breakout_spikes(time, neuron_ids)
 
 
 def handle_live_spikes(label, time, neuron_ids, vis):
@@ -79,7 +79,7 @@ def jupyter_visualiser(breakout, x_res, x_scale, y_res, y_scale, live_spikes_pop
         x_factor=2, y_factor=2, x_bits=xb, y_bits=yb, 
         live_pops=live_spikes_pops)
     display.clear_output(wait=True)
-    vis.update(None)
+    vis.update()
     display_handle = display.display(plt.gcf(), display_id=True)
 
     vis_connection.add_receive_callback(

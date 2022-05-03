@@ -64,9 +64,11 @@ class Visualiser(object):
 
     def __init__(self, key_input_connection=None,
                  scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60,
-                 live_pops=None, live_duration=1000, video_out=False):
+                 live_pops=None, live_duration=5000, video_out=False):
         self._connection_ready = False
         self.running = True
+        self.do_update = False
+        self.last_time = 0
         self.message_received = False
 
         # Reset input state
@@ -132,16 +134,16 @@ class Visualiser(object):
             axes_names, figsize=(width, 6), constrained_layout=True)
         
         if live_pops:
+            self.live_spike_range = (0, live_duration)
             self.live_spike_data = {pop.label: deque() for pop in live_pops}
-            self.live_spike_range = dict()
             self.live_spike_plot = dict()
             for pop in live_pops:
-                self.live_spike_plot[pop.label] = self.axes[pop.label].plot(
+                self.live_spike_plot[pop.label], = self.axes[pop.label].plot(
                     [], [], ".")
                 self.axes[pop.label].set_xlim(0, live_duration)
-                self.axes[pop.label].set_ylim(0, pop.size)
-                self.axes[pop.label].set_xticks([0, live_duration - 100])
-                self.live_spike_range[pop.label] = (0, live_duration)
+                self.axes[pop.label].set_ylim(-1, pop.size + 1)
+                self.axes[pop.label].set_xticks([])
+                self.axes[pop.label].set_yticks([])
             self.live_duration = live_duration
         
         breakout_axis = self.axes["Breakout"]
@@ -201,21 +203,35 @@ class Visualiser(object):
     def close(self):
         self.score_text.set_text("Simulation finished")
         self.running = False
-        self.video_writer.release()
-        
+        if self.video_data is not None:
+            self.video_writer.release()
+
     def handle_live_spikes(self, label, time, neuron_ids):
-        # Take out the trash
-        time_low, time_high = self.live_spike_range[label]
+        time_low, time_high = self.live_spike_range
         if time < time_low:
             return
+        data = self.live_spike_data[label]
         if time > time_high:
             time_high = time
             time_low = time - self.live_duration
-            self.live_spike_range[label] = (time_low, time_high)
-            self.axes[label].set_xlim(time_low, time_high)
-            self.axes[label].set_xticks([time_low, time_high - 100])
-        
-    def handle_breakout_spikes(self, neuron_ids):
+            self.live_spike_range = (time_low, time_high)
+            while data and data[0][1] < time_low:
+                data.popleft()
+        data.extend((n, time) for n in neuron_ids)
+
+    def handle_breakout_spikes(self, time, neuron_ids):
+        if time != self.last_time:
+            self.last_time = time
+            self.image.set_array(self.image_data)
+            time_low, time_high = self.live_spike_range
+            for label in self.live_spike_data:
+                data = self.live_spike_data[label]
+                axes = self.axes[label]
+                plot = self.live_spike_plot[label]
+                axes.set_xlim(time_low, time_high)
+                plot_data = np.array(data)
+                plot.set_data(plot_data[:, 1], plot_data[:, 0])
+            self.do_update = True
         payload = np.array(neuron_ids, dtype="uint32")
         payload_value = payload & self.value_mask
         vision_event_mask = payload_value >= SpecialEvent.max
@@ -282,16 +298,10 @@ class Visualiser(object):
                 self.video_data[0:1, :, :] = [200, 200, 200]
         self.message_received = True
 
-    def update(self, frame):
+    def update(self):
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
             self.key_input_connection.send_spike("key_input", self.input_state)
-
-        # Set image data
-        try:
-            self.image.set_array(self.image_data)
-        except NameError:
-            pass
 
         # try:
         if self.message_received and self.video_data is not None:
@@ -299,7 +309,9 @@ class Visualiser(object):
                 cv2.resize(self.video_data, self.video_shape,
                            interpolation=cv2.INTER_NEAREST))
             self.message_received = False
-        return [self.image, self.score_text]
+        do_update = self.do_update
+        self.do_update = False
+        return do_update
 
     def _on_key_press(self, event):
         # Send appropriate bits
