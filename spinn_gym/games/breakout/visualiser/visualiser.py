@@ -223,14 +223,6 @@ class Visualiser(object):
         if time != self.last_time:
             self.last_time = time
             self.image.set_array(self.image_data)
-            time_low, time_high = self.live_spike_range
-            for label in self.live_spike_data:
-                data = self.live_spike_data[label]
-                axes = self.axes[label]
-                plot = self.live_spike_plot[label]
-                axes.set_xlim(time_low, time_high)
-                plot_data = np.array(data)
-                plot.set_data(plot_data[:, 1], plot_data[:, 0])
             self.do_update = True
         payload = np.array(neuron_ids, dtype="uint32")
         payload_value = payload & self.value_mask
@@ -311,6 +303,16 @@ class Visualiser(object):
             self.message_received = False
         do_update = self.do_update
         self.do_update = False
+        if do_update:
+            time_low, time_high = self.live_spike_range
+            for label in self.live_spike_data:
+                data = self.live_spike_data[label]
+                axes = self.axes[label]
+                plot = self.live_spike_plot[label]
+                axes.set_xlim(time_low, time_high)
+                if data:
+                    plot_data = np.array(data)
+                    plot.set_data(plot_data[:, 1], plot_data[:, 0])
         return do_update
 
     def _on_key_press(self, event):

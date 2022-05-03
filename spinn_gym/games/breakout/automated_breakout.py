@@ -29,9 +29,9 @@ Y_RES_FINAL = Y_RES // Y_SCALE
 
 class AutomatedBreakout(object):
 
-    def __init__(self):
+    def __init__(self, time_scale_factor=1):
         # Setup pyNN simulation
-        p.setup(timestep=1.0)
+        p.setup(timestep=1.0, time_scale_factor=time_scale_factor)
         p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
         # Weights
