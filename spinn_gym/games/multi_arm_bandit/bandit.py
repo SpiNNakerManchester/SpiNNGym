@@ -214,7 +214,7 @@ class Bandit(AbstractOneAppOneMachineVertex,
         return 10000  # 10 seconds hard coded in bkout.c
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable, n_machine_time_steps):
+    def get_data(self, variable):
         vertex = self.machine_vertices.pop()
         placement = FecDataView.get_placement_of_vertex(vertex)
 
