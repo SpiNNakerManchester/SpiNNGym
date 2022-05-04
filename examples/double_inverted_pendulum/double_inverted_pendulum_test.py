@@ -24,8 +24,7 @@ from spinn_front_end_common.data import FecDataView
 
 def get_scores(game_pop):
     g_vertex = game_pop._vertex
-    scores = g_vertex.get_data(
-        'score', FecDataView.get_current_run_timesteps())
+    scores = g_vertex.get_data('score')
     return scores.tolist()
 
 

@@ -24,8 +24,7 @@ from spinn_front_end_common.data import FecDataView
 
 def get_scores(bandit_pop):
     b_vertex = bandit_pop._vertex
-    scores = b_vertex.get_data(
-        'score', FecDataView.get_current_run_timesteps())
+    scores = b_vertex.get_data('score')
     return scores.tolist()
 
 
