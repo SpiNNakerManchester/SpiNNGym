@@ -222,7 +222,6 @@ class Visualiser(object):
     def handle_breakout_spikes(self, time, neuron_ids):
         if time != self.last_time:
             self.last_time = time
-            self.image.set_array(self.image_data)
             self.do_update = True
         payload = np.array(neuron_ids, dtype="uint32")
         payload_value = payload & self.value_mask
@@ -304,6 +303,7 @@ class Visualiser(object):
         do_update = self.do_update
         self.do_update = False
         if do_update:
+            self.image.set_array(self.image_data)
             time_low, time_high = self.live_spike_range
             for label in self.live_spike_data:
                 data = self.live_spike_data[label]
