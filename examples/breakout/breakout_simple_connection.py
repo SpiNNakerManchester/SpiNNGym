@@ -22,7 +22,6 @@ import subprocess
 import sys
 
 # SpiNNaker imports
-from spinn_front_end_common.data import FecDataView
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spynnaker.pyNN.connections.\

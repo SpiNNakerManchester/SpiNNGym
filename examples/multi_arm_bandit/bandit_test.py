@@ -19,7 +19,6 @@ import spinn_gym as gym
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
-from spinn_front_end_common.data import FecDataView
 
 
 def get_scores(bandit_pop):

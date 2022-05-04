@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 # SpiNNaker imports
 import pyNN.spiNNaker as p
 import spinn_gym as gym
-from spinn_front_end_common.data import FecDataView
 
 
 def get_scores(game_pop):
