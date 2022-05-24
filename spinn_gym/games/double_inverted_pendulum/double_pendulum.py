@@ -18,8 +18,6 @@ import numpy
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.model.constraints.key_allocator_constraints import \
-    ContiguousKeyRangeContraint
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 from pacman.model.graphs.common import Slice
@@ -27,9 +25,6 @@ from spinn_utilities.config_holder import get_config_int
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -49,7 +44,6 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # Double Pendulum
 # ----------------------------------------------------------------------------
 class DoublePendulum(AbstractOneAppOneMachineVertex,
-                     AbstractProvidesOutgoingPartitionConstraints,
                      AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
                      SimplePopulationSettable):
 
@@ -173,7 +167,6 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
                 rand_seed),
             label=label, constraints=constraints)
 
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
@@ -189,14 +182,6 @@ class DoublePendulum(AbstractOneAppOneMachineVertex,
     @overrides(AbstractOneAppOneMachineVertex.n_atoms)
     def n_atoms(self):
         return self._n_neurons
-
-    # ------------------------------------------------------------------------
-    # AbstractProvidesOutgoingPartitionConstraints overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractProvidesOutgoingPartitionConstraints.
-               get_outgoing_partition_constraints)
-    def get_outgoing_partition_constraints(self, partition):
-        return [ContiguousKeyRangeContraint()]
 
     @property
     @overrides(AbstractChangableAfterRun.requires_mapping)

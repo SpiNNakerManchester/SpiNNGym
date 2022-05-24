@@ -18,8 +18,6 @@ import numpy
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.model.constraints.key_allocator_constraints import (
-    ContiguousKeyRangeContraint)
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 from pacman.model.graphs.common import Slice
@@ -29,9 +27,6 @@ from spinn_utilities.config_holder import get_config_int
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
 from spinn_front_end_common.utilities.utility_objs import ExecutableType
 
 # sPyNNaker imports
@@ -50,7 +45,6 @@ from spinn_gym.games.breakout.breakout_machine_vertex import \
 # Breakout
 # ----------------------------------------------------------------------------
 class Breakout(AbstractOneAppOneMachineVertex,
-               AbstractProvidesOutgoingPartitionConstraints,
                AbstractAcceptsIncomingSynapses,
                AbstractNeuronRecordable,
                SimplePopulationSettable):
@@ -156,7 +150,6 @@ class Breakout(AbstractOneAppOneMachineVertex,
                 incoming_spike_buffer_size, simulation_duration_ms, bricking,
                 random_seed),
             label=label, constraints=constraints)
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
@@ -189,14 +182,6 @@ class Breakout(AbstractOneAppOneMachineVertex,
         print("Breakout get_binary_start_type")
         # return ExecutableStartType.USES_SIMULATION_INTERFACE
         return ExecutableType.USES_SIMULATION_INTERFACE
-
-    # ------------------------------------------------------------------------
-    # AbstractProvidesOutgoingPartitionConstraints overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractProvidesOutgoingPartitionConstraints.
-               get_outgoing_partition_constraints)
-    def get_outgoing_partition_constraints(self, partition):
-        return [ContiguousKeyRangeContraint()]
 
     @property
     @overrides(AbstractChangableAfterRun.requires_mapping)
