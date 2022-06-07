@@ -18,10 +18,6 @@ import numpy
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.model.constraints.key_allocator_constraints import \
-    ContiguousKeyRangeContraint
-from pacman.model.graphs.application.abstract import (
-    AbstractOneAppOneMachineVertex)
 from pacman.model.graphs.common import Slice
 from spinn_utilities.config_holder import get_config_int
 
@@ -38,6 +34,9 @@ from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
+# common imports
+from spinn_gym.games import SpinnGymApplicationVertex
+
 # Bandit imports
 from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import \
     BanditMachineVertex
@@ -48,34 +47,7 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # ----------------------------------------------------------------------------
 # Bandit
 # ----------------------------------------------------------------------------
-class Bandit(AbstractOneAppOneMachineVertex,
-             AbstractProvidesOutgoingPartitionConstraints,
-             AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-             SimplePopulationSettable):
-
-    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
-    def verify_splitter(self, splitter):
-        # Need to ignore this verify
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
-    def get_connections_from_machine(
-            self, transceiver, placements, app_edge, synapse_info):
-
-        # TODO: make this work properly (the following call does nothing)
-
-        super(Bandit, self).get_connections_from_machine(
-            transceiver, placements, app_edge, synapse_info)
-
-    def set_synapse_dynamics(self, synapse_dynamics):
-        pass
-
-    def clear_connection_cache(self):
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
-    def get_synapse_id_by_target(self, target):
-        return 0
+class Bandit(SpinnGymApplicationVertex):
 
     BANDIT_REGION_BYTES = 4
     BASE_ARMS_REGION_BYTES = 11 * 4
@@ -159,62 +131,6 @@ class Bandit(AbstractOneAppOneMachineVertex,
             self._incoming_spike_buffer_size = get_config_int(
                 "Simulation", "incoming_spike_buffer_size")
 
-    def neurons(self):
-        return self._n_neurons
-
-    @property
-    @overrides(AbstractOneAppOneMachineVertex.n_atoms)
-    def n_atoms(self):
-        return self._n_neurons
-
-    # ------------------------------------------------------------------------
-    # AbstractProvidesOutgoingPartitionConstraints overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractProvidesOutgoingPartitionConstraints.
-               get_outgoing_partition_constraints)
-    def get_outgoing_partition_constraints(self, partition):
-        return [ContiguousKeyRangeContraint()]
-
-    @property
-    @overrides(AbstractChangableAfterRun.requires_mapping)
-    def requires_mapping(self):
-        return self._change_requires_mapping
-
-    @overrides(AbstractChangableAfterRun.mark_no_changes)
-    def mark_no_changes(self):
-        self._change_requires_mapping = False
-
-    @overrides(SimplePopulationSettable.set_value)
-    def set_value(self, key, value):
-        SimplePopulationSettable.set_value(self, key, value)
-        self._change_requires_neuron_parameters_reload = True
-
-    # ------------------------------------------------------------------------
-    # Recording overrides
-    # ------------------------------------------------------------------------
-    @overrides(
-        AbstractNeuronRecordable.clear_recording)
-    def clear_recording(
-            self, variable, buffer_manager, placements):
-        self._clear_recording_region(buffer_manager, placements, 0)
-
-    @overrides(AbstractNeuronRecordable.get_recordable_variables)
-    def get_recordable_variables(self):
-        return 'score'
-
-    @overrides(AbstractNeuronRecordable.is_recording)
-    def is_recording(self, variable):
-        return True
-
-    @overrides(AbstractNeuronRecordable.set_recording)
-    def set_recording(self, variable, new_state=True, sampling_interval=None,
-                      indexes=None):
-        pass
-
-    @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
-    def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
-
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(
             self, variable, n_machine_time_steps, placements, buffer_manager):
@@ -232,20 +148,3 @@ class Bandit(AbstractOneAppOneMachineVertex,
 
         # return formatted_data
         return output_data
-
-    def _clear_recording_region(
-            self, buffer_manager, placements, recording_region_id):
-        """ Clear a recorded data region from the buffer manager.
-
-        :param buffer_manager: the buffer manager object
-        :param placements: the placements object
-        :param recording_region_id: the recorded region ID for clearing
-        :rtype: None
-        """
-        for machine_vertex in self.machine_vertices:
-            placement = placements.get_placement_of_vertex(machine_vertex)
-            buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, recording_region_id)
-
-    def reset_ring_buffer_shifts(self):
-        pass
