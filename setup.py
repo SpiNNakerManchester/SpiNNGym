@@ -30,7 +30,7 @@ install_requires = [
     'spalloc == 1!6.0.1',
     'SpiNNFrontEndCommon == 1!6.0.1',
     'sPyNNaker == 1!6.0.1',
-    'opencv-python']
+    'opencv-python< 4.6.0.66']
 if os.environ.get('READTHEDOCS', None) != 'True':
 
     # scipy must be added in config.py as a mock
