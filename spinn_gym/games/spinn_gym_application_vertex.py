@@ -49,6 +49,10 @@ class SpinnGymApplicationVertex(
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
         SimplePopulationSettable):
 
+    __slots__ = [
+        # A flag to detect a reset must be hard
+        "_change_requires_mapping"]
+
     def __init__(self, machine_vertex, label, constraints, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \

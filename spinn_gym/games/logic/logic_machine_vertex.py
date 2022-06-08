@@ -57,13 +57,14 @@ class LogicMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, sdram_required, constraints, label,
+    def __init__(self, n_neurons, constraints, label,
                  app_vertex, truth_table, input_sequence, rate_on, rate_off,
                  score_delay, stochastic, simulation_duration_ms, rand_seed):
 
         # Superclasses
         super(LogicMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons, sdram_required,
+            label, constraints, app_vertex, n_neurons,
+            self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
             simulation_duration_ms,  rand_seed)
 
         # Pass in variables

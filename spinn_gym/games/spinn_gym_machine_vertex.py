@@ -38,7 +38,7 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                             AbstractHasAssociatedBinary):
 
     def __init__(self, label, constraints, app_vertex, n_neurons,
-                 sdram_required, simulation_duration_ms, rand_seed):
+                 region_bytes, simulation_duration_ms, rand_seed):
 
         vertex_slice = Slice(0, n_neurons - 1)
 
@@ -46,13 +46,13 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         MachineVertex.__init__(
             self, label, constraints, app_vertex, vertex_slice)
 
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(sdram_required))
-
-        self._rand_seed = rand_seed
-
         # Define size of recording region
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
+
+        self._resources_required = ResourceContainer(
+            sdram=ConstantSDRAM(region_bytes + self._recording_size))
+
+        self._rand_seed = rand_seed
 
     @property
     @overrides(MachineVertex.resources_required)

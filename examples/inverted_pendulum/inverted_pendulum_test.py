@@ -54,7 +54,7 @@ input_model = gym.Pendulum(
     pole_angle=pole_angle, reward_based=reward_based,
     force_increments=force_increments, max_firing_rate=max_firing_rate,
     number_of_bins=number_of_bins, central=central,
-    rand_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
+    random_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
     label='pendulum_pop')
 
 pendulum_pop_size = input_model.n_atoms

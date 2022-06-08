@@ -27,12 +27,9 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
 
 class Bad_Table(Exception):
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
+    """
+    table and input sequence are not compatible
+    """
 
 # ----------------------------------------------------------------------------
 # Logic
@@ -86,6 +83,7 @@ class Logic(SpinnGymApplicationVertex):
                 raise Bad_Table('table and input sequence are not compatible')
             except Bad_Table as e:
                 print("ERROR: ", e)
+                # TODO is it safe to continue ??????
 
         self._rand_seed = rand_seed
 
@@ -94,17 +92,11 @@ class Logic(SpinnGymApplicationVertex):
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
-        # (static) resources required
-        # technically as using OneAppOneMachine this is not necessary?
-        sdram_required = (
-            self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
-            self._recording_size)
-
         # Superclasses
         super(Logic, self).__init__(
             LogicMachineVertex(
-                n_neurons, sdram_required, constraints, label, self,
-                truth_table, input_sequence, rate_on, rate_off, score_delay,
+                n_neurons, constraints, label, self, truth_table,
+                input_sequence, rate_on, rate_off, score_delay,
                 stochastic, simulation_duration_ms, rand_seed),
             label=label, constraints=constraints, n_atoms=n_neurons)
 

@@ -56,7 +56,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, sdram_required, constraints, label,
+    def __init__(self, n_neurons, constraints, label,
                  app_vertex, encoding, time_increment, pole_length, pole_angle,
                  reward_based, force_increments, max_firing_rate,
                  number_of_bins, central, bin_overlap, tau_force,
@@ -65,7 +65,8 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(PendulumMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons, sdram_required,
+            label, constraints, app_vertex, n_neurons,
+            self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  rand_seed)
 
         self._encoding = encoding

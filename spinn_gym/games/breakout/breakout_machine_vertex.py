@@ -55,13 +55,14 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self,  n_neurons, sdram_required, constraints, label,
+    def __init__(self,  n_neurons, constraints, label,
                  app_vertex, x_factor, y_factor, colour_bits,
                  simulation_duration_ms, bricking,
                  rand_seed):
         # Superclasses
         super(BreakoutMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons, sdram_required,
+            label, constraints, app_vertex, n_neurons,
+            self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES,
             simulation_duration_ms, rand_seed)
 
         self._x_factor = x_factor
