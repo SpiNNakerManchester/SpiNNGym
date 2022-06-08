@@ -54,7 +54,6 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # Define size of recording region
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
 
-
     @property
     @overrides(MachineVertex.resources_required)
     def resources_required(self):
