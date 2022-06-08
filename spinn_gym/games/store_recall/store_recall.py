@@ -79,8 +79,6 @@ class Recall(SpinnGymApplicationVertex):
                  reward=default_parameters['reward'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters[
-                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -107,18 +105,16 @@ class Recall(SpinnGymApplicationVertex):
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
         # technically as using OneAppOneMachine this is not necessary?
-        resources_required = (
+        sdram_required = (
             self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES +
             self._recording_size)
-
-        vertex_slice = Slice(0, self._n_neurons - 1)
 
         # Superclasses
         super(Recall, self).__init__(
             RecallMachineVertex(
-                vertex_slice, resources_required, constraints, label, self,
+                self._n_neurons, sdram_required, constraints, label, self,
                 rate_on, rate_off, pop_size, prob_command, prob_in_change,
-                time_period, stochastic, reward, incoming_spike_buffer_size,
+                time_period, stochastic, reward,
                 simulation_duration_ms, rand_seed),
             label=label, constraints=constraints)
 

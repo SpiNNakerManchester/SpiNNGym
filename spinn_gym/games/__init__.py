@@ -14,5 +14,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .spinn_gym_application_vertex import SpinnGymApplicationVertex
+from .spinn_gym_machine_vertex import SpinnGymMachineVertex
 
-__all__ = ["SpinnGymApplicationVertex"]
+__all__ = ["SpinnGymApplicationVertex", "SpinnGymMachineVertex"]

@@ -38,10 +38,6 @@ from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
-# Pendulum imports
-from spinn_gym.games.double_inverted_pendulum.double_pendulum_machine_vertex \
-    import DoublePendulumMachineVertex
-
 NUMPY_DATA_ELEMENT_TYPE = numpy.double
 
 

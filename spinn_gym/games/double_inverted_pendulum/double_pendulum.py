@@ -78,8 +78,6 @@ class DoublePendulum(SpinnGymApplicationVertex):
                  bin_overlap=default_parameters['bin_overlap'],
                  tau_force=default_parameters['tau_force'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters[
-                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration']):
         # **NOTE** n_neurons currently ignored - width and height will be
         # specified as additional parameters, forcing their product to be
@@ -114,21 +112,18 @@ class DoublePendulum(SpinnGymApplicationVertex):
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
         # technically as using OneAppOneMachine this is not necessary?
-        resources_required = (
+        sdram_required = (
             self.PENDULUM_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
             self._recording_size)
-
-        vertex_slice = Slice(0, self._n_neurons - 1)
 
         # Superclasses
         super(DoublePendulum, self).__init__(
             DoublePendulumMachineVertex(
-                vertex_slice, resources_required, constraints, label, self,
+                self._n_neurons, sdram_required, constraints, label, self,
                 encoding, time_increment, pole_length, pole_angle,
                 pole2_length, pole2_angle, reward_based, force_increments,
                 max_firing_rate, number_of_bins, central, bin_overlap,
-                tau_force, incoming_spike_buffer_size, simulation_duration_ms,
-                rand_seed),
+                tau_force, simulation_duration_ms, rand_seed),
             label=label, constraints=constraints)
 
     @overrides(AbstractNeuronRecordable.get_data)

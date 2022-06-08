@@ -21,16 +21,11 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models import \
-    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
 from spinn_front_end_common.abstract_models \
@@ -43,13 +38,14 @@ from spinn_front_end_common.utilities import constants as \
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # RecallMachineVertex
 # ----------------------------------------------------------------------------
-class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
-                          AbstractReceiveBuffersToHost,
-                          AbstractHasAssociatedBinary):
+class RecallMachineVertex(SpinnGymMachineVertex):
     RECALL_REGION_BYTES = 4
     DATA_REGION_BYTES = 12 * 4
 
@@ -60,22 +56,15 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
+    def __init__(self, n_neurons, sdram_required, constraints, label,
                  app_vertex, rate_on, rate_off, pop_size, prob_command,
                  prob_in_change, time_period, stochastic, reward,
-                 incoming_spike_buffer_size, simulation_duration_ms,
-                 rand_seed):
+                 simulation_duration_ms, rand_seed):
 
-        # Resources required
-        self._resource_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
-
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
-
-        self._label = label
-
+        # Superclasses
+        super(RecallMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons, sdram_required,
+            simulation_duration_ms,  rand_seed)
         # Pass in variables
         self._rate_on = rate_on
         self._rate_off = rate_off
@@ -85,17 +74,12 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._prob_command = prob_command
         self._prob_in_change = prob_in_change
 
-        self._n_neurons = pop_size * 4
         self._rand_seed = rand_seed
 
         self._time_period = time_period
 
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
-
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -167,35 +151,11 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # End-of-Spec:
         spec.end_specification()
 
-    @property
-    def resources_required(self):
-        return self._resource_required
-
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._RECALL_REGIONS.RECORDING.value, txrx)
-
-    def get_recorded_region_ids(self):
-        """ Get the recording region IDs that have been recorded with buffering
-
-        :return: The region numbers that have active recording
-        :rtype: iterable(int) """
-        return [0]
-
-    def get_n_keys_for_partition(self, partition):
-        n_keys = 0
-        # The way this has been written, there should only be one edge, but
-        # better to be safe than sorry
-        for edge in partition.edges:
-            if edge.pre_vertex is not edge.post_vertex:
-                n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
-        return n_keys
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "store_recall.aplx"
 
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE

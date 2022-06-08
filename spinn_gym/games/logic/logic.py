@@ -72,8 +72,6 @@ class Logic(SpinnGymApplicationVertex):
                  stochastic=default_parameters['stochastic'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters[
-                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -105,19 +103,16 @@ class Logic(SpinnGymApplicationVertex):
 
         # (static) resources required
         # technically as using OneAppOneMachine this is not necessary?
-        resources_required = (
+        sdram_required = (
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
             self._recording_size)
-
-        vertex_slice = Slice(0, self._n_neurons - 1)
 
         # Superclasses
         super(Logic, self).__init__(
             LogicMachineVertex(
-                vertex_slice, resources_required, constraints, label, self,
+                self._n_neurons, sdram_required, constraints, label, self,
                 truth_table, input_sequence, rate_on, rate_off, score_delay,
-                stochastic, incoming_spike_buffer_size, simulation_duration_ms,
-                rand_seed),
+                stochastic, simulation_duration_ms, rand_seed),
             label=label, constraints=constraints)
 
     @overrides(AbstractNeuronRecordable.get_data)

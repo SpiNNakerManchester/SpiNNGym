@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 from enum import Enum
 
 from spinn_utilities.overrides import overrides
@@ -22,14 +21,9 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models.\
-    abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.abstract_models.\
     abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
@@ -43,13 +37,14 @@ from spinn_front_end_common.utilities import constants as \
 
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
-class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
-                            AbstractReceiveBuffersToHost,
-                            AbstractHasAssociatedBinary):
+class BreakoutMachineVertex(SpinnGymMachineVertex):
     BREAKOUT_REGION_BYTES = 4
     PARAM_REGION_BYTES = 40
 
@@ -60,45 +55,20 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
-                 app_vertex, x_factor, y_factor, width, height, colour_bits,
-                 incoming_spike_buffer_size, simulation_duration_ms, bricking,
-                 random_seed):
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
+    def __init__(self,  n_neurons, sdram_required, constraints, label,
+                 app_vertex, x_factor, y_factor, colour_bits,
+                 simulation_duration_ms, bricking,
+                 rand_seed):
+        # Superclasses
+        super(BreakoutMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons, sdram_required,
+            simulation_duration_ms, rand_seed)
 
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
-
-        self._label = label
         self._x_factor = x_factor
         self._y_factor = y_factor
-        self._width = width/x_factor
-        self._height = height/y_factor
         self._colour_bits = colour_bits
-        self._width_bits = numpy.uint32(numpy.ceil(numpy.log2(self._width)))
-        self._height_bits = numpy.uint32(numpy.ceil(numpy.log2(self._height)))
 
-        self._n_neurons = (1 << (self._width_bits + self._height_bits +
-                                 self._colour_bits))
         self._bricking = bricking
-        self._rand_seed = random_seed
-
-        # print self._rand_seed
-        # print "# width =", self._width
-        # print "# width bits =", self._width_bits
-        # print "# height =", self._height
-        # print "# height bits =", self._height_bits
-        # print "# neurons =", self._n_neurons
-
-        # Define size of recording region
-        self._recording_size = int((simulation_duration_ms/10000.) * 4)
-
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
-#         self._resource_required = resources_required
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -164,25 +134,11 @@ class BreakoutMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # End-of-Spec:
         spec.end_specification()
 
-    @property
-    def resources_required(self):
-        return self._resources_required
-
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._BREAKOUT_REGIONS.RECORDING.value, txrx)
-
-    def get_recorded_region_ids(self):
-        """ Get the recording region IDs that have been recorded using buffering
-
-        :return: The region numbers that have active recording
-        :rtype: iterable(int) """
-        return [0]
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "breakout.aplx"
 
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        return ExecutableType.USES_SIMULATION_INTERFACE

@@ -79,8 +79,6 @@ class Bandit(SpinnGymApplicationVertex):
                  constant_input=default_parameters['constant_input'],
                  constraints=default_parameters['constraints'],
                  label=default_parameters['label'],
-                 incoming_spike_buffer_size=default_parameters[
-                     'incoming_spike_buffer_size'],
                  simulation_duration_ms=default_parameters['duration'],
                  rand_seed=default_parameters['random_seed']):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -107,19 +105,16 @@ class Bandit(SpinnGymApplicationVertex):
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
 
-        resources_required = (
+        sdram_required = (
             self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES +
             self._recording_size)
-
-        vertex_slice = Slice(0, self._n_neurons - 1)
 
         # Superclasses
         super(Bandit, self).__init__(
             BanditMachineVertex(
-                vertex_slice, resources_required, constraints, label, self,
+                self._n_neurons, sdram_required, constraints, label, self,
                 arms, reward_delay, reward_based, rate_on, rate_off,
-                stochastic, constant_input, incoming_spike_buffer_size,
-                simulation_duration_ms, rand_seed),
+                stochastic, constant_input, simulation_duration_ms, rand_seed),
             label=label, constraints=constraints)
 
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
@@ -127,9 +122,6 @@ class Bandit(SpinnGymApplicationVertex):
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
-        if incoming_spike_buffer_size is None:
-            self._incoming_spike_buffer_size = get_config_int(
-                "Simulation", "incoming_spike_buffer_size")
 
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(

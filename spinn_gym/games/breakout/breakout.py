@@ -67,7 +67,7 @@ class Breakout(SpinnGymApplicationVertex):
     def __init__(self, x_factor=X_FACTOR, y_factor=Y_FACTOR,
                  width=WIDTH_PIXELS, height=HEIGHT_PIXELS,
                  colour_bits=COLOUR_BITS, constraints=None,
-                 label="Breakout", incoming_spike_buffer_size=None,
+                 label="Breakout",
                  simulation_duration_ms=MAX_SIM_DURATION, bricking=1,
                  random_seed=rand_seed):
         # **NOTE** n_neurons currently ignored - width and height will be
@@ -100,18 +100,16 @@ class Breakout(SpinnGymApplicationVertex):
 
         # (static) resources required
         # technically as using OneAppOneMachine this is not necessary?
-        resources_required = (
+        sdram_required = (
             self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES +
             self._recording_size)
-
-        vertex_slice = Slice(0, self._n_neurons - 1)
 
         # Superclasses
         super(Breakout, self).__init__(
             BreakoutMachineVertex(
-                vertex_slice, resources_required, constraints, self._label,
-                self, x_factor, y_factor, width, height, colour_bits,
-                incoming_spike_buffer_size, simulation_duration_ms, bricking,
+                self._n_neurons, sdram_required, constraints, label,
+                self, x_factor, y_factor, colour_bits,
+                simulation_duration_ms, bricking,
                 random_seed),
             label=label, constraints=constraints)
 
