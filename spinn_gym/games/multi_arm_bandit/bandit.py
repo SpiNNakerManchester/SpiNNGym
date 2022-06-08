@@ -26,7 +26,6 @@ from spinn_front_end_common.abstract_models. \
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
     AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
