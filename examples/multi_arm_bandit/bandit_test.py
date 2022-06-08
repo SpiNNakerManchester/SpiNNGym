@@ -22,7 +22,6 @@ import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-
 p.setup(timestep=1.0)
 
 probabilities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]

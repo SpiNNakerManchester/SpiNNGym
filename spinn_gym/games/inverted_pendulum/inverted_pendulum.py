@@ -17,9 +17,6 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
-# PACMAN imports
-from pacman.model.graphs.common import Slice
-
 # sPyNNaker imports
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 

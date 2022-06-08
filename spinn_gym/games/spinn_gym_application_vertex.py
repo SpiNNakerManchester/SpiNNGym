@@ -23,8 +23,6 @@ from pacman.model.constraints.key_allocator_constraints import \
     ContiguousKeyRangeContraint
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
-from pacman.model.graphs.common import Slice
-from spinn_utilities.config_holder import get_config_int
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
@@ -46,10 +44,10 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # Double Pendulum
 # ----------------------------------------------------------------------------
 class SpinnGymApplicationVertex(
-    AbstractOneAppOneMachineVertex,
-    AbstractProvidesOutgoingPartitionConstraints,
-    AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-    SimplePopulationSettable):
+        AbstractOneAppOneMachineVertex,
+        AbstractProvidesOutgoingPartitionConstraints,
+        AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
+        SimplePopulationSettable):
 
     def __init__(self, machine_vertex, label, constraints, n_atoms=1):
         """

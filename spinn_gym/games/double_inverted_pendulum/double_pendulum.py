@@ -17,9 +17,6 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
-from pacman.model.graphs.common import Slice
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-
 # common imports
 from spinn_gym.games import SpinnGymApplicationVertex
 

@@ -142,4 +142,3 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "breakout.aplx"
-

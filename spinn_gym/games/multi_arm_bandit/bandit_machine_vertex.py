@@ -42,6 +42,7 @@ from spynnaker.pyNN.utilities import constants
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
 
+
 # ----------------------------------------------------------------------------
 # BanditMachineVertex
 # ----------------------------------------------------------------------------

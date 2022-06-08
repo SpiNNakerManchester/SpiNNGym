@@ -17,10 +17,6 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
-# PACMAN imports
-from pacman.model.graphs.common import Slice
-from spinn_utilities.config_holder import get_config_int
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models. \
