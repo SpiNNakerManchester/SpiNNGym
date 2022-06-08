@@ -25,7 +25,7 @@ from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 def get_scores(game_pop, simulator):
-    g_vertex = game_pop._vertex
+    g_vertex = game_pop._vertex  # pylint: disable=protected-access
     scores = g_vertex.get_data(
         'score', simulator.no_machine_time_steps, simulator.placements,
         simulator.buffer_manager)

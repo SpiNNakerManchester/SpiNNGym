@@ -18,36 +18,27 @@ import numpy as np
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import spinn_gym as gym
-# from spinn_arm.python_models.arm import Arm
 from spinn_front_end_common.utilities.globals_variables import get_simulator
-
-
-def get_scores(game_pop, simulator):
-    g_vertex = game_pop._vertex
-    scores = g_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-    return scores.tolist()
 
 
 def connect_to_arms(pre_pop, from_list, arms, r_type, plastic, stdp_model):
     arm_conn_list = []
-    for i in range(len(arms)):
+    for j in range(len(arms)):
         arm_conn_list.append([])
     for conn in from_list:
         arm_conn_list[conn[1]].append((conn[0], 0, conn[2], conn[3]))
         # print "out:", conn[1]
         # if conn[1] == 2:
         #     print '\nit is possible\n'
-    for i in range(len(arms)):
-        if len(arm_conn_list[i]) != 0:
+    for j in range(len(arms)):
+        if len(arm_conn_list[j]) != 0:
             if plastic:
-                p.Projection(pre_pop, arms[i],
-                             p.FromListConnector(arm_conn_list[i]),
+                p.Projection(pre_pop, arms[j],
+                             p.FromListConnector(arm_conn_list[j]),
                              receptor_type=r_type, synapse_type=stdp_model)
             else:
-                p.Projection(pre_pop, arms[i],
-                             p.FromListConnector(arm_conn_list[i]),
+                p.Projection(pre_pop, arms[j],
+                             p.FromListConnector(arm_conn_list[j]),
                              receptor_type=r_type)
 
 
@@ -152,8 +143,13 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 simulator = get_simulator()
 p.run(runtime)
 
+g_vertex = pendulum._vertex  # pylint: disable=protected-access
+_scores = g_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+
 scores = []
-scores.append(get_scores(game_pop=pendulum, simulator=simulator))
+scores.append(_scores.toList())
 if reward_based:
     print(scores)
 else:
@@ -186,6 +182,7 @@ else:
 # )
 # plt.show()
 
+# pylint: disable=no-member
 spikes_n = null_pop.get_data('spikes').segments[0].spiketrains
 v_n = null_pop.get_data('v').segments[0].filter(name='v')[0]
 spikes_o = output_pop.get_data('spikes').segments[0].spiketrains

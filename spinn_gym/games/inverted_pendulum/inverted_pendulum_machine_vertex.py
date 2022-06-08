@@ -93,6 +93,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
                additional_arguments={"routing_info"}
                )
     def generate_data_specification(self, spec, placement, routing_info):
+        # pylint: disable=arguments-differ
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Pendulum Instance ***\n\n")

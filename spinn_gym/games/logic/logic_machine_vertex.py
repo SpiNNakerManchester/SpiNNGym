@@ -83,6 +83,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
                additional_arguments={"routing_info"}
                )
     def generate_data_specification(self, spec, placement, routing_info):
+        # pylint: disable=arguments-differ
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Logic Instance ***\n\n")

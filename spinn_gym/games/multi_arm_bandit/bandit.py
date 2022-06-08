@@ -123,20 +123,7 @@ class Bandit(SpinnGymApplicationVertex):
         AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
 
-    @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
-        vertex = self.machine_vertices.pop()
-        placement = placements.get_placement_of_vertex(vertex)
-
-        # Read the data recorded
-        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
-        data = data_values
-
-        numpy_format = list()
-        numpy_format.append(("Score", numpy.int32))
-
-        output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
-
-        # return formatted_data
-        return output_data
+    @property
+    @overrides(SpinnGymApplicationVertex.score_format)
+    def score_format(self):
+        return numpy.int32

@@ -15,6 +15,7 @@
 
 import numpy
 
+from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -95,12 +96,6 @@ class SpinnGymApplicationVertex(
     def get_synapse_id_by_target(self, target):
         return 0
 
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
-        SimplePopulationSettable.__init__(self)
-        AbstractChangableAfterRun.__init__(self)
-        AbstractAcceptsIncomingSynapses.__init__(self)
-        self._change_requires_mapping = True
-
     def neurons(self):
         return self._n_neurons
 
@@ -129,7 +124,7 @@ class SpinnGymApplicationVertex(
     @overrides(SimplePopulationSettable.set_value)
     def set_value(self, key, value):
         SimplePopulationSettable.set_value(self, key, value)
-        self._change_requires_neuron_parameters_reload = True
+        # TODO there was a AbstractRewritesDataSpecification variable here?
 
     # ------------------------------------------------------------------------
     # Recording overrides
@@ -157,6 +152,12 @@ class SpinnGymApplicationVertex(
     def get_neuron_sampling_interval(self, variable):
         return 10000  # 10 seconds hard coded in bkout.c
 
+    @abstractproperty
+    def score_format(self):
+        """
+        The numpy format for the scores data
+        """
+
     @overrides(AbstractNeuronRecordable.get_data)
     def get_data(
             self, variable, n_machine_time_steps, placements, buffer_manager):
@@ -168,7 +169,7 @@ class SpinnGymApplicationVertex(
         data = data_values
 
         numpy_format = list()
-        numpy_format.append(("Score", numpy.float32))
+        numpy_format.append(("Score", self.score_format))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
 

@@ -22,14 +22,6 @@ import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-def get_scores(recall_pop, simulator):
-    b_vertex = recall_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-    return scores.tolist()
-
-
 rate_on = 10
 rate_off = 0
 pop_size = 1
@@ -74,8 +66,11 @@ simulator = get_simulator()
 runtime = 30 * 1000
 p.run(runtime)
 
-scores = get_scores(recall_pop=recall_pop, simulator=simulator)
-
+b_vertex = recall_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+scores = scores.tolist()
 print(scores)
 
 i = 0
@@ -89,6 +84,7 @@ accuracy = float(scores[len(scores)-2][0]+scores[len(scores)-3][0]) / float(
     scores[len(scores)-1][0])
 print("Accuracy:", accuracy)
 
+# pylint: disable=no-member
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out = readout_pop.get_data('spikes').segments[0].spiketrains
 Figure(
