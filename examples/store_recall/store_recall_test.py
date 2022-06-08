@@ -49,7 +49,7 @@ recall_model = gym.Recall(rate_on=rate_on,
                           time_period=time_period,
                           stochastic=stochastic,
                           reward=reward,
-                          rand_seed=random_seed)
+                          random_seed=random_seed)
 
 recall_pop = p.Population(recall_model.n_atoms, recall_model)
 readout_pop = p.Population(recall_model.n_atoms, p.IF_cond_exp())

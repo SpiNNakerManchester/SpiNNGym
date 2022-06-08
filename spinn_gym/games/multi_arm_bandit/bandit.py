@@ -17,18 +17,6 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
-# SpinnFrontEndCommon imports
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
-
-# sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import \
-    AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
-
 # common imports
 from spinn_gym.games import SpinnGymApplicationVertex
 
@@ -43,79 +31,34 @@ NUMPY_DATA_ELEMENT_TYPE = numpy.double
 # Bandit
 # ----------------------------------------------------------------------------
 class Bandit(SpinnGymApplicationVertex):
+    ONE_DAY_IN_MS = 1000 * 60 * 60 * 24  # 1 day
+    RANDOM_SEED = [numpy.random.randint(10000),
+                   numpy.random.randint(10000),
+                   numpy.random.randint(10000),
+                   numpy.random.randint(10000)]
+    ARMS = [0.1, 0.9]
 
-    BANDIT_REGION_BYTES = 4
-    BASE_ARMS_REGION_BYTES = 11 * 4
-    MAX_SIM_DURATION = 1000 * 60 * 60  # 1 hour
+    __slots__ = []
 
-    # parameters expected by PyNN
-    default_parameters = {
-        'reward_delay': 200.0,
-        'constraints': None,
-        'rate_on': 20.0,
-        'rate_off': 5.0,
-        'constant_input': 0,
-        'stochastic': 1,
-        'reward_based': 1,
-        'label': "Bandit",
-        'incoming_spike_buffer_size': None,
-        'duration': MAX_SIM_DURATION,
-        'arms': [0.1, 0.9],
-        'random_seed': [
-            numpy.random.randint(10000), numpy.random.randint(10000),
-            numpy.random.randint(10000), numpy.random.randint(10000)]}
-
-    def __init__(self, arms=default_parameters['arms'],
-                 reward_delay=default_parameters['reward_delay'],
-                 reward_based=default_parameters['reward_based'],
-                 rate_on=default_parameters['rate_on'],
-                 rate_off=default_parameters['rate_off'],
-                 stochastic=default_parameters['stochastic'],
-                 constant_input=default_parameters['constant_input'],
-                 constraints=default_parameters['constraints'],
-                 label=default_parameters['label'],
-                 simulation_duration_ms=default_parameters['duration'],
-                 rand_seed=default_parameters['random_seed']):
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
-
-        self._label = label
-
-        # Pass in variables
-        self._arms = arms
+    def __init__(self, arms=None, reward_delay=200.0, reward_based=1,
+                 rate_on=20.0, rate_off=5.0, stochastic=1,
+                 constant_input=0, constraints=None, label="Bandit",
+                 simulation_duration_ms=ONE_DAY_IN_MS, random_seed=None):
+        if arms is None:
+            arms = list(self.ARMS)
+        if random_seed is None:
+            random_seed = list(self.RANDOM_SEED)
 
         n_neurons = len(arms)
-        self._rand_seed = rand_seed
-
-        self._reward_delay = reward_delay
-        self._reward_based = reward_based
-
-        self._rate_on = rate_on
-        self._rate_off = rate_off
-        self._stochastic = stochastic
-        self._constant_input = constant_input
-
-        # used to define size of recording region
-        self._recording_size = int((simulation_duration_ms / 1000.) * 4)
-
-        sdram_required = (
-            self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES +
-            self._recording_size)
 
         # Superclasses
         super(Bandit, self).__init__(
             BanditMachineVertex(
-                n_neurons, sdram_required, constraints, label, self,
+                n_neurons, constraints, label, self,
                 arms, reward_delay, reward_based, rate_on, rate_off,
-                stochastic, constant_input, simulation_duration_ms, rand_seed),
+                stochastic, constant_input, simulation_duration_ms,
+                random_seed),
             label=label, constraints=constraints, n_atoms=n_neurons)
-
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
-        SimplePopulationSettable.__init__(self)
-        AbstractChangableAfterRun.__init__(self)
-        AbstractAcceptsIncomingSynapses.__init__(self)
-        self._change_requires_mapping = True
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

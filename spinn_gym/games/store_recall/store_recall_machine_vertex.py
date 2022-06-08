@@ -56,14 +56,15 @@ class RecallMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, sdram_required, constraints, label,
+    def __init__(self, n_neurons, constraints, label,
                  app_vertex, rate_on, rate_off, pop_size, prob_command,
                  prob_in_change, time_period, stochastic, reward,
                  simulation_duration_ms, rand_seed):
 
         # Superclasses
         super(RecallMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons, sdram_required,
+            label, constraints, app_vertex, n_neurons,
+            self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  rand_seed)
         # Pass in variables
         self._rate_on = rate_on

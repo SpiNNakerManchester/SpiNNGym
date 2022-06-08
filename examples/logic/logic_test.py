@@ -46,7 +46,7 @@ for j in range(4):
 logic_model = gym.Logic(truth_table=truth_table,
                         input_sequence=input_sequence,
                         stochastic=0,
-                        rand_seed=random_seed)
+                        random_seed=random_seed)
 logic_pop = p.Population(input_size, logic_model)
 
 input_pop.record('spikes')

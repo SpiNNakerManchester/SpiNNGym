@@ -17,9 +17,6 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
-# sPyNNaker imports
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-
 # common imports
 from spinn_gym.games import SpinnGymApplicationVertex
 
@@ -74,7 +71,7 @@ class Pendulum(SpinnGymApplicationVertex):
         else:
             n_neurons = 4 * number_of_bins
 
-       # Superclasses
+        # Superclasses
         super(Pendulum, self).__init__(
             PendulumMachineVertex(
                 n_neurons, constraints, label, self,

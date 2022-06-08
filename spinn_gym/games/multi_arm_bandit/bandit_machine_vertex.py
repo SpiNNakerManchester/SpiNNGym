@@ -57,14 +57,15 @@ class BanditMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('ARMS', 3)])
 
-    def __init__(self, n_neurons, sdram_required, constraints, label,
+    def __init__(self, n_neurons, constraints, label,
                  app_vertex, arms, reward_delay, reward_based, rate_on,
                  rate_off, stochastic, constant_input,
                  simulation_duration_ms, rand_seed):
 
         # Superclasses
         super(BanditMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons, sdram_required,
+            label, constraints, app_vertex, n_neurons,
+            self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES,
             simulation_duration_ms,  rand_seed)
 
         # Pass in variables
