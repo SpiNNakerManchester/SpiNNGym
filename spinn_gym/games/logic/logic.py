@@ -80,14 +80,13 @@ class Logic(SpinnGymApplicationVertex):
         self._rate_off = rate_off
         self._stochastic = stochastic
         self._input_sequence = input_sequence
-        self._no_inputs = len(input_sequence)
-        if self._no_inputs != numpy.log2(len(self._truth_table)):
+        n_neurons = len(input_sequence)
+        if n_neurons != numpy.log2(len(self._truth_table)):
             try:
                 raise Bad_Table('table and input sequence are not compatible')
             except Bad_Table as e:
                 print("ERROR: ", e)
 
-        self._n_neurons = self._no_inputs
         self._rand_seed = rand_seed
 
         self._score_delay = score_delay
@@ -104,10 +103,10 @@ class Logic(SpinnGymApplicationVertex):
         # Superclasses
         super(Logic, self).__init__(
             LogicMachineVertex(
-                self._n_neurons, sdram_required, constraints, label, self,
+                n_neurons, sdram_required, constraints, label, self,
                 truth_table, input_sequence, rate_on, rate_off, score_delay,
                 stochastic, simulation_duration_ms, rand_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

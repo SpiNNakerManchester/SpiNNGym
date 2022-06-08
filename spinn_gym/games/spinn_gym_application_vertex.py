@@ -49,7 +49,7 @@ class SpinnGymApplicationVertex(
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
         SimplePopulationSettable):
 
-    def __init__(self, machine_vertex, label, constraints, n_atoms=1):
+    def __init__(self, machine_vertex, label, constraints, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \
         MachineVertex
@@ -62,7 +62,7 @@ class SpinnGymApplicationVertex(
             If one of the constraints is not valid
         """
         super(SpinnGymApplicationVertex, self).__init__(
-            machine_vertex, label, constraints)
+            machine_vertex, label, constraints, n_atoms)
 
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
@@ -93,14 +93,6 @@ class SpinnGymApplicationVertex(
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
-
-    def neurons(self):
-        return self._n_neurons
-
-    @property
-    @overrides(AbstractOneAppOneMachineVertex.n_atoms)
-    def n_atoms(self):
-        return self._n_neurons
 
     # ------------------------------------------------------------------------
     # AbstractProvidesOutgoingPartitionConstraints overrides

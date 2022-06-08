@@ -90,9 +90,9 @@ class Pendulum(SpinnGymApplicationVertex):
         # for rate based it's only 1 neuron per metric
         # (position, angle, velocity of both)
         if self._encoding == 0:
-            self._n_neurons = 4
+            n_neurons = 4
         else:
-            self._n_neurons = 4 * number_of_bins
+            n_neurons = 4 * number_of_bins
 
         self._time_increment = time_increment
         self._reward_based = reward_based
@@ -114,27 +114,14 @@ class Pendulum(SpinnGymApplicationVertex):
         # Superclasses
         super(Pendulum, self).__init__(
             PendulumMachineVertex(
-                self._n_neurons, sdram_required, constraints, label, self,
+                n_neurons, sdram_required, constraints, label, self,
                 encoding, time_increment, pole_length, pole_angle,
                 reward_based, force_increments, max_firing_rate,
                 number_of_bins, central, bin_overlap, tau_force,
                 simulation_duration_ms, rand_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
-    @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
-        vertex = self.machine_vertices.pop()
-        placement = placements.get_placement_of_vertex(vertex)
-
-        # Read the data recorded
-        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
-        data = data_values
-
-        numpy_format = list()
-        numpy_format.append(("Score", numpy.float32))
-
-        output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
-
-        # return formatted_data
-        return output_data
+    @property
+    @overrides(SpinnGymApplicationVertex.score_format)
+    def score_format(self):
+        return numpy.float32

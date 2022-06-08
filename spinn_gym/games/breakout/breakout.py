@@ -77,8 +77,8 @@ class Breakout(SpinnGymApplicationVertex):
         self._width_bits = numpy.uint32(numpy.ceil(numpy.log2(self._width)))
         self._height_bits = numpy.uint32(numpy.ceil(numpy.log2(self._height)))
 
-        self._n_neurons = int(1 << (self._width_bits + self._height_bits +
-                                    self._colour_bits))
+        n_neurons = int(1 << (self._width_bits + self._height_bits +
+                              self._colour_bits))
         self._bricking = bricking
         self._rand_seed = random_seed
 
@@ -101,11 +101,11 @@ class Breakout(SpinnGymApplicationVertex):
         # Superclasses
         super(Breakout, self).__init__(
             BreakoutMachineVertex(
-                self._n_neurons, sdram_required, constraints, label,
+                n_neurons, sdram_required, constraints, label,
                 self, x_factor, y_factor, colour_bits,
                 simulation_duration_ms, bricking,
                 random_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

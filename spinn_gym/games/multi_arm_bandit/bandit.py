@@ -85,8 +85,7 @@ class Bandit(SpinnGymApplicationVertex):
         # Pass in variables
         self._arms = arms
 
-        self._no_arms = len(arms)
-        self._n_neurons = self._no_arms
+        n_neurons = len(arms)
         self._rand_seed = rand_seed
 
         self._reward_delay = reward_delay
@@ -107,10 +106,10 @@ class Bandit(SpinnGymApplicationVertex):
         # Superclasses
         super(Bandit, self).__init__(
             BanditMachineVertex(
-                self._n_neurons, sdram_required, constraints, label, self,
+                n_neurons, sdram_required, constraints, label, self,
                 arms, reward_delay, reward_based, rate_on, rate_off,
                 stochastic, constant_input, simulation_duration_ms, rand_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
         AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)

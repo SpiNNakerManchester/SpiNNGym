@@ -82,7 +82,7 @@ class Recall(SpinnGymApplicationVertex):
         self._prob_command = prob_command
         self._prob_in_change = prob_in_change
 
-        self._n_neurons = pop_size * 4
+        n_neurons = pop_size * 4
         self._rand_seed = rand_seed
 
         self._time_period = time_period
@@ -98,11 +98,11 @@ class Recall(SpinnGymApplicationVertex):
         # Superclasses
         super(Recall, self).__init__(
             RecallMachineVertex(
-                self._n_neurons, sdram_required, constraints, label, self,
+                n_neurons, sdram_required, constraints, label, self,
                 rate_on, rate_off, pop_size, prob_command, prob_in_change,
                 time_period, stochastic, reward,
                 simulation_duration_ms, rand_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

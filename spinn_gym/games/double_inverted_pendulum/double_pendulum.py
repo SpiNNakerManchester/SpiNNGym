@@ -93,7 +93,7 @@ class DoublePendulum(SpinnGymApplicationVertex):
         self._force_increments = force_increments
         # for rate based it's only 1 neuron per metric
         # (position, angle, velocity of both)
-        self._n_neurons = 6 * number_of_bins
+        n_neurons = 6 * number_of_bins
 
         self._time_increment = time_increment
         self._reward_based = reward_based
@@ -116,12 +116,12 @@ class DoublePendulum(SpinnGymApplicationVertex):
         # Superclasses
         super(DoublePendulum, self).__init__(
             DoublePendulumMachineVertex(
-                self._n_neurons, sdram_required, constraints, label, self,
+                n_neurons, sdram_required, constraints, label, self,
                 encoding, time_increment, pole_length, pole_angle,
                 pole2_length, pole2_angle, reward_based, force_increments,
                 max_firing_rate, number_of_bins, central, bin_overlap,
                 tau_force, simulation_duration_ms, rand_seed),
-            label=label, constraints=constraints)
+            label=label, constraints=constraints, n_atoms=n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

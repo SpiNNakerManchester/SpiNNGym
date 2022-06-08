@@ -57,7 +57,7 @@ input_model = gym.Pendulum(
     rand_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
     label='pendulum_pop')
 
-pendulum_pop_size = input_model.neurons()
+pendulum_pop_size = input_model.n_atoms
 pendulum = p.Population(pendulum_pop_size, input_model)
 null_pop = p.Population(4*number_of_bins, p.IF_cond_exp(), label='null')
 p.Projection(pendulum, null_pop, p.OneToOneConnector(),

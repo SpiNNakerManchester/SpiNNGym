@@ -134,7 +134,7 @@ bricking = 1
 
 # Create breakout population and activate live output
 b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
-breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+breakout_pop = p.Population(b1.n_atoms, b1, label="breakout1")
 
 # ex is the external device plugin manager
 ex.activate_live_output_for(breakout_pop)
