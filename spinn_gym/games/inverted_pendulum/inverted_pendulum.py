@@ -24,8 +24,6 @@ from spinn_gym.games import SpinnGymApplicationVertex
 from spinn_gym.games.inverted_pendulum.inverted_pendulum_machine_vertex \
     import PendulumMachineVertex
 
-NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
 
 # ----------------------------------------------------------------------------
 # Pendulum

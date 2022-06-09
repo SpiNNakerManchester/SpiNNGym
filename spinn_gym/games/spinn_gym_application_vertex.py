@@ -37,8 +37,6 @@ from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
-NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
 
 # ----------------------------------------------------------------------------
 # Double Pendulum
@@ -60,8 +58,9 @@ class SpinnGymApplicationVertex(
 
         :param machine_vertex: MachineVertex
         :param str label: The optional name of the vertex.
-        :param iterable(AbstractConstraint) constraints:
+        :param constraints:
             The optional initial constraints of the vertex.
+        :type constraints: iterable(AbstractConstraint) or None
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
@@ -88,9 +87,12 @@ class SpinnGymApplicationVertex(
         super(SpinnGymApplicationVertex, self).get_connections_from_machine(
             transceiver, placements, app_edge, synapse_info)
 
+    @overrides(AbstractAcceptsIncomingSynapses.set_synapse_dynamics)
     def set_synapse_dynamics(self, synapse_dynamics):
         pass
+        # TODO Should this be a pass or a NotImplemented ?
 
+    @overrides(AbstractAcceptsIncomingSynapses.clear_connection_cache)
     def clear_connection_cache(self):
         pass
 
@@ -125,9 +127,11 @@ class SpinnGymApplicationVertex(
     # ------------------------------------------------------------------------
     @overrides(
         AbstractNeuronRecordable.clear_recording)
-    def clear_recording(
-            self, variable, buffer_manager, placements):
-        self._clear_recording_region(buffer_manager, placements, 0)
+    def clear_recording(self, variable, buffer_manager, placements):
+        for machine_vertex in self.machine_vertices:
+            placement = placements.get_placement_of_vertex(machine_vertex)
+            buffer_manager.clear_recorded_data(
+                placement.x, placement.y, placement.p, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
@@ -141,6 +145,7 @@ class SpinnGymApplicationVertex(
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
         pass
+        # TODO Should this be a pass or a NotImplemented ?
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):
@@ -186,6 +191,7 @@ class SpinnGymApplicationVertex(
 
     def reset_ring_buffer_shifts(self):
         pass
+        # TODO Should this be a pass or a NotImplemented ?
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)

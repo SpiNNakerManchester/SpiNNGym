@@ -24,8 +24,6 @@ from spinn_gym.games import SpinnGymApplicationVertex
 from spinn_gym.games.store_recall.store_recall_machine_vertex import \
     RecallMachineVertex
 
-NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
 
 # ----------------------------------------------------------------------------
 # Recall

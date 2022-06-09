@@ -24,8 +24,6 @@ from spinn_gym.games import SpinnGymApplicationVertex
 from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import \
     BanditMachineVertex
 
-NUMPY_DATA_ELEMENT_TYPE = numpy.double
-
 
 # ----------------------------------------------------------------------------
 # Bandit
