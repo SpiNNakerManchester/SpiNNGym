@@ -84,7 +84,6 @@ accuracy = float(scores[len(scores)-2][0]+scores[len(scores)-3][0]) / float(
     scores[len(scores)-1][0])
 print("Accuracy:", accuracy)
 
-# pylint: disable=no-member
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out = readout_pop.get_data('spikes').segments[0].spiketrains
 Figure(

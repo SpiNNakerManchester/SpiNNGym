@@ -215,7 +215,6 @@ receive_reward_pop_output = receive_reward_pop.get_data()
 
 figure_filename = "results.png"
 Figure(
-    # pylint: disable=no-member
     # raster plot of the presynaptic neuron spike times
     Panel(spike_input_spikes.segments[0].spiketrains,
           yticks=True, markersize=0.2, xlim=(0, runtime)),

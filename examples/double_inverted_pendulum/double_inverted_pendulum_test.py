@@ -182,7 +182,6 @@ else:
 # )
 # plt.show()
 
-# pylint: disable=no-member
 spikes_n = null_pop.get_data('spikes').segments[0].spiketrains
 v_n = null_pop.get_data('v').segments[0].filter(name='v')[0]
 spikes_o = output_pop.get_data('spikes').segments[0].spiketrains

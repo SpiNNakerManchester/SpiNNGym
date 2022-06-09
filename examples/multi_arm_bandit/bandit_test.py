@@ -67,7 +67,6 @@ scores = b_vertex.get_data(
 scores = scores.tolist()
 print(scores)
 
-# pylint: disable=no-member
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out1 = output_pop1.get_data('spikes').segments[0].spiketrains
 spikes_out2 = output_pop2.get_data('spikes').segments[0].spiketrains
