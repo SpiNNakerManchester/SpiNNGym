@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -69,7 +69,7 @@ class Pendulum(SpinnGymApplicationVertex):
         else:
             n_neurons = 4 * number_of_bins
 
-        machine_vertex =  PendulumMachineVertex(
+        machine_vertex = PendulumMachineVertex(
             label, constraints, self, n_neurons,
             simulation_duration_ms, random_seed,
             encoding, time_increment, pole_length, pole_angle,
