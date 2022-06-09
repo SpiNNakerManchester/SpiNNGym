@@ -69,15 +69,16 @@ class Pendulum(SpinnGymApplicationVertex):
         else:
             n_neurons = 4 * number_of_bins
 
+        machine_vertex =  PendulumMachineVertex(
+            label, constraints, self, n_neurons,
+            simulation_duration_ms, random_seed,
+            encoding, time_increment, pole_length, pole_angle,
+            reward_based, force_increments, max_firing_rate,
+            number_of_bins, central, bin_overlap, tau_force)
+
         # Superclasses
         super(Pendulum, self).__init__(
-            PendulumMachineVertex(
-                n_neurons, constraints, label, self,
-                encoding, time_increment, pole_length, pole_angle,
-                reward_based, force_increments, max_firing_rate,
-                number_of_bins, central, bin_overlap, tau_force,
-                simulation_duration_ms, random_seed),
-            label=label, constraints=constraints, n_atoms=n_neurons)
+           machine_vertex, label, constraints, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

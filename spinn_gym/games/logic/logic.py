@@ -57,14 +57,13 @@ class Logic(SpinnGymApplicationVertex):
             except Bad_Table as e:
                 print("ERROR: ", e)
                 # TODO is it safe to continue ??????
-
+        machine_vertex = LogicMachineVertex(
+            label, constraints, self, n_neurons, simulation_duration_ms,
+            random_seed, truth_table, input_sequence, rate_on, rate_off,
+            score_delay, stochastic)
         # Superclasses
         super(Logic, self).__init__(
-            LogicMachineVertex(
-                n_neurons, constraints, label, self, truth_table,
-                input_sequence, rate_on, rate_off, score_delay,
-                stochastic, simulation_duration_ms, random_seed),
-            label=label, constraints=constraints, n_atoms=n_neurons)
+            machine_vertex, label, constraints, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

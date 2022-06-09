@@ -37,8 +37,41 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                             AbstractReceiveBuffersToHost,
                             AbstractHasAssociatedBinary):
 
+    __slots__ = [
+        # list of 4 numbers to be the random seeds for the c code
+        "_random_seed",
+        # size of recording region
+        "_recording_size",
+        # resources needed for this vertex
+        "_resources_required"]
+
     def __init__(self, label, constraints, app_vertex, n_neurons,
-                 region_bytes, simulation_duration_ms, rand_seed):
+                 region_bytes, simulation_duration_ms, random_seed):
+        """
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+
+        """
 
         vertex_slice = Slice(0, n_neurons - 1)
 
@@ -48,11 +81,12 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
 
         # Define size of recording region
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
+        # TODO Should this not round UP!
 
         self._resources_required = ResourceContainer(
             sdram=ConstantSDRAM(region_bytes + self._recording_size))
 
-        self._rand_seed = rand_seed
+        self._random_seed = random_seed
 
     @property
     @overrides(MachineVertex.resources_required)
@@ -75,5 +109,4 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
     def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
         return ExecutableType.USES_SIMULATION_INTERFACE

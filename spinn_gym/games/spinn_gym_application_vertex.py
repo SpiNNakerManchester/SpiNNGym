@@ -145,7 +145,7 @@ class SpinnGymApplicationVertex(
     def set_recording(self, variable, new_state=True, sampling_interval=None,
                       indexes=None):
         pass
-        # TODO Should this be a pass or a NotImplemented ?
+        # TODO Should this be a implemented, pass or a NotImplemented ?
 
     @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
     def get_neuron_sampling_interval(self, variable):

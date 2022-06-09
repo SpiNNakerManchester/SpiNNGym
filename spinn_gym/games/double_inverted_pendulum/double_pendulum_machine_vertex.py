@@ -46,6 +46,12 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     PENDULUM_REGION_BYTES = 4
     DATA_REGION_BYTES = 17 * 4
 
+    __slots__ = [
+        "_bin_overlap", "_central", "_encoding", "_force_increments",
+        "_max_firing_rate", "_number_of_bins", "_pole_angle", "_pole2_angle",
+        "_pole_length", "_pole2_length", "_reward_based", "_tau_force",
+        "_time_increment"]
+
     _DOUBLE_PENDULUM_REGIONS = Enum(
         value="_DOUBLE_PENDULUM_REGIONS",
         names=[('SYSTEM', 0),
@@ -53,17 +59,56 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, constraints, label,
-                 app_vertex, encoding, time_increment, pole_length, pole_angle,
-                 pole2_length, pole2_angle, reward_based, force_increments,
-                 max_firing_rate, number_of_bins, central, bin_overlap,
-                 tau_force, simulation_duration_ms, rand_seed):
+    def __init__(
+            self, label, constraints, app_vertex, n_neurons,
+            simulation_duration_ms, random_seed,
+            encoding, time_increment, pole_length, pole_angle, pole2_length,
+            pole2_angle, reward_based, force_increments, max_firing_rate,
+            number_of_bins, central, bin_overlap, tau_force):
+        """
+
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param encoding:
+        :param time_increment:
+        :param pole_length:
+        :param pole_angle:
+        :param pole2_length:
+        :param pole2_angle:
+        :param reward_based:
+        :param force_increments:
+        :param max_firing_rate:
+        :param number_of_bins:
+        :param central:
+        :param bin_overlap:
+        :param tau_force:
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+        """
 
         # Superclasses
         super(DoublePendulumMachineVertex, self).__init__(
             label, constraints, app_vertex, n_neurons,
             self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
-            simulation_duration_ms,  rand_seed)
+            simulation_duration_ms,  random_seed)
 
         self._encoding = encoding
 
@@ -149,10 +194,10 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.write_value(self._max_firing_rate, data_type=DataType.UINT32)
         spec.write_value(self._number_of_bins, data_type=DataType.UINT32)
         spec.write_value(self._central, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._bin_overlap, data_type=DataType.S1615)
         spec.write_value(self._tau_force, data_type=DataType.S1615)
 

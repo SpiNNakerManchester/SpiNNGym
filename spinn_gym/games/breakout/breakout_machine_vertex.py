@@ -55,20 +55,50 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    def __init__(self,  n_neurons, constraints, label,
-                 app_vertex, x_factor, y_factor, colour_bits,
-                 simulation_duration_ms, bricking,
-                 rand_seed):
+    __slots__ = ["_bricking", "_colour_bits", "_x_factor", "_y_factor"]
+
+    def __init__(
+            self, label, constraints, app_vertex, n_neurons,
+            simulation_duration_ms, random_seed,
+            x_factor, y_factor, colour_bits, bricking):
+        """
+
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param x_factor:
+        :param y_factor:
+        :param colour_bits:
+        :param bricking:
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+        """
         # Superclasses
         super(BreakoutMachineVertex, self).__init__(
             label, constraints, app_vertex, n_neurons,
             self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES,
-            simulation_duration_ms, rand_seed)
+            simulation_duration_ms, random_seed)
 
         self._x_factor = x_factor
         self._y_factor = y_factor
         self._colour_bits = colour_bits
-
         self._bricking = bricking
 
     # ------------------------------------------------------------------------
@@ -128,14 +158,15 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.write_value(self._x_factor, data_type=DataType.UINT32)
         spec.write_value(self._y_factor, data_type=DataType.UINT32)
         spec.write_value(self._bricking, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
 
         # End-of-Spec:
         spec.end_specification()
 
+    @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._BREAKOUT_REGIONS.RECORDING.value, txrx)

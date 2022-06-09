@@ -57,15 +57,50 @@ class LogicMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, constraints, label,
-                 app_vertex, truth_table, input_sequence, rate_on, rate_off,
-                 score_delay, stochastic, simulation_duration_ms, rand_seed):
+    __slots__ = ["_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
+                 "_score_delay", "_stochastic", "_truth_table"]
+
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 truth_table, input_sequence, rate_on, rate_off,
+                 score_delay, stochastic):
+        """
+
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param truth_table:
+        :param input_sequence:
+        :param rate_on:
+        :param rate_off:
+        :param score_delay:
+        :param stochastic:
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+        """
 
         # Superclasses
         super(LogicMachineVertex, self).__init__(
             label, constraints, app_vertex, n_neurons,
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
-            simulation_duration_ms,  rand_seed)
+            simulation_duration_ms,  random_seed)
 
         # Pass in variables
         self._truth_table = truth_table
@@ -135,10 +170,10 @@ class LogicMachineVertex(SpinnGymMachineVertex):
             self._LOGIC_REGIONS.DATA.value)
         spec.write_value(self._score_delay, data_type=DataType.UINT32)
         spec.write_value(self._no_inputs, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)

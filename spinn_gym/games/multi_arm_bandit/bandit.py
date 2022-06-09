@@ -49,14 +49,15 @@ class Bandit(SpinnGymApplicationVertex):
 
         n_neurons = len(arms)
 
+        machine_vertex = BanditMachineVertex(
+            label, constraints, self, n_neurons,
+            simulation_duration_ms, random_seed,
+            arms, reward_delay, reward_based, rate_on,
+            rate_off, stochastic, constant_input)
+
         # Superclasses
         super(Bandit, self).__init__(
-            BanditMachineVertex(
-                n_neurons, constraints, label, self,
-                arms, reward_delay, reward_based, rate_on, rate_off,
-                stochastic, constant_input, simulation_duration_ms,
-                random_seed),
-            label=label, constraints=constraints, n_atoms=n_neurons)
+            machine_vertex, label, constraints, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

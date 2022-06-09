@@ -57,16 +57,53 @@ class BanditMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('ARMS', 3)])
 
-    def __init__(self, n_neurons, constraints, label,
-                 app_vertex, arms, reward_delay, reward_based, rate_on,
-                 rate_off, stochastic, constant_input,
-                 simulation_duration_ms, rand_seed):
+    __slots__ = ["_arms", "_constant_input", "_no_arms", "_rate_off",
+                 "_rate_on", "_reward_based", "_reward_delay", "_stochastic"]
+
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 arms, reward_delay, reward_based, rate_on,
+                 rate_off, stochastic, constant_input):
+        """
+
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param random_seed:
+        :param arms:
+        :param reward_delay:
+        :param reward_based:
+        :param rate_on:
+        :param rate_off:
+        :param stochastic:
+        :param constant_input:
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+
+        """
 
         # Superclasses
         super(BanditMachineVertex, self).__init__(
             label, constraints, app_vertex, n_neurons,
             self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES,
-            simulation_duration_ms,  rand_seed)
+            simulation_duration_ms,  random_seed)
 
         # Pass in variables
         arms_list = []
@@ -75,7 +112,6 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         self._arms = arms_list
 
         self._no_arms = len(arms)
-        self._rand_seed = rand_seed
 
         self._reward_delay = reward_delay
         self._reward_based = reward_based
@@ -143,10 +179,10 @@ class BanditMachineVertex(SpinnGymMachineVertex):
             self._BANDIT_REGIONS.ARMS.value)
         spec.write_value(self._reward_delay, data_type=DataType.UINT32)
         spec.write_value(self._no_arms, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._reward_based, data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)

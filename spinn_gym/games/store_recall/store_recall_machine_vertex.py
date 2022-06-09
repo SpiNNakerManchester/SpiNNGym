@@ -56,16 +56,54 @@ class RecallMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, n_neurons, constraints, label,
-                 app_vertex, rate_on, rate_off, pop_size, prob_command,
-                 prob_in_change, time_period, stochastic, reward,
-                 simulation_duration_ms, rand_seed):
+    __slots__ = ["_prob_command", "_prob_in_change", "_pop_size",
+                 "_rate_off", "_rate_on", "_reward", "_stochastic",
+                 "_time_period"]
+
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 rate_on, rate_off, pop_size, prob_command,
+                 prob_in_change, time_period, stochastic, reward):
+        """
+
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param rate_on:
+        :param rate_off:
+        :param pop_size:
+        :param prob_command:
+        :param prob_in_change:
+        :param time_period:
+        :param stochastic:
+        :param reward:
+
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+
+        """
 
         # Superclasses
         super(RecallMachineVertex, self).__init__(
             label, constraints, app_vertex, n_neurons,
             self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES,
-            simulation_duration_ms,  rand_seed)
+            simulation_duration_ms,  random_seed)
         # Pass in variables
         self._rate_on = rate_on
         self._rate_off = rate_off
@@ -74,9 +112,6 @@ class RecallMachineVertex(SpinnGymMachineVertex):
         self._pop_size = pop_size
         self._prob_command = prob_command
         self._prob_in_change = prob_in_change
-
-        self._rand_seed = rand_seed
-
         self._time_period = time_period
 
         # used to define size of recording region
@@ -139,10 +174,10 @@ class RecallMachineVertex(SpinnGymMachineVertex):
             self._RECALL_REGIONS.DATA.value)
         spec.write_value(self._time_period, data_type=DataType.UINT32)
         spec.write_value(self._pop_size, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)

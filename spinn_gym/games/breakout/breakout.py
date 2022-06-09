@@ -50,14 +50,13 @@ class Breakout(SpinnGymApplicationVertex):
 
         n_neurons = int(1 << (width_bits + height_bits + colour_bits))
 
+        machne_vertex = BreakoutMachineVertex(
+            label, constraints, self, n_neurons, simulation_duration_ms,
+            random_seed, x_factor, y_factor, colour_bits, bricking)
+
         # Superclasses
         super(Breakout, self).__init__(
-            BreakoutMachineVertex(
-                n_neurons, constraints, label,
-                self, x_factor, y_factor, colour_bits,
-                simulation_duration_ms, bricking,
-                random_seed),
-            label=label, constraints=constraints, n_atoms=n_neurons)
+            machne_vertex,  label, constraints, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
