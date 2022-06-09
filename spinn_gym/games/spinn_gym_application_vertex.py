@@ -75,7 +75,7 @@ class SpinnGymApplicationVertex(
 
     @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
     def verify_splitter(self, splitter):
-        # Need to ignore this verify
+        # See https://github.com/SpiNNakerManchester/sPyNNaker/issues/1192
         pass
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
