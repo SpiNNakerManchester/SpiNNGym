@@ -128,8 +128,13 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 simulator = get_simulator()
 p.run(runtime)
 
+g_vertex = pendulum._vertex  # pylint: disable=protected-access
+_scores = g_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+
 scores = []
-scores.append(get_scores(game_pop=pendulum, simulator=simulator))
+scores.append(_scores.tolist())
 if reward_based:
     print(scores)
 else:
