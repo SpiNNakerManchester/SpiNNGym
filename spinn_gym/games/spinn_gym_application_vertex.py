@@ -38,9 +38,6 @@ from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 
 
-# ----------------------------------------------------------------------------
-# Double Pendulum
-# ----------------------------------------------------------------------------
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
         AbstractProvidesOutgoingPartitionConstraints,
