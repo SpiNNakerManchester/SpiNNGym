@@ -43,7 +43,7 @@ vis_proc = None  # Visualiser process (global)
 # -----------------------------------------------------------------------------
 #  Helper Functions
 # -----------------------------------------------------------------------------
-def start_visualiser(database, pop_label, xb=8, yb=8):
+def start_visualiser(database, pop_label, xr=2, yr=2, xb=8, yb=8):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
 
@@ -58,6 +58,8 @@ def start_visualiser(database, pop_label, xb=8, yb=8):
          '../../spinn_gym/games/breakout/visualiser/visualiser.py',
          board_address,
          tag.__str__(),
+         xr.__str__(),
+         yr.__str__(),
          xb.__str__(),
          yb.__str__()
          ])
@@ -189,7 +191,7 @@ d_conn = DatabaseConnection(local_port=None)
 
 print("\nRegister visualiser process")
 d_conn.add_database_callback(functools.partial(
-    start_visualiser, pop_label=b1.label,
+    start_visualiser, pop_label=b1.label, xr=x_factor1, yr=y_factor1,
     xb=np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
     yb=np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))))
 

@@ -38,7 +38,7 @@ class Breakout(SpinnGymApplicationVertex):
 
     __slots__ = []
 
-    def __init__(self, x_factor=16, y_factor=16,  width=128, height=128,
+    def __init__(self, x_factor=16, y_factor=16, width=160, height=128,
                  colour_bits=2, constraints=None,  label="Breakout",
                  simulation_duration_ms=ONE_WEEK_IN_MS, bricking=1,
                  random_seed=None):

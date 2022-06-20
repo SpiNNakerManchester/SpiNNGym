@@ -55,7 +55,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    __slots__ = ["_bricking", "_colour_bits", "_x_factor", "_y_factor"]
+    __slots__ = ["_x_factor", "_y_factor", "_colour_bits", "_bricking"]
 
     def __init__(
             self, label, constraints, app_vertex, n_neurons,
@@ -165,6 +165,10 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
 
         # End-of-Spec:
         spec.end_specification()
+
+    @overrides(SpinnGymMachineVertex.get_n_keys_for_partition)
+    def get_n_keys_for_partition(self, _partition):
+        return self._vertex_slice.n_atoms
 
     @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
     def get_recording_region_base_address(self, txrx, placement):

@@ -317,18 +317,21 @@ class Visualiser(object):
 if __name__ == "__main__":
     # Visualiser process to be called from Breakout script
     print("\nStarting visualiser process")
-    print("\targs: 1: {}, 2: {}, 3: {}, 4: {}".format(
-        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+    print("\targs: 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}".format(
+        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
+        sys.argv[6]))
 
     # Parse arguments
     machine = sys.argv[1]
     the_tag = int(sys.argv[2])
-    xb = int(sys.argv[3])
-    yb = int(sys.argv[4])
+    xr = int(sys.argv[3])
+    yr = int(sys.argv[4])
+    xb = int(sys.argv[5])
+    yb = int(sys.argv[6])
 
     # Create visualiser
-    vis = Visualiser(machine_address=machine, tag=the_tag, x_factor=2,
-                     y_factor=2, x_bits=xb, y_bits=yb)
+    vis = Visualiser(machine_address=machine, tag=the_tag, x_factor=xr,
+                     y_factor=yr, x_bits=xb, y_bits=yb)
     print("\nDisplaying visualiser")
     vis.show()
     print("...awaiting game signals")

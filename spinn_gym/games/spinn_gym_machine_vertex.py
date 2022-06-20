@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
-
 
 # PACMAN imports
 from pacman.model.graphs.common import Slice
@@ -96,12 +96,18 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     @overrides(MachineVertex.get_n_keys_for_partition)
     def get_n_keys_for_partition(self, _partition):
         n_keys = 0
-        # The way this has been written, there should only be one edge, but
-        # better to be safe than sorry
+        # The way most of these vertices are written, there should only be one
+        # edge, but better to be safe than sorry
         for edge in _partition.edges:
             if edge.pre_vertex is not edge.post_vertex:
                 n_keys += edge.post_vertex.get_n_keys_for_partition(_partition)
         return n_keys
+
+    @abstractproperty
+    def get_recording_region_base_address(self, txrx, placement):
+        """
+        The recording region base address
+        """
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
     def get_recorded_region_ids(self):
