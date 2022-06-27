@@ -38,6 +38,7 @@ from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
 from spynnaker.pyNN.data import SpynnakerDataView
 
+
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
         AbstractProvidesOutgoingPartitionConstraints,
