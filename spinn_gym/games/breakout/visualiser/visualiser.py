@@ -166,8 +166,7 @@ class Visualiser(object):
             plt.show()
             plt.draw()
             print("Visualiser displayed")
-        except Exception:
-            # pylint: disable=broad-except
+        except Exception: # pylint: disable=broad-except
             pass
 
     def handle_close(self, evt):
@@ -338,7 +337,7 @@ if __name__ == "__main__":
 
     refresh_time = 0.001
     while True:
-        score = vis._update(None)
+        score = vis._update(None)  # pylint: disable=protected-access)
         time.sleep(refresh_time)
 
     print("visualiser gets to here?")

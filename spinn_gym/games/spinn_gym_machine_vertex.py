@@ -103,12 +103,6 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                 n_keys += edge.post_vertex.get_n_keys_for_partition(_partition)
         return n_keys
 
-    @abstractproperty
-    def get_recording_region_base_address(self, placement):
-        """
-        The recording region base address
-        """
-
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
     def get_recorded_region_ids(self):
         return [0]

@@ -125,7 +125,12 @@ class SpinnGymApplicationVertex(
     @overrides(
         AbstractNeuronRecordable.clear_recording)
     def clear_recording(self, variable):
-        self._clear_recording_region(0)
+        for machine_vertex in self.machine_vertices:
+            placement = SpynnakerDataView.get_placement_of_vertex(
+                machine_vertex)
+            buffer_manager = SpynnakerDataView.get_buffer_manager()
+            buffer_manager.clear_recorded_data(
+                placement.x, placement.y, placement.p, 0)
 
     @overrides(AbstractNeuronRecordable.get_recordable_variables)
     def get_recordable_variables(self):
