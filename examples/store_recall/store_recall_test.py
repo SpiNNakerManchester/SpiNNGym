@@ -19,12 +19,7 @@ import spinn_gym as gym
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def get_scores(recall_pop):
-    b_vertex = recall_pop._vertex
-    scores = b_vertex.get_data('score')
-    return scores.tolist()
+from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 rate_on = 10
@@ -54,10 +49,10 @@ recall_model = gym.Recall(rate_on=rate_on,
                           time_period=time_period,
                           stochastic=stochastic,
                           reward=reward,
-                          rand_seed=random_seed)
+                          random_seed=random_seed)
 
-recall_pop = p.Population(recall_model.neurons(), recall_model)
-readout_pop = p.Population(recall_model.neurons(), p.IF_cond_exp())
+recall_pop = p.Population(recall_model.n_atoms, recall_model)
+readout_pop = p.Population(recall_model.n_atoms, p.IF_cond_exp())
 
 input_pop.record('spikes')
 readout_pop.record('spikes')
@@ -66,11 +61,14 @@ i2a = p.Projection(input_pop, recall_pop, p.AllToAllConnector())
 i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
+simulator = get_simulator()
+
 runtime = 30 * 1000
 p.run(runtime)
 
-scores = get_scores(recall_pop=recall_pop)
-
+b_vertex = recall_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data('score')
+scores = scores.tolist()
 print(scores)
 
 i = 0

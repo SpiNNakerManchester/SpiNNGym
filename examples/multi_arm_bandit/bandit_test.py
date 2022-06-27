@@ -19,12 +19,7 @@ import spinn_gym as gym
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
-
-
-def get_scores(bandit_pop):
-    b_vertex = bandit_pop._vertex
-    scores = b_vertex.get_data('score')
-    return scores.tolist()
+from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 p.setup(timestep=1.0)
@@ -41,7 +36,8 @@ random_seed = []
 for j in range(4):
     random_seed.append(np.random.randint(0xffff))
 arms_pop = p.Population(input_size, gym.Bandit(
-    arms=probabilities, reward_delay=500, rand_seed=random_seed, stochastic=0))
+    arms=probabilities, reward_delay=500, random_seed=random_seed,
+    stochastic=0))
 
 input_pop.record('spikes')
 # arms_pop.record('spikes')
@@ -59,11 +55,14 @@ i2o1 = p.Projection(arms_pop, output_pop1, p.AllToAllConnector(),
 i2o2 = p.Projection(arms_pop, output_pop2, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
+simulator = get_simulator()
+
 runtime = 10000
 p.run(runtime)
 
-scores = get_scores(bandit_pop=arms_pop)
-
+b_vertex = arms_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data('score')
+scores = scores.tolist()
 print(scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains

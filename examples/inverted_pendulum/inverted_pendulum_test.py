@@ -21,12 +21,7 @@ import matplotlib.pyplot as plt
 # SpiNNaker imports
 import pyNN.spiNNaker as p
 import spinn_gym as gym
-
-
-def get_scores(game_pop):
-    g_vertex = game_pop._vertex
-    scores = g_vertex.get_data('score')
-    return scores.tolist()
+from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 runtime = 21000
@@ -51,10 +46,10 @@ input_model = gym.Pendulum(
     pole_angle=pole_angle, reward_based=reward_based,
     force_increments=force_increments, max_firing_rate=max_firing_rate,
     number_of_bins=number_of_bins, central=central,
-    rand_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
+    random_seed=[np.random.randint(0xffff) for i in range(4)], bin_overlap=3,
     label='pendulum_pop')
 
-pendulum_pop_size = input_model.neurons()
+pendulum_pop_size = input_model.n_atoms
 pendulum = p.Population(pendulum_pop_size, input_model)
 null_pop = p.Population(4*number_of_bins, p.IF_cond_exp(), label='null')
 p.Projection(pendulum, null_pop, p.OneToOneConnector(),
@@ -122,10 +117,14 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 #     p.Projection(null_pops[conn[0]], arm_collection[1],
 #                  p.AllToAllConnector())
 
+simulator = get_simulator()
 p.run(runtime)
 
+g_vertex = pendulum._vertex  # pylint: disable=protected-access
+_scores = g_vertex.get_data('score')
+
 scores = []
-scores.append(get_scores(game_pop=pendulum))
+scores.append(_scores.tolist())
 if reward_based:
     print(scores)
 else:
