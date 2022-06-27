@@ -43,7 +43,7 @@ vis_proc = None  # Visualiser process (global)
 # -----------------------------------------------------------------------------
 #  Helper Functions
 # -----------------------------------------------------------------------------
-def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
+def start_visualiser(database, pop_label, xr=2, yr=2, xb=8, yb=8):
     _, _, _, board_address, tag = database.get_live_output_details(
         pop_label, "LiveSpikeReceiver")
 
@@ -51,28 +51,22 @@ def start_visualiser(database, pop_label, xr, yr, xb=8, yb=8, key_conn=None):
 
     # Calling visualiser - must be done as process rather than on thread due to
     # OS security (Mac)
+    # pylint: disable=global-statement
     global vis_proc
     vis_proc = subprocess.Popen(
         [sys.executable,
          '../../spinn_gym/games/breakout/visualiser/visualiser.py',
          board_address,
          tag.__str__(),
+         xr.__str__(),
+         yr.__str__(),
          xb.__str__(),
          yb.__str__()
          ])
     # print("Visualiser proc ID: {}".format(vis_proc.pid))
 
 
-def get_scores(breakout_pop, simulator):
-    b_vertex = breakout_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-
-    return scores.tolist()
-
-
-def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
+def row_col_to_input_breakout(row, col, is_on_input, row_bits,
                               colour_bits=2, row_start=0):
     row_bits = np.uint32(row_bits)
     idx = np.uint32(0)
@@ -91,7 +85,7 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
 
 
 def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
-                         weight, coord_map_func):
+                         coord_map_func):
     # subY_BITS=int(np.ceil(np.log2(y_res/subsamp_factor)))
     connection_list_on = []
     connection_list_off = []
@@ -142,7 +136,7 @@ bricking = 1
 
 # Create breakout population and activate live output
 b1 = gym.Breakout(x_factor=x_factor1, y_factor=y_factor1, bricking=bricking)
-breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+breakout_pop = p.Population(b1.n_atoms, b1, label="breakout1")
 
 # ex is the external device plugin manager
 ex.activate_live_output_for(breakout_pop)
@@ -162,7 +156,7 @@ p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
 
 weight = 0.1
 [Connections_on, Connections_off] = subsample_connection(
-    X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1, 1, 1, weight,
+    X_RESOLUTION/x_factor1, Y_RESOLUTION/y_factor1, 1, 1,
     row_col_to_input_breakout)
 
 # Create population of neurons to receive input from Breakout
@@ -199,8 +193,7 @@ print("\nRegister visualiser process")
 d_conn.add_database_callback(functools.partial(
     start_visualiser, pop_label=b1.label, xr=x_factor1, yr=y_factor1,
     xb=np.uint32(np.ceil(np.log2(X_RESOLUTION/x_factor1))),
-    yb=np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1))),
-    key_conn=key_input_connection))
+    yb=np.uint32(np.ceil(np.log2(Y_RESOLUTION/y_factor1)))))
 
 p.external_devices.add_database_socket_address(
      "localhost", d_conn.local_port, None)
@@ -241,7 +234,12 @@ Figure(
 
 plt.show()
 
-scores = get_scores(breakout_pop=breakout_pop, simulator=simulator)
+b_vertex = breakout_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+scores = scores.tolist()
+
 print("Scores: {}".format(scores))
 
 # End simulation
