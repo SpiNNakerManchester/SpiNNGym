@@ -166,7 +166,7 @@ class Visualiser(object):
             plt.show()
             plt.draw()
             print("Visualiser displayed")
-        except Exception: # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             pass
 
     def handle_close(self, evt):
