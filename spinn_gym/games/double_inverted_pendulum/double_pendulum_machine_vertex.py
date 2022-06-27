@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,21 +21,13 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models import \
-    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
-from spinn_front_end_common.abstract_models \
-    .abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
@@ -43,16 +35,22 @@ from spinn_front_end_common.utilities import constants as \
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # DoublePendulumMachineVertex
 # ----------------------------------------------------------------------------
-class DoublePendulumMachineVertex(MachineVertex,
-                                  AbstractGeneratesDataSpecification,
-                                  AbstractReceiveBuffersToHost,
-                                  AbstractHasAssociatedBinary):
+class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     PENDULUM_REGION_BYTES = 4
     DATA_REGION_BYTES = 17 * 4
+
+    __slots__ = [
+        "_bin_overlap", "_central", "_encoding", "_force_increments",
+        "_max_firing_rate", "_number_of_bins", "_pole_angle", "_pole2_angle",
+        "_pole_length", "_pole2_length", "_reward_based", "_tau_force",
+        "_time_increment"]
 
     _DOUBLE_PENDULUM_REGIONS = Enum(
         value="_DOUBLE_PENDULUM_REGIONS",
@@ -61,22 +59,56 @@ class DoublePendulumMachineVertex(MachineVertex,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
-                 app_vertex, encoding, time_increment, pole_length, pole_angle,
-                 pole2_length, pole2_angle, reward_based, force_increments,
-                 max_firing_rate, number_of_bins, central, bin_overlap,
-                 tau_force, incoming_spike_buffer_size, simulation_duration_ms,
-                 rand_seed):
+    def __init__(
+            self, label, constraints, app_vertex, n_neurons,
+            simulation_duration_ms, random_seed,
+            encoding, time_increment, pole_length, pole_angle, pole2_length,
+            pole2_angle, reward_based, force_increments, max_firing_rate,
+            number_of_bins, central, bin_overlap, tau_force):
+        """
 
-        # Resources required
-        self._resource_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param encoding:
+        :param time_increment:
+        :param pole_length:
+        :param pole_angle:
+        :param pole2_length:
+        :param pole2_angle:
+        :param reward_based:
+        :param force_increments:
+        :param max_firing_rate:
+        :param number_of_bins:
+        :param central:
+        :param bin_overlap:
+        :param tau_force:
 
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+        """
 
-        self._label = label
+        # Superclasses
+        super(DoublePendulumMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons,
+            self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
+            simulation_duration_ms,  random_seed)
 
         self._encoding = encoding
 
@@ -87,35 +119,24 @@ class DoublePendulumMachineVertex(MachineVertex,
         self._pole2_angle = pole2_angle
 
         self._force_increments = force_increments
-        # for rate based it's only 1 neuron per metric
-        # (position, angle, velocity of both)
-        self._n_neurons = 6 * number_of_bins
-
         self._time_increment = time_increment
         self._reward_based = reward_based
 
         self._max_firing_rate = max_firing_rate
         self._number_of_bins = number_of_bins
         self._central = central
-        self._rand_seed = rand_seed
         self._bin_overlap = bin_overlap
         self._tau_force = tau_force
-
-        # used to define size of recording region
-        self._recording_size = int((simulation_duration_ms / 1000.) * 4)
-
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
+    @overrides(SpinnGymMachineVertex.generate_data_specification,
                additional_arguments={"routing_info"}
                )
     def generate_data_specification(self, spec, placement, routing_info):
+        # pylint: disable=arguments-differ
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Double Pendulum Instance ***\n\n")
@@ -173,42 +194,21 @@ class DoublePendulumMachineVertex(MachineVertex,
         spec.write_value(self._max_firing_rate, data_type=DataType.UINT32)
         spec.write_value(self._number_of_bins, data_type=DataType.UINT32)
         spec.write_value(self._central, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._bin_overlap, data_type=DataType.S1615)
         spec.write_value(self._tau_force, data_type=DataType.S1615)
 
         # End-of-Spec:
         spec.end_specification()
 
-    @property
-    def resources_required(self):
-        return self._resource_required
-
-    def get_minimum_buffer_sdram_usage(self):
-        return 0  # probably should make this a user input
-
+    @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value, txrx)
 
-    def get_recorded_region_ids(self):
-        """ Get the recording region IDs that have been recorded with buffering
-
-        :return: The region numbers that have active recording
-        :rtype: iterable(int) """
-        return [0]
-
-    def get_n_keys_for_partition(self, partition):
-        return self._n_neurons
-
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "double_inverted_pendulum.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE

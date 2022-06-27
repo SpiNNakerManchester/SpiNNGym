@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,16 +22,11 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models import \
-    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
 from spinn_front_end_common.abstract_models \
@@ -44,13 +39,14 @@ from spinn_front_end_common.utilities import constants as \
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # LogicMachineVertex
 # ----------------------------------------------------------------------------
-class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
-                         AbstractReceiveBuffersToHost,
-                         AbstractHasAssociatedBinary):
+class LogicMachineVertex(SpinnGymMachineVertex):
     LOGIC_REGION_BYTES = 4
     BASE_DATA_REGION_BYTES = 9 * 4
 
@@ -61,20 +57,50 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
-                 app_vertex, truth_table, input_sequence, rate_on, rate_off,
-                 score_delay, stochastic, incoming_spike_buffer_size,
-                 simulation_duration_ms, rand_seed):
+    __slots__ = ["_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
+                 "_score_delay", "_stochastic", "_truth_table"]
 
-        # resources required
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 truth_table, input_sequence, rate_on, rate_off,
+                 score_delay, stochastic):
+        """
 
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param truth_table:
+        :param input_sequence:
+        :param rate_on:
+        :param rate_off:
+        :param score_delay:
+        :param stochastic:
 
-        self._label = label
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
+        """
+
+        # Superclasses
+        super(LogicMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons,
+            self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
+            simulation_duration_ms,  random_seed)
 
         # Pass in variables
         self._truth_table = truth_table
@@ -83,18 +109,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._stochastic = stochastic
         self._input_sequence = input_sequence
         self._no_inputs = len(input_sequence)
-
-        self._n_neurons = self._no_inputs
-        self._rand_seed = rand_seed
-
         self._score_delay = score_delay
-
-        # used to define size of recording region
-        self._recording_size = int((simulation_duration_ms / 1000.) * 4)
-
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -104,6 +119,7 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                additional_arguments={"routing_info"}
                )
     def generate_data_specification(self, spec, placement, routing_info):
+        # pylint: disable=arguments-differ
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Logic Instance ***\n\n")
@@ -154,10 +170,10 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
             self._LOGIC_REGIONS.DATA.value)
         spec.write_value(self._score_delay, data_type=DataType.UINT32)
         spec.write_value(self._no_inputs, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)
@@ -170,27 +186,10 @@ class LogicMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # End-of-Spec:
         spec.end_specification()
 
-    @property
-    def resources_required(self):
-        return self._resources_required
-
-    def get_minimum_buffer_sdram_usage(self):
-        return 0  # probably should make this a user input
-
-    def get_recorded_region_ids(self):
-        return [0]
-
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
 
-    def get_n_keys_for_partition(self, partition):
-        return self._no_inputs
-
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "logic.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        return ExecutableType.USES_SIMULATION_INTERFACE

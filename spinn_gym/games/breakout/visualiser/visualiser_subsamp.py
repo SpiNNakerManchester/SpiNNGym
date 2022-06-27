@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@ class Visualiser_subsamp(object):
     def __init__(self, key_input_connection, spike_output_connection,
                  on_pop_name, off_pop_name, x_res=160, y_res=128,
                  x_bits=8, y_bits=8):
+        # pylint: disable=unused-argument
         # Reset input state
         self.input_state = InputState.idle
 
@@ -82,6 +83,7 @@ class Visualiser_subsamp(object):
         self.axis.set_xticklabels([])
         self.axis.set_yticklabels([])
         self.axis.axes.get_xaxis().set_visible(False)
+        self.animation = None
 
     # ------------------------------------------------------------------------
     # Public methods
@@ -95,6 +97,7 @@ class Visualiser_subsamp(object):
 
     # spike receiver callback
     def receive_spikes(self, label, time, neuron_ids):
+        # pylint: disable=unused-argument
         # add received spike IDs to list
         if label == "subsample channel on":
             for n_id in neuron_ids:
@@ -108,6 +111,7 @@ class Visualiser_subsamp(object):
     # Private methods
     # ------------------------------------------------------------------------
     def _update(self, frame):
+        # pylint: disable=unused-argument
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle:
             self.key_input_connection.send_spike("key_input", self.input_state)
