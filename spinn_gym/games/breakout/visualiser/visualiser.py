@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -195,9 +195,11 @@ class Visualiser(object):
             plt.draw()
             print("Visualiser displayed")
         except Exception:
+            # pylint: disable=broad-except
             pass
 
     def handle_close(self, evt):
+        # pylint: disable=unused-argument
         self.close()
 
     def close(self):
