@@ -29,6 +29,8 @@ from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 from spinn_front_end_common.abstract_models. \
     abstract_provides_outgoing_partition_constraints import \
     AbstractProvidesOutgoingPartitionConstraints
+from spinn_front_end_common.abstract_models.impl \
+    import ProvidesKeyToAtomMappingImpl
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -42,7 +44,7 @@ class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
         AbstractProvidesOutgoingPartitionConstraints,
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-        SimplePopulationSettable):
+        SimplePopulationSettable, ProvidesKeyToAtomMappingImpl):
 
     __slots__ = [
         # A flag to detect a reset must be hard

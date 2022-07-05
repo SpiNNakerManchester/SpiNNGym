@@ -125,7 +125,8 @@ class Visualiser(object):
         width = 8
         if live_pops:
             width = 16
-            axes_names = [["Breakout", pop.label] for pop in live_pops]
+            axes_names = [["Breakout" for _ in live_pops]]
+            axes_names[0].extend(pop.label for pop in live_pops)
 
         self.fig, self.axes = plt.subplot_mosaic(
             axes_names, figsize=(width, 6), constrained_layout=True)
@@ -137,10 +138,11 @@ class Visualiser(object):
             for pop in live_pops:
                 self.live_spike_plot[pop.label], = self.axes[pop.label].plot(
                     [], [], ".")
-                self.axes[pop.label].set_xlim(0, live_duration)
-                self.axes[pop.label].set_ylim(-1, pop.size + 1)
-                self.axes[pop.label].set_xticks([])
+                self.axes[pop.label].set_ylim(0, live_duration)
+                self.axes[pop.label].set_xlim(-1, pop.size + 1)
                 self.axes[pop.label].set_yticks([])
+                self.axes[pop.label].set_xticks([])
+                self.axes[pop.label].set_xlabel(pop.label)
             self.live_duration = live_duration
 
         breakout_axis = self.axes["Breakout"]
@@ -311,10 +313,10 @@ class Visualiser(object):
                 data = self.live_spike_data[label]
                 axes = self.axes[label]
                 plot = self.live_spike_plot[label]
-                axes.set_xlim(time_low, time_high)
+                axes.set_ylim(time_low, time_high)
                 if data:
                     plot_data = np.array(data)
-                    plot.set_data(plot_data[:, 1], plot_data[:, 0])
+                    plot.set_data(plot_data[:, 0], plot_data[:, 1])
         return do_update
 
     def _on_key_press(self, event):

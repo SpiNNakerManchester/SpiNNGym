@@ -43,7 +43,7 @@ class AutomatedBreakout(object):
 
         # Create breakout population and activate live output
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
-        self.breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+        self.breakout_pop = p.Population(b1.n_atoms, b1, label="breakout1")
 
         # Create random spike input and connect to Breakout pop to stimulate
         # paddle (and enable paddle visualisation)

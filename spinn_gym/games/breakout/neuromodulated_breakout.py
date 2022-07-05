@@ -49,7 +49,7 @@ class NeuromodulatedBreakout(object):
         # Breakout Population && Spike Input
         # --------------------------------------------------------------------
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
-        self.breakout_pop = p.Population(b1.neurons(), b1, label="breakout1")
+        self.breakout_pop = p.Population(b1.n_atoms, b1, label="breakout1")
 
         # self.key_input = p.Population(
         #     2, p.external_devices.SpikeInjector(), label="key_input")
