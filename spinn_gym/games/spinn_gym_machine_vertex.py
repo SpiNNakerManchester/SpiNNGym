@@ -93,16 +93,6 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     def resources_required(self):
         return self._resources_required
 
-    @overrides(MachineVertex.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, _partition):
-        n_keys = 0
-        # The way most of these vertices are written, there should only be one
-        # edge, but better to be safe than sorry
-        for edge in _partition.edges:
-            if edge.pre_vertex is not edge.post_vertex:
-                n_keys += edge.post_vertex.get_n_keys_for_partition(_partition)
-        return n_keys
-
     @abstractproperty
     def get_recording_region_base_address(self, txrx, placement):
         """

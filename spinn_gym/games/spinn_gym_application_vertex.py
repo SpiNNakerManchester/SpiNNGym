@@ -19,16 +19,11 @@ from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.model.constraints.key_allocator_constraints import \
-    ContiguousKeyRangeContraint
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -40,7 +35,6 @@ from spynnaker.pyNN.models.common.simple_population_settable \
 
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
-        AbstractProvidesOutgoingPartitionConstraints,
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
         SimplePopulationSettable):
 
@@ -64,7 +58,6 @@ class SpinnGymApplicationVertex(
         super(SpinnGymApplicationVertex, self).__init__(
             machine_vertex, label, constraints, n_atoms)
 
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
@@ -96,14 +89,6 @@ class SpinnGymApplicationVertex(
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
-
-    # ------------------------------------------------------------------------
-    # AbstractProvidesOutgoingPartitionConstraints overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractProvidesOutgoingPartitionConstraints.
-               get_outgoing_partition_constraints)
-    def get_outgoing_partition_constraints(self, partition):
-        return [ContiguousKeyRangeContraint()]
 
     @property
     @overrides(AbstractChangableAfterRun.requires_mapping)
