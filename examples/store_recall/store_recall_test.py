@@ -22,14 +22,6 @@ import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-def get_scores(recall_pop, simulator):
-    b_vertex = recall_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-    return scores.tolist()
-
-
 rate_on = 10
 rate_off = 0
 pop_size = 1
@@ -57,10 +49,10 @@ recall_model = gym.Recall(rate_on=rate_on,
                           time_period=time_period,
                           stochastic=stochastic,
                           reward=reward,
-                          rand_seed=random_seed)
+                          random_seed=random_seed)
 
-recall_pop = p.Population(recall_model.neurons(), recall_model)
-readout_pop = p.Population(recall_model.neurons(), p.IF_cond_exp())
+recall_pop = p.Population(recall_model.n_atoms, recall_model)
+readout_pop = p.Population(recall_model.n_atoms, p.IF_cond_exp())
 
 input_pop.record('spikes')
 readout_pop.record('spikes')
@@ -74,8 +66,11 @@ simulator = get_simulator()
 runtime = 30 * 1000
 p.run(runtime)
 
-scores = get_scores(recall_pop=recall_pop, simulator=simulator)
-
+b_vertex = recall_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+scores = scores.tolist()
 print(scores)
 
 i = 0

@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -167,15 +167,18 @@ class Visualiser(object):
             plt.draw()
             print("Visualiser displayed")
         except Exception:
+            # pylint: disable=broad-except
             pass
 
     def handle_close(self, evt):
+        # pylint: disable=unused-argument
         self.video_writer.release()
 
     # ------------------------------------------------------------------------
     # Private methods
     # ------------------------------------------------------------------------
     def _update(self, frame):
+        # pylint: disable=unused-argument
         # print "trying to update interval = ", (1000. / self.fps)
 
         # If state isn't idle, send spike to key input
@@ -201,6 +204,7 @@ class Visualiser(object):
 
                 # Create mask to select vision (rather than event) packets
                 # Extract coordinates
+                # pylint: disable=pointless-string-statement
                 'const uint32_t spike_key = ' \
                     'key | (SPECIAL_EVENT_MAX + ' \
                     '(i << (game_bits + 2)) + (j << 2) + ' \
@@ -313,18 +317,21 @@ class Visualiser(object):
 if __name__ == "__main__":
     # Visualiser process to be called from Breakout script
     print("\nStarting visualiser process")
-    print("\targs: 1: {}, 2: {}, 3: {}, 4: {}".format(
-        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]))
+    print("\targs: 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}".format(
+        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
+        sys.argv[6]))
 
     # Parse arguments
     machine = sys.argv[1]
-    tag = int(sys.argv[2])
-    xb = int(sys.argv[3])
-    yb = int(sys.argv[4])
+    the_tag = int(sys.argv[2])
+    xr = int(sys.argv[3])
+    yr = int(sys.argv[4])
+    xb = int(sys.argv[5])
+    yb = int(sys.argv[6])
 
     # Create visualiser
-    vis = Visualiser(machine_address=machine, tag=tag, x_factor=2, y_factor=2,
-                     x_bits=xb, y_bits=yb)
+    vis = Visualiser(machine_address=machine, tag=the_tag, x_factor=xr,
+                     y_factor=yr, x_bits=xb, y_bits=yb)
     print("\nDisplaying visualiser")
     vis.show()
     print("...awaiting game signals")

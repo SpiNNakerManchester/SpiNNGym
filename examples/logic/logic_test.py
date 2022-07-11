@@ -22,14 +22,6 @@ import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-def get_scores(logic_pop, simulator):
-    b_vertex = logic_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-    return scores.tolist()
-
-
 p.setup(timestep=1.0)
 
 truth_table = [0, 1, 1, 0]
@@ -54,7 +46,7 @@ for j in range(4):
 logic_model = gym.Logic(truth_table=truth_table,
                         input_sequence=input_sequence,
                         stochastic=0,
-                        rand_seed=random_seed)
+                        random_seed=random_seed)
 logic_pop = p.Population(input_size, logic_model)
 
 input_pop.record('spikes')
@@ -76,8 +68,11 @@ simulator = get_simulator()
 runtime = 10000
 p.run(runtime)
 
-scores = get_scores(logic_pop=logic_pop, simulator=simulator)
-
+b_vertex = logic_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+scores = scores.tolist()
 print('scores:', scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains

@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021 The University of Manchester
+# Copyright (c) 2019-2022 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,16 +21,11 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models import \
-    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
 from spinn_front_end_common.abstract_models \
@@ -43,13 +38,14 @@ from spinn_front_end_common.utilities import constants as \
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # RecallMachineVertex
 # ----------------------------------------------------------------------------
-class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
-                          AbstractReceiveBuffersToHost,
-                          AbstractHasAssociatedBinary):
+class RecallMachineVertex(SpinnGymMachineVertex):
     RECALL_REGION_BYTES = 4
     DATA_REGION_BYTES = 12 * 4
 
@@ -60,22 +56,54 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
-                 app_vertex, rate_on, rate_off, pop_size, prob_command,
-                 prob_in_change, time_period, stochastic, reward,
-                 incoming_spike_buffer_size, simulation_duration_ms,
-                 rand_seed):
+    __slots__ = ["_prob_command", "_prob_in_change", "_pop_size",
+                 "_rate_off", "_rate_on", "_reward", "_stochastic",
+                 "_time_period"]
 
-        # Resources required
-        self._resource_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 rate_on, rate_off, pop_size, prob_command,
+                 prob_in_change, time_period, stochastic, reward):
+        """
 
-        # **NOTE** n_neurons currently ignored - width and height will be
-        # specified as additional parameters, forcing their product to be
-        # duplicated in n_neurons seems pointless
+        :param label: The optional name of the vertex
+        :type label: str or None
+        :param iterable(AbstractConstraint) constraints:
+            The optional initial constraints of the vertex
+        :type constraints: iterable(AbstractConstraint) or None
+        :type constraints: iterable(AbstractConstraint)  or None
+        :param app_vertex:
+            The application vertex that caused this machine vertex to be
+            created. If None, there is no such application vertex.
+        :type app_vertex: ApplicationVertex or None
+        :param int n_neurons:
+            The number of neurons to be used to create the slice of the
+            application vertex that this machine vertex implements.
+        :param int region_bytes: The bytes needed other than recording
+        :param float simulation_duration_ms:
+        :param list(int) random_seed: List of 4 vlaues to seed the c code
+        :param rate_on:
+        :param rate_off:
+        :param pop_size:
+        :param prob_command:
+        :param prob_in_change:
+        :param time_period:
+        :param stochastic:
+        :param reward:
 
-        self._label = label
+        :raise PacmanInvalidParameterException:
+            If one of the constraints is not valid
+        :raises PacmanValueError: If the slice of the machine_vertex is too big
+        :raise AttributeError:
+            If a not None app_vertex is not an ApplicationVertex
 
+        """
+
+        # Superclasses
+        super(RecallMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons,
+            self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES,
+            simulation_duration_ms,  random_seed)
         # Pass in variables
         self._rate_on = rate_on
         self._rate_off = rate_off
@@ -84,18 +112,10 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._pop_size = pop_size
         self._prob_command = prob_command
         self._prob_in_change = prob_in_change
-
-        self._n_neurons = pop_size * 4
-        self._rand_seed = rand_seed
-
         self._time_period = time_period
 
         # used to define size of recording region
         self._recording_size = int((simulation_duration_ms / 1000.) * 4)
-
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -105,6 +125,7 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                additional_arguments={"routing_info"}
                )
     def generate_data_specification(self, spec, placement, routing_info):
+        # pylint: disable=arguments-differ
         vertex = placement.vertex
 
         spec.comment("\n*** Spec for Recall Instance ***\n\n")
@@ -153,10 +174,10 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
             self._RECALL_REGIONS.DATA.value)
         spec.write_value(self._time_period, data_type=DataType.UINT32)
         spec.write_value(self._pop_size, data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[0], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[1], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[2], data_type=DataType.UINT32)
-        spec.write_value(self._rand_seed[3], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[0], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[1], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[2], data_type=DataType.UINT32)
+        spec.write_value(self._random_seed[3], data_type=DataType.UINT32)
         spec.write_value(self._rate_on, data_type=DataType.UINT32)
         spec.write_value(self._rate_off, data_type=DataType.UINT32)
         spec.write_value(self._stochastic, data_type=DataType.UINT32)
@@ -167,35 +188,10 @@ class RecallMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # End-of-Spec:
         spec.end_specification()
 
-    @property
-    def resources_required(self):
-        return self._resource_required
-
     def get_recording_region_base_address(self, txrx, placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._RECALL_REGIONS.RECORDING.value, txrx)
 
-    def get_recorded_region_ids(self):
-        """ Get the recording region IDs that have been recorded with buffering
-
-        :return: The region numbers that have active recording
-        :rtype: iterable(int) """
-        return [0]
-
-    def get_n_keys_for_partition(self, partition):
-        n_keys = 0
-        # The way this has been written, there should only be one edge, but
-        # better to be safe than sorry
-        for edge in partition.edges:
-            if edge.pre_vertex is not edge.post_vertex:
-                n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
-        return n_keys
-
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "store_recall.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        # return ExecutableStartType.USES_SIMULATION_INTERFACE
-        return ExecutableType.USES_SIMULATION_INTERFACE

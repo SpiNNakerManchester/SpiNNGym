@@ -22,14 +22,6 @@ import numpy as np
 from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-def get_scores(bandit_pop, simulator):
-    b_vertex = bandit_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
-    return scores.tolist()
-
-
 p.setup(timestep=1.0)
 
 probabilities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
@@ -44,7 +36,8 @@ random_seed = []
 for j in range(4):
     random_seed.append(np.random.randint(0xffff))
 arms_pop = p.Population(input_size, gym.Bandit(
-    arms=probabilities, reward_delay=500, rand_seed=random_seed, stochastic=0))
+    arms=probabilities, reward_delay=500, random_seed=random_seed,
+    stochastic=0))
 
 input_pop.record('spikes')
 # arms_pop.record('spikes')
@@ -67,8 +60,11 @@ simulator = get_simulator()
 runtime = 10000
 p.run(runtime)
 
-scores = get_scores(bandit_pop=arms_pop, simulator=simulator)
-
+b_vertex = arms_pop._vertex  # pylint: disable=protected-access
+scores = b_vertex.get_data(
+    'score', simulator.no_machine_time_steps, simulator.placements,
+    simulator.buffer_manager)
+scores = scores.tolist()
 print(scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
