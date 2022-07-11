@@ -22,16 +22,12 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.executor.injection_decorator import inject_items
-from pacman.model.graphs.machine import MachineVertex
 from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.interface.buffer_management.buffer_models import \
-    AbstractReceiveBuffersToHost
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
 from spinn_front_end_common.abstract_models \
@@ -45,14 +41,14 @@ from spinn_front_end_common.utilities.exceptions import ConfigurationException
 # sPyNNaker imports
 from spynnaker.pyNN.utilities import constants
 
+# spinn_gym imports
+from spinn_gym.games.spinn_gym_machine_vertex import SpinnGymMachineVertex
+
 
 # ----------------------------------------------------------------------------
 # ICubVorEnvMachineVertex
 # ----------------------------------------------------------------------------
-class ICubVorEnvMachineVertex(MachineVertex,
-                              AbstractGeneratesDataSpecification,
-                              AbstractReceiveBuffersToHost,
-                              AbstractHasAssociatedBinary):
+class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
     ICUB_VOR_ENV_REGION_BYTES = 4
     BASE_DATA_REGION_BYTES = 9 * 4
     # Probably better ways of doing this too, but keeping it for now
@@ -69,17 +65,16 @@ class ICubVorEnvMachineVertex(MachineVertex,
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, vertex_slice, resources_required, constraints, label,
-                 app_vertex, head_pos, head_vel, perfect_eye_pos,
+    def __init__(self, label, constraints, app_vertex, n_neurons,
+                 simulation_duration_ms, random_seed,
+                 head_pos, head_vel, perfect_eye_pos,
                  perfect_eye_vel, error_window_size, output_size, gain,
-                 pos_to_vel, wta_decision, low_error_rate, high_error_rate,
-                 incoming_spike_buffer_size, simulation_duration_ms):
+                 pos_to_vel, wta_decision, low_error_rate, high_error_rate):
 
-        # resources required
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(resources_required))
-
-        self._label = label
+        super(ICubVorEnvMachineVertex, self).__init__(
+            label, constraints, app_vertex, n_neurons,
+            self.ICUB_VOR_ENV_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
+            simulation_duration_ms, random_seed)
 
         # pass in variables
         self._head_pos = head_pos
@@ -99,15 +94,20 @@ class ICubVorEnvMachineVertex(MachineVertex,
                 "The length of perfect_eye_pos {} is not the same as the "
                 "length of perfect_eye_vel {}".format(
                     self._number_of_inputs, len(perfect_eye_vel)))
-
         self._n_recordable_variables = len(self.RECORDABLE_VARIABLES)
 
         self._recording_size = int((simulation_duration_ms / error_window_size)
                                    * front_end_common_constants.BYTES_PER_WORD)
 
-        # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
+        self._resources_required = ResourceContainer(
+            sdram=ConstantSDRAM(
+                self.ICUB_VOR_ENV_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
+                self._recording_size))
+
+    @property
+    @overrides(SpinnGymMachineVertex.resources_required)
+    def resources_required(self):
+        return self._resources_required
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
@@ -198,13 +198,7 @@ class ICubVorEnvMachineVertex(MachineVertex,
         x_approx = numpy.floor((x / eps) + 0.5) * eps
         return x_approx
 
-    @property
-    def resources_required(self):
-        return self._resources_required
-
-    def get_minimum_buffer_sdram_usage(self):
-        return 0  # probably should make this a user input
-
+    @overrides(SpinnGymMachineVertex.get_recorded_region_ids)
     def get_recorded_region_ids(self):
         return [0, 1, 2, 3, 4]
 
@@ -212,19 +206,6 @@ class ICubVorEnvMachineVertex(MachineVertex,
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._ICUB_VOR_ENV_REGIONS.RECORDING.value, txrx)
 
-    def get_n_keys_for_partition(self, partition):
-        n_keys = 0
-        # The way this has been written, there should only be one edge, but
-        # better to be safe than sorry
-        for edge in partition.edges:
-            if edge.pre_vertex is not edge.post_vertex:
-                n_keys += edge.post_vertex.get_n_keys_for_partition(partition)
-        return n_keys
-
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "icub_vor_env.aplx"
-
-    @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
-        return ExecutableType.USES_SIMULATION_INTERFACE
