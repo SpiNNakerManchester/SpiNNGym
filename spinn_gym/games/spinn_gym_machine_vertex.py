@@ -93,12 +93,6 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     def resources_required(self):
         return self._resources_required
 
-    @abstractmethod
-    def get_recording_region_base_address(self, txrx, placement):
-        """
-        The recording region base address
-        """
-
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
     def get_recorded_region_ids(self):
         return [0]
