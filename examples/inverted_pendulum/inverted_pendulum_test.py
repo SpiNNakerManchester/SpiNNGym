@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 # SpiNNaker imports
 import pyNN.spiNNaker as p
 import spinn_gym as gym
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 runtime = 21000
@@ -117,7 +116,6 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 #     p.Projection(null_pops[conn[0]], arm_collection[1],
 #                  p.AllToAllConnector())
 
-simulator = get_simulator()
 p.run(runtime)
 
 g_vertex = pendulum._vertex  # pylint: disable=protected-access

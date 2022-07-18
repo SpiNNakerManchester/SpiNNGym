@@ -22,7 +22,6 @@ import subprocess
 import sys
 
 # SpiNNaker imports
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_front_end_common.utilities.database.database_connection \
     import DatabaseConnection
 from spynnaker.pyNN.connections.\
@@ -202,7 +201,6 @@ p.external_devices.add_database_socket_address(
 # Run Simulation
 # -----------------------------------------------------------------------------
 runtime = 1000 * 60
-simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 

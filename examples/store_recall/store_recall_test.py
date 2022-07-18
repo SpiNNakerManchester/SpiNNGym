@@ -19,7 +19,6 @@ import spinn_gym as gym
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 rate_on = 10
@@ -61,7 +60,6 @@ i2a = p.Projection(input_pop, recall_pop, p.AllToAllConnector())
 i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
-simulator = get_simulator()
 
 runtime = 30 * 1000
 p.run(runtime)
