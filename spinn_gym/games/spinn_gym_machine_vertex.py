@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -92,12 +91,6 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
     @overrides(MachineVertex.resources_required)
     def resources_required(self):
         return self._resources_required
-
-    @abstractproperty
-    def get_recording_region_base_address(self, txrx, placement):
-        """
-        The recording region base address
-        """
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
     def get_recorded_region_ids(self):
