@@ -21,7 +21,6 @@ from spinn_utilities.overrides import overrides
 from data_specification.enums.data_type import DataType
 
 # PACMAN imports
-from pacman.executor.injection_decorator import inject_items
 from pacman.model.resources import ConstantSDRAM, ResourceContainer
 
 # SpinnFrontEndCommon imports
@@ -39,6 +38,7 @@ from spinn_front_end_common.utilities import constants as \
 from spinn_front_end_common.utilities.exceptions import ConfigurationException
 
 # sPyNNaker imports
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
@@ -112,10 +112,7 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
     def generate_data_specification(self, spec, placement, routing_info):
         vertex = placement.vertex
 
@@ -151,6 +148,7 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting icub_vor_env region:\n")
         spec.switch_write_focus(
             self._ICUB_VOR_ENV_REGIONS.ICUB_VOR_ENV.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.LIVE_POISSON_CONTROL_PARTITION_ID))
 
