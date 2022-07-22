@@ -19,47 +19,36 @@ import spinn_gym as gym
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 # Examples of get functions for variables
-def get_error(icub_vor_env_pop, simulator):
+def get_error(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    error = b_vertex.get_data(
-        'error', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    error = b_vertex.get_data('error')
     return error.tolist()
 
 
-def get_l_count(icub_vor_env_pop, simulator):
+def get_l_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    left_count = b_vertex.get_data(
-        'l_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    left_count = b_vertex.get_data('l_count')
     return left_count.tolist()
 
 
-def get_r_count(icub_vor_env_pop, simulator):
+def get_r_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    right_count = b_vertex.get_data(
-        'r_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    right_count = b_vertex.get_data('r_count')
     return right_count.tolist()
 
 
-def get_eye_pos(icub_vor_env_pop, simulator):
+def get_eye_pos(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_positions = b_vertex.get_data(
-        'eye_pos', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    eye_positions = b_vertex.get_data('eye_pos')
     return eye_positions.tolist()
 
 
-def get_eye_vel(icub_vor_env_pop, simulator):
+def get_eye_vel(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_velocities = b_vertex.get_data(
-        'eye_vel', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    eye_velocities = b_vertex.get_data('eye_vel')
     return eye_velocities.tolist()
 
 
@@ -120,18 +109,15 @@ p.external_devices.activate_live_output_to(
     icub_vor_env_pop, output_pop, "CONTROL")
 
 # Store simulator and run
-simulator = get_simulator()
 runtime = 10000
 p.run(runtime)
 
 # Get the data from the ICubVorEnv pop
-errors = get_error(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-l_counts = get_l_count(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-r_counts = get_r_count(icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-rec_eye_pos = get_eye_pos(
-    icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
-rec_eye_vel = get_eye_vel(
-    icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)
+errors = get_error(icub_vor_env_pop=icub_vor_env_pop)
+l_counts = get_l_count(icub_vor_env_pop=icub_vor_env_pop)
+r_counts = get_r_count(icub_vor_env_pop=icub_vor_env_pop)
+rec_eye_pos = get_eye_pos(icub_vor_env_pop=icub_vor_env_pop)
+rec_eye_vel = get_eye_vel(icub_vor_env_pop=icub_vor_env_pop)
 
 # get the spike data from input and output and plot
 # spikes_in = input_pop.get_data('spikes').segments[0].spiketrains

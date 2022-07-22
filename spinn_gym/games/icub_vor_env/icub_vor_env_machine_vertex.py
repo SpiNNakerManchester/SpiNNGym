@@ -200,9 +200,9 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
     def get_recorded_region_ids(self):
         return [0, 1, 2, 3, 4]
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._ICUB_VOR_ENV_REGIONS.RECORDING.value, txrx)
+            placement, self._ICUB_VOR_ENV_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

@@ -20,7 +20,6 @@ import spinn_gym as gym
 # import matplotlib.pyplot as plt
 import numpy as np
 # import os
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 from icub_utilities import (
     generate_head_position_and_velocity, retrieve_and_package_results,
     remap_odd_even, remap_second_half_descending, ICUB_VOR_VENV_POP_SIZE,
@@ -94,13 +93,11 @@ i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
 p.external_devices.activate_live_output_to(
     icub_vor_env_pop, output_pop, "CONTROL")
 
-# Store simulator and run
-simulator = get_simulator()
 # Run the simulation
 p.run(runtime)
 
 # Get the data from the ICubVorEnv pop
-results = retrieve_and_package_results(icub_vor_env_pop, simulator)
+results = retrieve_and_package_results(icub_vor_env_pop)
 
 # get the spike data from input and output
 spikes_in_spin = input_pop.spinnaker_get_data('spikes')

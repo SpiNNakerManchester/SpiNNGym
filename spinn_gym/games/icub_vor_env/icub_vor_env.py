@@ -23,6 +23,8 @@ from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 from spinn_front_end_common.utilities.exceptions import ConfigurationException
 
+from spynnaker.pyNN.data import SpynnakerDataView
+
 from spinn_gym.games import SpinnGymApplicationVertex
 
 # ICubVorEnv imports
@@ -120,23 +122,22 @@ class ICubVorEnv(SpinnGymApplicationVertex):
     # Recording overrides
     # ------------------------------------------------------------------------
     @overrides(SpinnGymApplicationVertex.clear_recording)
-    def clear_recording(
-            self, variable, buffer_manager, placements):
+    def clear_recording(self, variable):
         for n in range(len(self.RECORDABLE_VARIABLES)):
-            self._clear_recording_region(buffer_manager, placements, n)
+            self._clear_recording_region(n)
 
     @overrides(SpinnGymApplicationVertex.get_recordable_variables)
     def get_recordable_variables(self):
         return self.RECORDABLE_VARIABLES
 
     @overrides(SpinnGymApplicationVertex.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
+    def get_data(self, variable):
         if self._m_vertex is None:
             self._m_vertex = self.machine_vertices.pop()
         print('get_data from machine vertex ', self._m_vertex,
               ' for variable ', variable)
-        placement = placements.get_placement_of_vertex(self._m_vertex)
+        placement = SpynnakerDataView.get_placement_of_vertex(self._m_vertex)
+        buffer_manager = SpynnakerDataView.get_buffer_manager()
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(

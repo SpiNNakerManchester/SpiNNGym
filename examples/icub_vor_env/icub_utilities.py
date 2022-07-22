@@ -33,43 +33,33 @@ POS_TO_VEL = 2 * np.pi * 0.001
 
 
 # Examples of get functions for variables
-def get_error(icub_vor_env_pop, simulator):
+def get_error(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    error = b_vertex.get_data(
-        'error', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    error = b_vertex.get_data('error')
     return error.tolist()
 
 
-def get_l_count(icub_vor_env_pop, simulator):
+def get_l_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    left_count = b_vertex.get_data(
-        'l_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    left_count = b_vertex.get_data('l_count')
     return left_count.tolist()
 
 
-def get_r_count(icub_vor_env_pop, simulator):
+def get_r_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    right_count = b_vertex.get_data(
-        'r_count', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    right_count = b_vertex.get_data('r_count')
     return right_count.tolist()
 
 
-def get_eye_pos(icub_vor_env_pop, simulator):
+def get_eye_pos(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_positions = b_vertex.get_data(
-        'eye_pos', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    eye_positions = b_vertex.get_data('eye_pos')
     return eye_positions.tolist()
 
 
-def get_eye_vel(icub_vor_env_pop, simulator):
+def get_eye_vel(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_velocities = b_vertex.get_data(
-        'eye_vel', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    eye_velocities = b_vertex.get_data('eye_vel')
     return eye_velocities.tolist()
 
 
@@ -80,18 +70,15 @@ def generate_head_position_and_velocity(time, dt=0.001):
     return pos, vel
 
 
-def retrieve_and_package_results(icub_vor_env_pop, simulator):
+def retrieve_and_package_results(icub_vor_env_pop):
     # Get the data from the ICubVorEnv pop
-    errors = np.asarray(get_error(
-        icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)).ravel()
-    l_counts = get_l_count(icub_vor_env_pop=icub_vor_env_pop,
-                           simulator=simulator)
-    r_counts = get_r_count(icub_vor_env_pop=icub_vor_env_pop,
-                           simulator=simulator)
-    rec_eye_pos = np.asarray(get_eye_pos(
-        icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)).ravel()
-    rec_eye_vel = np.asarray(get_eye_vel(
-        icub_vor_env_pop=icub_vor_env_pop, simulator=simulator)).ravel()
+    errors = np.asarray(get_error(icub_vor_env_pop=icub_vor_env_pop)).ravel()
+    l_counts = get_l_count(icub_vor_env_pop=icub_vor_env_pop)
+    r_counts = get_r_count(icub_vor_env_pop=icub_vor_env_pop)
+    rec_eye_pos = np.asarray(
+        get_eye_pos(icub_vor_env_pop=icub_vor_env_pop)).ravel()
+    rec_eye_vel = np.asarray(
+        get_eye_vel(icub_vor_env_pop=icub_vor_env_pop)).ravel()
     results = {
         'errors': errors,
         'l_counts': l_counts,
