@@ -207,3 +207,24 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):
         return "icub_vor_env.aplx"
+
+    @overrides(SpinnGymMachineVertex.get_n_keys_for_partition)
+    def get_n_keys_for_partition(self, partition_id):
+        # If the vertex is controlling another vertex then the number of
+        # keys needed is related to that vertex!
+        if partition_id == constants.LIVE_POISSON_CONTROL_PARTITION_ID:
+            partitions = SpynnakerDataView.\
+                get_outgoing_edge_partitions_starting_at_vertex(
+                    self.app_vertex)
+            n_keys = 0
+            for partition in partitions:
+                if partition.identifier == partition_id:
+                    for edge in partition.edges:
+                        if edge.pre_vertex is not edge.post_vertex:
+                            for m_vert in edge.post_vertex.machine_vertices:
+                                n_keys += (
+                                    m_vert.get_n_keys_for_partition(
+                                        partition))
+            return n_keys
+        else:
+            return MachineVertex.get_n_keys_for_partition(partition_id)
