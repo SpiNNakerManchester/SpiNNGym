@@ -22,6 +22,7 @@ from data_specification.enums.data_type import DataType
 
 # PACMAN imports
 from pacman.model.resources import ConstantSDRAM, ResourceContainer
+from pacman.model.graphs.machine import MachineVertex
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
@@ -208,7 +209,7 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
     def get_binary_file_name(self):
         return "icub_vor_env.aplx"
 
-    @overrides(SpinnGymMachineVertex.get_n_keys_for_partition)
+    @overrides(MachineVertex.get_n_keys_for_partition)
     def get_n_keys_for_partition(self, partition_id):
         # If the vertex is controlling another vertex then the number of
         # keys needed is related to that vertex!
