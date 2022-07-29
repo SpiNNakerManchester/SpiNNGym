@@ -228,4 +228,6 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
                                         partition))
             return n_keys
         else:
-            return MachineVertex.get_n_keys_for_partition(partition_id)
+            return (
+                super(ICubVorEnvMachineVertex, self).get_n_keys_for_partition(
+                    partition_id))
