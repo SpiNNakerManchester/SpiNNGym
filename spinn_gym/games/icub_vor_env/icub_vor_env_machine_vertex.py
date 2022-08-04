@@ -21,7 +21,7 @@ from spinn_utilities.overrides import overrides
 from data_specification.enums.data_type import DataType
 
 # PACMAN imports
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
+from pacman.model.resources import ConstantSDRAM
 from pacman.model.graphs.machine import MachineVertex
 
 # SpinnFrontEndCommon imports
@@ -100,15 +100,14 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
         self._recording_size = int((simulation_duration_ms / error_window_size)
                                    * front_end_common_constants.BYTES_PER_WORD)
 
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(
-                self.ICUB_VOR_ENV_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
-                self._recording_size))
+        self._sdram_required = ConstantSDRAM(
+            self.ICUB_VOR_ENV_REGION_BYTES + self.BASE_DATA_REGION_BYTES +
+            self._recording_size)
 
     @property
-    @overrides(SpinnGymMachineVertex.resources_required)
-    def resources_required(self):
-        return self._resources_required
+    @overrides(SpinnGymMachineVertex.sdram_required)
+    def sdram_required(self):
+        return self._sdram_required
 
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
