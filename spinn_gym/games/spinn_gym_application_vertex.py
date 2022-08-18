@@ -27,6 +27,7 @@ from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import PopulationApplicationVertex
+from spynnaker.pyNN.data import SpynnakerDataView
 
 
 class SpinnGymApplicationVertex(
@@ -85,9 +86,11 @@ class SpinnGymApplicationVertex(
     # ------------------------------------------------------------------------
     @overrides(
         AbstractNeuronRecordable.clear_recording)
-    def clear_recording(self, variable, buffer_manager, placements):
+    def clear_recording(self, variable):
         for machine_vertex in self.machine_vertices:
-            placement = placements.get_placement_of_vertex(machine_vertex)
+            placement = SpynnakerDataView.get_placement_of_vertex(
+                machine_vertex)
+            buffer_manager = SpynnakerDataView.get_buffer_manager()
             buffer_manager.clear_recorded_data(
                 placement.x, placement.y, placement.p, 0)
 
@@ -116,10 +119,10 @@ class SpinnGymApplicationVertex(
         """
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
+    def get_data(self, variable):
         vertex = self.machine_vertices.pop()
-        placement = placements.get_placement_of_vertex(vertex)
+        placement = SpynnakerDataView.get_placement_of_vertex(vertex)
+        buffer_manager = SpynnakerDataView.get_buffer_manager()
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)

@@ -20,9 +20,6 @@ from spinn_utilities.overrides import overrides
 
 from data_specification.enums.data_type import DataType
 
-# PACMAN imports
-from pacman.executor.injection_decorator import inject_items
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -37,6 +34,7 @@ from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
@@ -124,11 +122,8 @@ class BanditMachineVertex(SpinnGymMachineVertex):
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
-    def generate_data_specification(self, spec, placement, routing_info):
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
+    def generate_data_specification(self, spec, placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -163,6 +158,7 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting bandit region:\n")
         spec.switch_write_focus(
             self._BANDIT_REGIONS.BANDIT.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -195,9 +191,9 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         # End-of-Spec:
         spec.end_specification()
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._BANDIT_REGIONS.RECORDING.value, txrx)
+            placement, self._BANDIT_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

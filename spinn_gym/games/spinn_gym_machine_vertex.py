@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
 from pacman.model.graphs.common import Slice
 
 from pacman.model.graphs.machine import MachineVertex
-from pacman.model.resources import ConstantSDRAM, ResourceContainer
+from pacman.model.resources import ConstantSDRAM
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.interface.buffer_management.buffer_models.\
@@ -42,8 +41,8 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         "_random_seed",
         # size of recording region
         "_recording_size",
-        # resources needed for this vertex
-        "_resources_required"]
+        # sdram needed for this vertex
+        "_sdram_required"]
 
     def __init__(self, label, constraints, app_vertex, n_neurons,
                  region_bytes, simulation_duration_ms, random_seed):
@@ -83,21 +82,15 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         self._recording_size = int((simulation_duration_ms/10000.) * 4)
         # TODO Should this not round UP!
 
-        self._resources_required = ResourceContainer(
-            sdram=ConstantSDRAM(region_bytes + self._recording_size))
+        self._sdram_required = ConstantSDRAM(
+            region_bytes + self._recording_size)
 
         self._random_seed = random_seed
 
     @property
-    @overrides(MachineVertex.resources_required)
-    def resources_required(self):
-        return self._resources_required
-
-    @abstractproperty
-    def get_recording_region_base_address(self, txrx, placement):
-        """
-        The recording region base address
-        """
+    @overrides(MachineVertex.sdram_required)
+    def sdram_required(self):
+        return self._sdram_required
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
     def get_recorded_region_ids(self):
