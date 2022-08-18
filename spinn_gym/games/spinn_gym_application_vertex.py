@@ -26,17 +26,13 @@ from pacman.model.graphs.application.abstract import (
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import \
-    AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
+from spynnaker.pyNN.models.abstract_models import PopulationApplicationVertex
 
 
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
-        AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-        SimplePopulationSettable):
+        PopulationApplicationVertex,
+        AbstractChangableAfterRun):
 
     __slots__ = [
         # A flag to detect a reset must be hard
@@ -57,38 +53,7 @@ class SpinnGymApplicationVertex(
         """
         super(SpinnGymApplicationVertex, self).__init__(
             machine_vertex, label, constraints, n_atoms)
-
-        SimplePopulationSettable.__init__(self)
-        AbstractChangableAfterRun.__init__(self)
-        AbstractAcceptsIncomingSynapses.__init__(self)
         self._change_requires_mapping = True
-
-    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
-    def verify_splitter(self, splitter):
-        # See https://github.com/SpiNNakerManchester/sPyNNaker/issues/1192
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
-    def get_connections_from_machine(
-            self, transceiver, placements, app_edge, synapse_info):
-
-        # TODO: make this work properly (the following call does nothing)
-
-        super(SpinnGymApplicationVertex, self).get_connections_from_machine(
-            transceiver, placements, app_edge, synapse_info)
-
-    @overrides(AbstractAcceptsIncomingSynapses.set_synapse_dynamics)
-    def set_synapse_dynamics(self, synapse_dynamics):
-        pass
-        # TODO Should this be a pass or a NotImplemented ?
-
-    @overrides(AbstractAcceptsIncomingSynapses.clear_connection_cache)
-    def clear_connection_cache(self):
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
-    def get_synapse_id_by_target(self, target):
-        return 0
 
     @property
     @overrides(AbstractChangableAfterRun.requires_mapping)
@@ -99,10 +64,21 @@ class SpinnGymApplicationVertex(
     def mark_no_changes(self):
         self._change_requires_mapping = False
 
-    @overrides(SimplePopulationSettable.set_value)
-    def set_value(self, key, value):
-        SimplePopulationSettable.set_value(self, key, value)
-        # TODO there was a AbstractRewritesDataSpecification variable here?
+    @overrides(PopulationApplicationVertex.get_recordable_variables)
+    def get_recordable_variables(self):
+        return ["score"]
+
+    @overrides(PopulationApplicationVertex.can_record)
+    def can_record(self, name):
+        return name == "score"
+
+    @overrides(PopulationApplicationVertex.set_recording)
+    def set_recording(self, name, sampling_interval=None, indices=None):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+
+        if sampling_interval is not None:
+            raise KeyError("Sampling interval is not supported")
 
     # ------------------------------------------------------------------------
     # Recording overrides
@@ -170,10 +146,6 @@ class SpinnGymApplicationVertex(
             placement = placements.get_placement_of_vertex(machine_vertex)
             buffer_manager.clear_recorded_data(
                 placement.x, placement.y, placement.p, recording_region_id)
-
-    def reset_ring_buffer_shifts(self):
-        pass
-        # TODO Should this be a pass or a NotImplemented ?
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)
