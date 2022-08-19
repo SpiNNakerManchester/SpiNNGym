@@ -26,7 +26,8 @@ from pacman.model.graphs.application.abstract import (
 from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import PopulationApplicationVertex
+from spynnaker.pyNN.models.abstract_models import (
+    PopulationApplicationVertex, RecordingType)
 from spynnaker.pyNN.data import SpynnakerDataView
 
 
@@ -79,47 +80,37 @@ class SpinnGymApplicationVertex(
             raise KeyError(f"Cannot record {name}")
 
         if sampling_interval is not None:
-            raise KeyError("Sampling interval is not supported")
+            raise KeyError(
+                "Sampling interval is not supported (fixed at 10000)")
 
-    # ------------------------------------------------------------------------
-    # Recording overrides
-    # ------------------------------------------------------------------------
-    @overrides(
-        AbstractNeuronRecordable.clear_recording)
-    def clear_recording(self, variable):
-        for machine_vertex in self.machine_vertices:
-            placement = SpynnakerDataView.get_placement_of_vertex(
-                machine_vertex)
-            buffer_manager = SpynnakerDataView.get_buffer_manager()
-            buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, 0)
+        if indices is not None:
+            raise KeyError("Indices are not supported")
 
-    @overrides(AbstractNeuronRecordable.get_recordable_variables)
-    def get_recordable_variables(self):
-        return 'score'
+        # No need to do anything, as always recording anyway!
 
-    @overrides(AbstractNeuronRecordable.is_recording)
-    def is_recording(self, variable):
-        return True
+    @overrides(PopulationApplicationVertex.set_not_recording)
+    def set_not_recording(self, name, indices=None):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
 
-    @overrides(AbstractNeuronRecordable.set_recording)
-    def set_recording(self, variable, new_state=True, sampling_interval=None,
-                      indexes=None):
-        pass
-        # TODO Should this be a implemented, pass or a NotImplemented ?
+        if indices is not None:
+            raise KeyError("Indices are not supported")
 
-    @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
-    def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
+        # No need to do anything, as always recording anyway!
 
-    @abstractproperty
-    def score_format(self):
-        """
-        The numpy format for the scores data
-        """
+    @overrides(PopulationApplicationVertex.get_recording_variables)
+    def get_recording_variables(self):
+        return ["score"]
 
-    @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable):
+    @overrides(PopulationApplicationVertex.is_recording_variable)
+    def is_recording_variable(self, name):
+        return name == "score"
+
+    @overrides(PopulationApplicationVertex.get_recorded_data)
+    def get_recorded_data(self, name):
+        if name != "score":
+            raise KeyError(f"{name} was not recorded")
+
         vertex = self.machine_vertices.pop()
         placement = SpynnakerDataView.get_placement_of_vertex(vertex)
         buffer_manager = SpynnakerDataView.get_buffer_manager()
@@ -136,19 +127,40 @@ class SpinnGymApplicationVertex(
         # return formatted_data
         return output_data
 
-    def _clear_recording_region(
-            self, buffer_manager, placements, recording_region_id):
-        """ Clear a recorded data region from the buffer manager.
+    @overrides(PopulationApplicationVertex.get_recording_sampling_interval)
+    def get_recording_sampling_interval(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+        # recording is done at 10000ms intervals
+        return 10000
 
-        :param buffer_manager: the buffer manager object
-        :param placements: the placements object
-        :param recording_region_id: the recorded region ID for clearing
-        :rtype: None
-        """
+    @overrides(PopulationApplicationVertex.get_recording_indices)
+    def get_recording_indices(self, name):
+        # Only the score is recorded
+        return [0]
+
+    @overrides(PopulationApplicationVertex.get_recording_type)
+    def get_recording_type(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+        return RecordingType.MATRIX
+
+    @overrides(PopulationApplicationVertex.clear_recording_data)
+    def clear_recording_data(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
         for machine_vertex in self.machine_vertices:
-            placement = placements.get_placement_of_vertex(machine_vertex)
+            placement = SpynnakerDataView.get_placement_of_vertex(
+                machine_vertex)
+            buffer_manager = SpynnakerDataView.get_buffer_manager()
             buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, recording_region_id)
+                placement.x, placement.y, placement.p, 0)
+
+    @abstractproperty
+    def score_format(self):
+        """
+        The numpy format for the scores data
+        """
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)

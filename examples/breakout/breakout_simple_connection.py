@@ -17,6 +17,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from pyNN.utility.plotting import Figure, Panel
+from spynnaker.pyNN.utilities.constants import SPIKE_PARTITION_ID
 import functools
 import subprocess
 import sys
@@ -143,15 +144,13 @@ ex.activate_live_output_for(breakout_pop)
 # Connect key spike injector to breakout population
 key_input = p.Population(2, SpikeInjector, label="key_input")
 key_input_connection = SpynnakerLiveSpikesConnection(send_labels=["key_input"])
-p.Projection(key_input, breakout_pop, p.AllToAllConnector(),
-             p.StaticSynapse(weight=0.1))
+ex.activate_live_output_to(key_input, breakout_pop, SPIKE_PARTITION_ID)
 
 # Create random spike input and connect to Breakout pop to stimulate paddle
 # (and enable paddle visualisation)
 spike_input = p.Population(2, p.SpikeSourcePoisson(rate=2),
                            label="input_connect")
-p.Projection(spike_input, breakout_pop, p.AllToAllConnector(),
-             p.StaticSynapse(weight=0.1))
+ex.activate_live_output_to(spike_input, breakout_pop, SPIKE_PARTITION_ID)
 
 weight = 0.1
 [Connections_on, Connections_off] = subsample_connection(
