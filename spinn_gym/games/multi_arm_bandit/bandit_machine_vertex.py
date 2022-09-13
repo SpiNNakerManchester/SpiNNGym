@@ -58,9 +58,8 @@ class BanditMachineVertex(SpinnGymMachineVertex):
     __slots__ = ["_arms", "_constant_input", "_no_arms", "_rate_off",
                  "_rate_on", "_reward_based", "_reward_delay", "_stochastic"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
-                 simulation_duration_ms, random_seed,
-                 arms, reward_delay, reward_based, rate_on,
+    def __init__(self, label, app_vertex, n_neurons, simulation_duration_ms,
+                 random_seed, arms, reward_delay, reward_based, rate_on,
                  rate_off, stochastic, constant_input):
         """
 
@@ -68,8 +67,6 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         :type label: str or None
         :param iterable(AbstractConstraint) constraints:
             The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -99,7 +96,7 @@ class BanditMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(BanditMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 

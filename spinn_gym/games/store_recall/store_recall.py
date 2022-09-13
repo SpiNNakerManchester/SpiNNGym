@@ -41,7 +41,7 @@ class Recall(SpinnGymApplicationVertex):
     def __init__(
             self, rate_on=50.0, rate_off=0.0, pop_size=1, prob_command=1.0/6.0,
             prob_in_change=1.0/2.0, time_period=200.0, stochastic=1,
-            reward=0, constraints=None, label="Recall",
+            reward=0, label="Recall",
             simulation_duration_ms=ONE_DAY_IN_MS,  random_seed=None):
         if random_seed is None:
             random_seed = list(self.RANDOM_SEED)
@@ -49,13 +49,11 @@ class Recall(SpinnGymApplicationVertex):
         n_neurons = pop_size * 4
 
         machine_vertex = RecallMachineVertex(
-            label, constraints, self, n_neurons,
-            simulation_duration_ms, random_seed,
+            label, self, n_neurons, simulation_duration_ms, random_seed,
             rate_on, rate_off, pop_size, prob_command,
             prob_in_change, time_period, stochastic, reward)
         # Superclasses
-        super(Recall, self).__init__(
-            machine_vertex, label, constraints, n_neurons)
+        super(Recall, self).__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

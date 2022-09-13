@@ -58,7 +58,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
     __slots__ = ["_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
                  "_score_delay", "_stochastic", "_truth_table"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
                  truth_table, input_sequence, rate_on, rate_off,
                  score_delay, stochastic):
@@ -66,10 +66,6 @@ class LogicMachineVertex(SpinnGymMachineVertex):
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -96,7 +92,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(LogicMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 

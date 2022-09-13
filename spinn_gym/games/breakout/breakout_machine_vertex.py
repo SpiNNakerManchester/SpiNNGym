@@ -56,17 +56,13 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     __slots__ = ["_x_factor", "_y_factor", "_colour_bits", "_bricking"]
 
     def __init__(
-            self, label, constraints, app_vertex, n_neurons,
+            self, label, app_vertex, n_neurons,
             simulation_duration_ms, random_seed,
             x_factor, y_factor, colour_bits, bricking):
         """
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.

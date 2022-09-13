@@ -43,21 +43,19 @@ class SpinnGymApplicationVertex(
         # A flag to detect a reset must be hard
         "_change_requires_mapping"]
 
-    def __init__(self, machine_vertex, label, constraints, n_atoms):
+    def __init__(self, machine_vertex, label, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \
         MachineVertex
 
         :param machine_vertex: MachineVertex
         :param str label: The optional name of the vertex.
-        :param constraints:
-            The optional initial constraints of the vertex.
         :type constraints: iterable(AbstractConstraint) or None
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
         super(SpinnGymApplicationVertex, self).__init__(
-            machine_vertex, label, constraints, n_atoms)
+            machine_vertex, label, n_atoms)
 
         SimplePopulationSettable.__init__(self)
         AbstractChangableAfterRun.__init__(self)
