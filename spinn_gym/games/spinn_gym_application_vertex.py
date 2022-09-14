@@ -22,9 +22,6 @@ from spinn_utilities.overrides import overrides
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
-# SpinnFrontEndCommon imports
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
     AbstractAcceptsIncomingSynapses
@@ -39,9 +36,7 @@ class SpinnGymApplicationVertex(
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
         SimplePopulationSettable):
 
-    __slots__ = [
-        # A flag to detect a reset must be hard
-        "_change_requires_mapping"]
+    __slots__ = []
 
     def __init__(self, machine_vertex, label, constraints, n_atoms):
         """
@@ -60,9 +55,7 @@ class SpinnGymApplicationVertex(
             machine_vertex, label, constraints, n_atoms)
 
         SimplePopulationSettable.__init__(self)
-        AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
-        self._change_requires_mapping = True
 
     @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
     def verify_splitter(self, splitter):
@@ -89,15 +82,6 @@ class SpinnGymApplicationVertex(
     @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
     def get_synapse_id_by_target(self, target):
         return 0
-
-    @property
-    @overrides(AbstractChangableAfterRun.requires_mapping)
-    def requires_mapping(self):
-        return self._change_requires_mapping
-
-    @overrides(AbstractChangableAfterRun.mark_no_changes)
-    def mark_no_changes(self):
-        self._change_requires_mapping = False
 
     @overrides(SimplePopulationSettable.set_value)
     def set_value(self, key, value):
