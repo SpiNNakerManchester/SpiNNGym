@@ -40,7 +40,7 @@ class Bandit(SpinnGymApplicationVertex):
 
     def __init__(self, arms=None, reward_delay=200.0, reward_based=1,
                  rate_on=20.0, rate_off=5.0, stochastic=1,
-                 constant_input=0, constraints=None, label="Bandit",
+                 constant_input=0, label="Bandit",
                  simulation_duration_ms=ONE_DAY_IN_MS, random_seed=None):
         if arms is None:
             arms = list(self.ARMS)
@@ -50,14 +50,12 @@ class Bandit(SpinnGymApplicationVertex):
         n_neurons = len(arms)
 
         machine_vertex = BanditMachineVertex(
-            label, constraints, self, n_neurons,
-            simulation_duration_ms, random_seed,
+            label, self, n_neurons, simulation_duration_ms, random_seed,
             arms, reward_delay, reward_based, rate_on,
             rate_off, stochastic, constant_input)
 
         # Superclasses
-        super(Bandit, self).__init__(
-            machine_vertex, label, constraints, n_neurons)
+        super(Bandit, self).__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
