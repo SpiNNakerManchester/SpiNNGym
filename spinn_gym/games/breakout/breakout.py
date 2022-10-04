@@ -39,7 +39,7 @@ class Breakout(SpinnGymApplicationVertex):
     __slots__ = []
 
     def __init__(self, x_factor=16, y_factor=16, width=160, height=128,
-                 colour_bits=2, constraints=None,  label="Breakout",
+                 colour_bits=2, label="Breakout",
                  simulation_duration_ms=ONE_WEEK_IN_MS, bricking=1,
                  random_seed=None):
         if random_seed is None:
@@ -51,12 +51,11 @@ class Breakout(SpinnGymApplicationVertex):
         n_neurons = int(1 << (width_bits + height_bits + colour_bits))
 
         machne_vertex = BreakoutMachineVertex(
-            label, constraints, self, n_neurons, simulation_duration_ms,
+            label, self, n_neurons, simulation_duration_ms,
             random_seed, x_factor, y_factor, colour_bits, bricking)
 
         # Superclasses
-        super(Breakout, self).__init__(
-            machne_vertex,  label, constraints, n_neurons)
+        super(Breakout, self).__init__(machne_vertex,  label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

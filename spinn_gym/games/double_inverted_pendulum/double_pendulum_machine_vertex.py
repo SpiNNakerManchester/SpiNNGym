@@ -58,7 +58,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
                ('DATA', 3)])
 
     def __init__(
-            self, label, constraints, app_vertex, n_neurons,
+            self, label, app_vertex, n_neurons,
             simulation_duration_ms, random_seed,
             encoding, time_increment, pole_length, pole_angle, pole2_length,
             pole2_angle, reward_based, force_increments, max_firing_rate,
@@ -69,8 +69,6 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         :type label: str or None
         :param iterable(AbstractConstraint) constraints:
             The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -104,7 +102,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(DoublePendulumMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 

@@ -22,9 +22,6 @@ from spinn_utilities.overrides import overrides
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
-# SpinnFrontEndCommon imports
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import (
     PopulationApplicationVertex, RecordingType)
@@ -33,38 +30,23 @@ from spynnaker.pyNN.data import SpynnakerDataView
 
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
-        PopulationApplicationVertex,
-        AbstractChangableAfterRun):
+        PopulationApplicationVertex):
 
-    __slots__ = [
-        # A flag to detect a reset must be hard
-        "_change_requires_mapping"]
+    __slots__ = []
 
-    def __init__(self, machine_vertex, label, constraints, n_atoms):
+    def __init__(self, machine_vertex, label, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \
         MachineVertex
 
         :param machine_vertex: MachineVertex
         :param str label: The optional name of the vertex.
-        :param constraints:
-            The optional initial constraints of the vertex.
         :type constraints: iterable(AbstractConstraint) or None
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
         super(SpinnGymApplicationVertex, self).__init__(
-            machine_vertex, label, constraints, n_atoms)
-        self._change_requires_mapping = True
-
-    @property
-    @overrides(AbstractChangableAfterRun.requires_mapping)
-    def requires_mapping(self):
-        return self._change_requires_mapping
-
-    @overrides(AbstractChangableAfterRun.mark_no_changes)
-    def mark_no_changes(self):
-        self._change_requires_mapping = False
+            machine_vertex, label, n_atoms)
 
     @overrides(PopulationApplicationVertex.get_recordable_variables)
     def get_recordable_variables(self):
