@@ -68,7 +68,7 @@ arm_collection = []
 rate = 5
 print('rate = ', rate)
 input_spikes = p.Population(force_increments, p.SpikeSourcePoisson(rate=rate))
-p.Projection(input_spikes, pendulum, p.AllToAllConnector(), p.StaticSynapse())
+p.external_devices.activate_live_output_to(input_spikes, pendulum)
 weight = 0.1
 label = '64 0.55'
 from_list_conn_left = [[0, 0, weight, 1], [6, 0, weight, 1],
@@ -119,7 +119,7 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 p.run(runtime)
 
 g_vertex = pendulum._vertex  # pylint: disable=protected-access
-_scores = g_vertex.get_data('score')
+_scores = g_vertex.get_recorded_data('score')
 
 scores = []
 scores.append(_scores.tolist())

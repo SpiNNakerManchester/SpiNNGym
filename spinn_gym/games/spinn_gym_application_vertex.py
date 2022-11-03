@@ -48,6 +48,12 @@ class SpinnGymApplicationVertex(
         super(SpinnGymApplicationVertex, self).__init__(
             machine_vertex, label, n_atoms)
 
+    @overrides(PopulationApplicationVertex.get_units)
+    def get_units(self, name):
+        if name == "score":
+            return ""
+        return super(SpinnGymApplicationVertex, self).get_units(name)
+
     @overrides(PopulationApplicationVertex.get_recordable_variables)
     def get_recordable_variables(self):
         return ["score"]
@@ -137,6 +143,24 @@ class SpinnGymApplicationVertex(
             buffer_manager = SpynnakerDataView.get_buffer_manager()
             buffer_manager.clear_recorded_data(
                 placement.x, placement.y, placement.p, 0)
+
+    def describe(self):
+        """ Get a human-readable description of the cell or synapse type.
+
+        The output may be customised by specifying a different template
+        together with an associated template engine
+        (see :py:mod:`pyNN.descriptions`).
+
+        If template is None, then a dictionary containing the template context
+        will be returned.
+
+        :rtype: dict(str, ...)
+        """
+
+        context = {
+            "name": self.__class__.__name__
+        }
+        return context
 
     @abstractproperty
     def score_format(self):

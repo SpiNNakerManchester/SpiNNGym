@@ -142,7 +142,7 @@ arm_conns = [from_list_conn_left, from_list_conn_right]
 p.run(runtime)
 
 g_vertex = pendulum._vertex  # pylint: disable=protected-access
-_scores = g_vertex.get_data('score')
+_scores = g_vertex.get_recorded_data('score')
 
 scores = []
 scores.append(_scores.tolist())

@@ -232,7 +232,7 @@ Figure(
 plt.show()
 
 b_vertex = breakout_pop._vertex  # pylint: disable=protected-access
-scores = b_vertex.get_data('score')
+scores = b_vertex.get_recorded_data('score')
 scores = scores.tolist()
 
 print("Scores: {}".format(scores))
