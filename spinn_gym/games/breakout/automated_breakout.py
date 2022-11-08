@@ -153,6 +153,13 @@ class AutomatedBreakout(object):
         p.Projection(
             self.right_hidden_pop, self.decision_input_pop,
             p.FromListConnector(Right_decision_connections))
+        
+        p.Projection(
+            self.left_hidden_pop, self.decision_input_pop,
+            p.FromListConnector(Right_decision_connections), receptor_type="inhibitory")
+        p.Projection(
+            self.right_hidden_pop, self.decision_input_pop,
+            p.FromListConnector(Left_decision_connections), receptor_type="inhibitory")
 
         # Connect input Decision population to the game
         p.Projection(

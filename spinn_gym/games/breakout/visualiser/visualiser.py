@@ -205,7 +205,7 @@ class Visualiser(object):
         self.close()
 
     def close(self):
-        self.score_text.set_text("Simulation finished")
+        self.score_text.set_text(f"Game Over - Score: {self.score}")
         self.running = False
         if self.video_data is not None:
             self.video_writer.release()
