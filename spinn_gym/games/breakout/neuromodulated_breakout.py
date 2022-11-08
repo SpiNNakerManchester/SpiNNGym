@@ -116,9 +116,9 @@ class NeuromodulatedBreakout(object):
         # Ball Positions Populations
         # ---------------------------------------------------------------------
 
-        ball_x_pop = p.Population(
+        self.ball_x_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="ball_x_pop")
-        ball_y_pop = p.Population(
+        self.ball_y_pop = p.Population(
             Y_RES_FINAL, p.IF_cond_exp(), label="ball_y_pop")
 
         Ball_x_connections = compress_to_x_axis(
@@ -127,11 +127,11 @@ class NeuromodulatedBreakout(object):
             Ball_on_connections, Y_RES_FINAL)
 
         p.Projection(
-            self.breakout_pop, ball_x_pop,
+            self.breakout_pop, self.ball_x_pop,
             p.FromListConnector(Ball_x_connections),
             p.StaticSynapse(weight=weight))
         p.Projection(
-            self.breakout_pop, ball_y_pop,
+            self.breakout_pop, self.ball_y_pop,
             p.FromListConnector(Ball_y_connections),
             p.StaticSynapse(weight=weight))
 
@@ -158,13 +158,13 @@ class NeuromodulatedBreakout(object):
         # Left Hidden Population
         # ----------------------------------------------------------------
 
-        left_hidden_pop = p.Population(
+        self.left_hidden_pop = p.Population(
             hidden_pop_size, p.IF_cond_exp(),
             label="left_hidden_pop")
 
         # Stimulate Left Hidden pop
         p.Projection(
-            stimulation_pop, left_hidden_pop, p.OneToOneConnector(),
+            stimulation_pop, self.left_hidden_pop, p.OneToOneConnector(),
             p.StaticSynapse(weight=stim_weight))
 
         if load_previous_connections:
@@ -183,7 +183,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Ball X and Hidden neurons
         p.Projection(
-            ball_x_pop, left_hidden_pop,
+            self.ball_x_pop, self.left_hidden_pop,
             p.FromListConnector(prev_ball_x_left_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -191,7 +191,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Ball Y and Hidden neurons
         p.Projection(
-            ball_y_pop, left_hidden_pop,
+            self.ball_y_pop, self.left_hidden_pop,
             p.FromListConnector(prev_ball_y_left_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -199,7 +199,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Paddle and Hidden neurons
         p.Projection(
-            self.paddle_pop, left_hidden_pop,
+            self.paddle_pop, self.left_hidden_pop,
             p.FromListConnector(prev_paddle_left_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -207,14 +207,14 @@ class NeuromodulatedBreakout(object):
 
         # Create Dopaminergic connections
         p.Projection(
-            ball_on_left_dopaminergic_pop, left_hidden_pop,
+            ball_on_left_dopaminergic_pop, self.left_hidden_pop,
             p.AllToAllConnector(),
             synapse_type=p.extra_models.Neuromodulation(
                 weight=dopaminergic_weight, tau_c=30., tau_d=10.),
             receptor_type='reward',
             label='reward ball on left synapses -> left hidden')
         p.Projection(
-            ball_on_right_dopaminergic_pop, left_hidden_pop,
+            ball_on_right_dopaminergic_pop, self.left_hidden_pop,
             p.AllToAllConnector(),
             synapse_type=p.extra_models.Neuromodulation(
                 weight=dopaminergic_weight, tau_c=30., tau_d=10.),
@@ -225,13 +225,13 @@ class NeuromodulatedBreakout(object):
         # Right Hidden Population
         # --------------------------------------------------------------------
 
-        right_hidden_pop = p.Population(
+        self.right_hidden_pop = p.Population(
             hidden_pop_size, p.IF_cond_exp(),
             label="right_hidden_pop")
 
         # Stimulate Right Hidden pop
         p.Projection(
-            stimulation_pop, right_hidden_pop,
+            stimulation_pop, self.right_hidden_pop,
             p.OneToOneConnector(),
             p.StaticSynapse(weight=stim_weight))
 
@@ -242,7 +242,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Ball X and Hidden neurons
         self.ball_x_learning_proj = p.Projection(
-            ball_x_pop, right_hidden_pop,
+            self.ball_x_pop, self.right_hidden_pop,
             p.FromListConnector(prev_ball_x_right_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -250,7 +250,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Ball Y and Hidden neurons
         p.Projection(
-            ball_y_pop, right_hidden_pop,
+            self.ball_y_pop, self.right_hidden_pop,
             p.FromListConnector(prev_ball_y_right_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -258,7 +258,7 @@ class NeuromodulatedBreakout(object):
 
         # Create a plastic connection between Paddle and Hidden neurons
         p.Projection(
-            self.paddle_pop, right_hidden_pop,
+            self.paddle_pop, self.right_hidden_pop,
             p.FromListConnector(prev_paddle_right_conn)
             if load_previous_connections else p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
@@ -266,14 +266,14 @@ class NeuromodulatedBreakout(object):
 
         # Create Dopaminergic connections
         p.Projection(
-            ball_on_left_dopaminergic_pop, right_hidden_pop,
+            ball_on_left_dopaminergic_pop, self.right_hidden_pop,
             p.AllToAllConnector(),
             synapse_type=p.extra_models.Neuromodulation(
                 weight=dopaminergic_weight, tau_c=30., tau_d=10.),
             receptor_type='punishment',
             label='punish ball on left synapses -> right hidden')
         p.Projection(
-            ball_on_right_dopaminergic_pop, right_hidden_pop,
+            ball_on_right_dopaminergic_pop, self.right_hidden_pop,
             p.AllToAllConnector(),
             synapse_type=p.extra_models.Neuromodulation(
                 weight=dopaminergic_weight, tau_c=30., tau_d=10.),
@@ -288,7 +288,7 @@ class NeuromodulatedBreakout(object):
         # the same time
         hidden_to_decision_weight = 0.085 / 4
 
-        decision_input_pop = p.Population(
+        self.decision_input_pop = p.Population(
             2, p.IF_cond_exp, label="decision_input_pop")
 
         [left_decision_conn, right_decision_conn] = \
@@ -296,15 +296,15 @@ class NeuromodulatedBreakout(object):
                 hidden_pop_size, weight=hidden_to_decision_weight)
 
         p.Projection(
-            left_hidden_pop, decision_input_pop,
+            self.left_hidden_pop, self.decision_input_pop,
             p.FromListConnector(left_decision_conn),
             p.StaticSynapse(weight=hidden_to_decision_weight))
         p.Projection(
-            right_hidden_pop, decision_input_pop,
+            self.right_hidden_pop, self.decision_input_pop,
             p.FromListConnector(right_decision_conn),
             p.StaticSynapse(weight=hidden_to_decision_weight))
 
         # Connect input decision population to the game
         p.Projection(
-            decision_input_pop, self.breakout_pop, p.OneToOneConnector(),
+            self.decision_input_pop, self.breakout_pop, p.OneToOneConnector(),
             p.StaticSynapse(weight=1.))
