@@ -19,7 +19,6 @@ import spinn_gym as gym
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
 p.setup(timestep=1.0)
@@ -55,15 +54,12 @@ i2o1 = p.Projection(arms_pop, output_pop1, p.AllToAllConnector(),
 i2o2 = p.Projection(arms_pop, output_pop2, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
-simulator = get_simulator()
 
 runtime = 10000
 p.run(runtime)
 
 b_vertex = arms_pop._vertex  # pylint: disable=protected-access
-scores = b_vertex.get_data(
-    'score', simulator.no_machine_time_steps, simulator.placements,
-    simulator.buffer_manager)
+scores = b_vertex.get_data('score')
 scores = scores.tolist()
 print(scores)
 

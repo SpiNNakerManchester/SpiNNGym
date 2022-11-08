@@ -20,9 +20,6 @@ from spinn_utilities.overrides import overrides
 
 from data_specification.enums.data_type import DataType
 
-# PACMAN imports
-from pacman.executor.injection_decorator import inject_items
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -37,6 +34,7 @@ from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
@@ -60,7 +58,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
     __slots__ = ["_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
                  "_score_delay", "_stochastic", "_truth_table"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
                  truth_table, input_sequence, rate_on, rate_off,
                  score_delay, stochastic):
@@ -68,10 +66,6 @@ class LogicMachineVertex(SpinnGymMachineVertex):
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -98,7 +92,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(LogicMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 
@@ -114,11 +108,8 @@ class LogicMachineVertex(SpinnGymMachineVertex):
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
-    def generate_data_specification(self, spec, placement, routing_info):
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
+    def generate_data_specification(self, spec, placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -154,6 +145,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting logic region:\n")
         spec.switch_write_focus(
             self._LOGIC_REGIONS.LOGIC.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -186,9 +178,9 @@ class LogicMachineVertex(SpinnGymMachineVertex):
         # End-of-Spec:
         spec.end_specification()
 
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._LOGIC_REGIONS.RECORDING.value, txrx)
+            placement, self._LOGIC_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

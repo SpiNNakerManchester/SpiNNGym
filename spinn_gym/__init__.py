@@ -23,9 +23,9 @@ from spinn_gym.games.double_inverted_pendulum.double_pendulum \
 import os
 
 # Put model_binaries directory on path
-from spynnaker.pyNN.abstract_spinnaker_common import AbstractSpiNNakerCommon
+from spynnaker.pyNN.data import SpynnakerDataView
 binary_path = os.path.join(os.path.split(__file__)[0], 'model_binaries')
-AbstractSpiNNakerCommon.register_binary_search_path(binary_path)
+SpynnakerDataView.register_binary_search_path(binary_path)
 
 __all__ = ['Breakout', 'Bandit', 'Pendulum', 'Logic', 'Recall',
            'DoublePendulum']

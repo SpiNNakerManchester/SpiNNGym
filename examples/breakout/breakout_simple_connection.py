@@ -18,7 +18,6 @@ import matplotlib.pyplot as plt
 from pyNN.utility.plotting import Figure, Panel
 
 # SpiNNaker imports
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.random_breakout import RandomBreakout
 import pyNN.spiNNaker as p
@@ -64,8 +63,7 @@ Figure(
 
 plt.show()
 
-simulator = get_simulator()
-scores = get_scores(breakout_pop=breakout.breakout_pop, simulator=simulator)
+scores = get_scores(breakout_pop=breakout.breakout_pop)
 print("Scores: {}".format(scores))
 
 # End simulation

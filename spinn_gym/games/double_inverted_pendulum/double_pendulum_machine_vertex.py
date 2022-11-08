@@ -19,9 +19,6 @@ from spinn_utilities.overrides import overrides
 
 from data_specification.enums.data_type import DataType
 
-# PACMAN imports
-from pacman.executor.injection_decorator import inject_items
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -33,6 +30,7 @@ from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
@@ -60,7 +58,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
                ('DATA', 3)])
 
     def __init__(
-            self, label, constraints, app_vertex, n_neurons,
+            self, label, app_vertex, n_neurons,
             simulation_duration_ms, random_seed,
             encoding, time_increment, pole_length, pole_angle, pole2_length,
             pole2_angle, reward_based, force_increments, max_firing_rate,
@@ -71,8 +69,6 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         :type label: str or None
         :param iterable(AbstractConstraint) constraints:
             The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -106,7 +102,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(DoublePendulumMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 
@@ -131,11 +127,8 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(SpinnGymMachineVertex.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
-    def generate_data_specification(self, spec, placement, routing_info):
+    @overrides(SpinnGymMachineVertex.generate_data_specification)
+    def generate_data_specification(self, spec, placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -169,6 +162,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting double pendulum region:\n")
         spec.switch_write_focus(
             self._DOUBLE_PENDULUM_REGIONS.PENDULUM.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -205,9 +199,9 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.end_specification()
 
     @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value, txrx)
+            placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

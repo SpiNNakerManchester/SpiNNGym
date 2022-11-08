@@ -19,18 +19,8 @@ from spinn_utilities.abstract_base import abstractproperty
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
-from pacman.model.constraints.key_allocator_constraints import \
-    ContiguousKeyRangeContraint
 from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
-
-# SpinnFrontEndCommon imports
-from spinn_front_end_common.abstract_models import AbstractChangableAfterRun
-from spinn_front_end_common.abstract_models. \
-    abstract_provides_outgoing_partition_constraints import \
-    AbstractProvidesOutgoingPartitionConstraints
-from spinn_front_end_common.abstract_models.impl \
-    import ProvidesKeyToAtomMappingImpl
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.abstract_models import \
@@ -38,39 +28,32 @@ from spynnaker.pyNN.models.abstract_models import \
 from spynnaker.pyNN.models.common import AbstractNeuronRecordable
 from spynnaker.pyNN.models.common.simple_population_settable \
     import SimplePopulationSettable
+from spynnaker.pyNN.data import SpynnakerDataView
 
 
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
-        AbstractProvidesOutgoingPartitionConstraints,
         AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-        SimplePopulationSettable, ProvidesKeyToAtomMappingImpl):
+        SimplePopulationSettable):
 
-    __slots__ = [
-        # A flag to detect a reset must be hard
-        "_change_requires_mapping"]
+    __slots__ = []
 
-    def __init__(self, machine_vertex, label, constraints, n_atoms):
+    def __init__(self, machine_vertex, label, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \
         MachineVertex
 
         :param machine_vertex: MachineVertex
         :param str label: The optional name of the vertex.
-        :param constraints:
-            The optional initial constraints of the vertex.
         :type constraints: iterable(AbstractConstraint) or None
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
         super(SpinnGymApplicationVertex, self).__init__(
-            machine_vertex, label, constraints, n_atoms)
+            machine_vertex, label, n_atoms)
 
-        AbstractProvidesOutgoingPartitionConstraints.__init__(self)
         SimplePopulationSettable.__init__(self)
-        AbstractChangableAfterRun.__init__(self)
         AbstractAcceptsIncomingSynapses.__init__(self)
-        self._change_requires_mapping = True
 
     @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
     def verify_splitter(self, splitter):
@@ -78,13 +61,12 @@ class SpinnGymApplicationVertex(
         pass
 
     @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
-    def get_connections_from_machine(
-            self, transceiver, placements, app_edge, synapse_info):
+    def get_connections_from_machine(self, app_edge, synapse_info):
 
         # TODO: make this work properly (the following call does nothing)
 
         super(SpinnGymApplicationVertex, self).get_connections_from_machine(
-            transceiver, placements, app_edge, synapse_info)
+            app_edge, synapse_info)
 
     @overrides(AbstractAcceptsIncomingSynapses.set_synapse_dynamics)
     def set_synapse_dynamics(self, synapse_dynamics):
@@ -99,23 +81,6 @@ class SpinnGymApplicationVertex(
     def get_synapse_id_by_target(self, target):
         return 0
 
-    # ------------------------------------------------------------------------
-    # AbstractProvidesOutgoingPartitionConstraints overrides
-    # ------------------------------------------------------------------------
-    @overrides(AbstractProvidesOutgoingPartitionConstraints.
-               get_outgoing_partition_constraints)
-    def get_outgoing_partition_constraints(self, partition):
-        return [ContiguousKeyRangeContraint()]
-
-    @property
-    @overrides(AbstractChangableAfterRun.requires_mapping)
-    def requires_mapping(self):
-        return self._change_requires_mapping
-
-    @overrides(AbstractChangableAfterRun.mark_no_changes)
-    def mark_no_changes(self):
-        self._change_requires_mapping = False
-
     @overrides(SimplePopulationSettable.set_value)
     def set_value(self, key, value):
         SimplePopulationSettable.set_value(self, key, value)
@@ -126,9 +91,11 @@ class SpinnGymApplicationVertex(
     # ------------------------------------------------------------------------
     @overrides(
         AbstractNeuronRecordable.clear_recording)
-    def clear_recording(self, variable, buffer_manager, placements):
+    def clear_recording(self, variable):
         for machine_vertex in self.machine_vertices:
-            placement = placements.get_placement_of_vertex(machine_vertex)
+            placement = SpynnakerDataView.get_placement_of_vertex(
+                machine_vertex)
+            buffer_manager = SpynnakerDataView.get_buffer_manager()
             buffer_manager.clear_recorded_data(
                 placement.x, placement.y, placement.p, 0)
 
@@ -157,10 +124,10 @@ class SpinnGymApplicationVertex(
         """
 
     @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(
-            self, variable, n_machine_time_steps, placements, buffer_manager):
+    def get_data(self, variable):
         vertex = self.machine_vertices.pop()
-        placement = placements.get_placement_of_vertex(vertex)
+        placement = SpynnakerDataView.get_placement_of_vertex(vertex)
+        buffer_manager = SpynnakerDataView.get_buffer_manager()
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(placement, 0)

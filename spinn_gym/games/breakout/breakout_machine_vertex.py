@@ -19,9 +19,6 @@ from spinn_utilities.overrides import overrides
 
 from data_specification.enums.data_type import DataType
 
-# PACMAN imports
-from pacman.executor.injection_decorator import inject_items
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.\
@@ -35,6 +32,7 @@ from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
+from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
@@ -58,17 +56,13 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     __slots__ = ["_x_factor", "_y_factor", "_colour_bits", "_bricking"]
 
     def __init__(
-            self, label, constraints, app_vertex, n_neurons,
+            self, label, app_vertex, n_neurons,
             simulation_duration_ms, random_seed,
             x_factor, y_factor, colour_bits, bricking):
         """
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -92,7 +86,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         """
         # Superclasses
         super(BreakoutMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES,
             simulation_duration_ms, random_seed)
 
@@ -104,11 +98,8 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
-    @inject_items({"routing_info": "RoutingInfos"})
-    @overrides(AbstractGeneratesDataSpecification.generate_data_specification,
-               additional_arguments={"routing_info"}
-               )
-    def generate_data_specification(self, spec, placement, routing_info):
+    @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
+    def generate_data_specification(self, spec, placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -142,6 +133,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting breakout region:\n")
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value)
+        routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
 
@@ -166,14 +158,10 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         # End-of-Spec:
         spec.end_specification()
 
-    @overrides(SpinnGymMachineVertex.get_n_keys_for_partition)
-    def get_n_keys_for_partition(self, _partition):
-        return self._vertex_slice.n_atoms
-
     @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
-    def get_recording_region_base_address(self, txrx, placement):
+    def get_recording_region_base_address(self, placement):
         return helpful_functions.locate_memory_region_for_placement(
-            placement, self._BREAKOUT_REGIONS.RECORDING.value, txrx)
+            placement, self._BREAKOUT_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
     def get_binary_file_name(self):

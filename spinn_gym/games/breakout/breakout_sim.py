@@ -15,11 +15,9 @@
 import numpy
 
 
-def get_scores(breakout_pop, simulator):
+def get_scores(breakout_pop):
     b_vertex = breakout_pop._vertex
-    scores = b_vertex.get_data(
-        'score', simulator.no_machine_time_steps, simulator.placements,
-        simulator.buffer_manager)
+    scores = b_vertex.get_data('score')
 
     return scores.tolist()
 
