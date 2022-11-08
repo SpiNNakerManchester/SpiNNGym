@@ -19,12 +19,11 @@ from pyNN.utility.plotting import Figure, Panel
 import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.automated_breakout import AutomatedBreakout
-from spinn_front_end_common.utilities.globals_variables import get_simulator
 
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Initialise Simulation and Parameters
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 breakout = AutomatedBreakout()
 breakout.paddle_pop.record("spikes")
@@ -34,25 +33,24 @@ breakout.left_hidden_pop.record("spikes")
 breakout.right_hidden_pop.record("spikes")
 breakout.receive_reward_pop.record("gsyn_exc")
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Configure Visualiser
-# ----------------------------------------------------------------------------------------------------------------------
-#
+# ------------------------------------------------------------------------------
+
 # configure_visualiser(
 #     breakout, X_RES, Y_RES, X_SCALE, Y_SCALE, start_external_visualiser)
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Run Simulation
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 runtime = 1000 * 10
-simulator = get_simulator()
 print("\nLet\'s play breakout!")
 p.run(runtime)
 
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Post-Process Results
-# ----------------------------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 print("\nSimulation Complete - Extracting Data and Post-Processing")
 
@@ -89,8 +87,8 @@ Figure(
 
 plt.show()
 
-scores = get_scores(breakout_pop=breakout.breakout_pop, simulator=simulator)
-print("Scores: {}".format(scores))
+scores = get_scores(breakout_pop=breakout.breakout_pop)
+print(f"Scores: {scores}")
 
 plt.figure(2)
 plt.plot(scores)
