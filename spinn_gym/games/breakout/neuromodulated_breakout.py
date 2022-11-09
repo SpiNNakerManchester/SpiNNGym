@@ -29,7 +29,7 @@ Y_RES_FINAL = Y_RES // Y_SCALE
 
 
 class NeuromodulatedBreakout(object):
-    
+
     def __init__(self, time_scale_factor=1):
         # Setup pyNN simulation
         p.setup(timestep=1.0, time_scale_factor=time_scale_factor)
