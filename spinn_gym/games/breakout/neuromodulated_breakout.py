@@ -12,8 +12,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import json
-import spynnaker8 as p
+import pyNN.spiNNaker as p
 from spinn_gym import Breakout
 from .breakout_sim import (
     subsample_connection, row_col_to_input_breakout, separate_connections,
@@ -30,24 +29,20 @@ Y_RES_FINAL = Y_RES // Y_SCALE
 
 
 class NeuromodulatedBreakout(object):
-    def __init__(self, previous_connections=None):
-        p.setup(timestep=1.0)
-        p.set_number_of_neurons_per_core(p.IF_cond_exp, 32)
+    
+    def __init__(self, time_scale_factor=1):
+        # Setup pyNN simulation
+        p.setup(timestep=1.0, time_scale_factor=time_scale_factor)
+        p.set_number_of_neurons_per_core(p.IF_cond_exp, 128)
 
         # Weights
         weight = 0.1
 
-        # --------------------------------------------------------------------
-        # Load previous data
-        # --------------------------------------------------------------------
-        load_previous_connections = previous_connections is not None
-        if load_previous_connections:
-            with open(previous_connections, "r") as f:
-                previous_connections = json.loads(f.read())
-
-        # --------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Breakout Population && Spike Input
-        # --------------------------------------------------------------------
+        # ---------------------------------------------------------------------
+
+        # Create breakout population and activate live output
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
         self.breakout_pop = p.Population(b1.n_atoms, b1, label="breakout1")
 
@@ -77,9 +72,9 @@ class NeuromodulatedBreakout(object):
             self.breakout_pop, ball_on_right_dopaminergic_pop,
             p.FromListConnector(punishment_ball_on_right_conn))
 
-        # --------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # ON/OFF Connections
-        # --------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         [Connections_on, _] = subsample_connection(
             X_RES_FINAL, Y_RES_FINAL, 1, 1, weight, row_col_to_input_breakout)
@@ -103,6 +98,7 @@ class NeuromodulatedBreakout(object):
 
         self.paddle_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="paddle_pop")
+
         p.Projection(
             self.breakout_pop, self.paddle_pop,
             p.FromListConnector(Compressed_paddle_connections),
@@ -167,11 +163,6 @@ class NeuromodulatedBreakout(object):
             stimulation_pop, self.left_hidden_pop, p.OneToOneConnector(),
             p.StaticSynapse(weight=stim_weight))
 
-        if load_previous_connections:
-            prev_ball_x_left_conn = previous_connections[0]
-            prev_ball_y_left_conn = previous_connections[1]
-            prev_paddle_left_conn = previous_connections[2]
-
         # Create STDP dynamics with neuromodulation
         hidden_synapse_dynamics = p.STDPMechanism(
             timing_dependence=p.SpikePairRule(
@@ -184,24 +175,21 @@ class NeuromodulatedBreakout(object):
         # Create a plastic connection between Ball X and Hidden neurons
         p.Projection(
             self.ball_x_pop, self.left_hidden_pop,
-            p.FromListConnector(prev_ball_x_left_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Ball_x-Left_Hidden projection')
 
         # Create a plastic connection between Ball Y and Hidden neurons
         p.Projection(
             self.ball_y_pop, self.left_hidden_pop,
-            p.FromListConnector(prev_ball_y_left_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Ball_y-Left_Hidden projection')
 
         # Create a plastic connection between Paddle and Hidden neurons
         p.Projection(
             self.paddle_pop, self.left_hidden_pop,
-            p.FromListConnector(prev_paddle_left_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Paddle-Left_Hidden projection')
 
@@ -235,32 +223,24 @@ class NeuromodulatedBreakout(object):
             p.OneToOneConnector(),
             p.StaticSynapse(weight=stim_weight))
 
-        if load_previous_connections:
-            prev_ball_x_right_conn = previous_connections[3]
-            prev_ball_y_right_conn = previous_connections[4]
-            prev_paddle_right_conn = previous_connections[5]
-
         # Create a plastic connection between Ball X and Hidden neurons
         self.ball_x_learning_proj = p.Projection(
             self.ball_x_pop, self.right_hidden_pop,
-            p.FromListConnector(prev_ball_x_right_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Ball_x-Right_Hidden projection')
 
         # Create a plastic connection between Ball Y and Hidden neurons
         p.Projection(
             self.ball_y_pop, self.right_hidden_pop,
-            p.FromListConnector(prev_ball_y_right_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Ball_y-Right_Hidden projection')
 
         # Create a plastic connection between Paddle and Hidden neurons
         p.Projection(
             self.paddle_pop, self.right_hidden_pop,
-            p.FromListConnector(prev_paddle_right_conn)
-            if load_previous_connections else p.AllToAllConnector(),
+            p.AllToAllConnector(),
             synapse_type=hidden_synapse_dynamics,
             receptor_type='excitatory', label='Paddle-Right_Hidden projection')
 

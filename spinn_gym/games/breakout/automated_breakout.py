@@ -37,9 +37,9 @@ class AutomatedBreakout(object):
         # Weights
         weight = 0.1
 
-        # ----------------------------------------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Breakout Population && Spike Input
-        # ----------------------------------------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         # Create breakout population and activate live output
         b1 = Breakout(x_factor=X_SCALE, y_factor=Y_SCALE, bricking=1)
@@ -60,24 +60,23 @@ class AutomatedBreakout(object):
         #    self.key_input, self.breakout_pop, p.AllToAllConnector(),
         #    p.StaticSynapse(weight=0.1))
 
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # ON/OFF Connections
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         [Connections_on, Connections_off] = subsample_connection(
             X_RES_FINAL, Y_RES_FINAL, 1, 1, weight, row_col_to_input_breakout)
 
-        [Ball_on_connections, Paddle_on_connections] = \
-            separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
-                                 Connections_on)
+        [Ball_on_connections, Paddle_on_connections] = separate_connections(
+            X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL, Connections_on)
 
         [_Ball_off_connections, Paddle_off_connections] = \
             separate_connections(X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL,
                                  Connections_off)
 
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Paddle Population
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         self.paddle_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="paddle_pop")
@@ -91,9 +90,9 @@ class AutomatedBreakout(object):
             p.FromListConnector(Paddle_off_connections),
             receptor_type="inhibitory")
 
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Ball Position Population
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         self.ball_pop = p.Population(
             X_RES_FINAL, p.IF_cond_exp(), label="ball_pop")
@@ -136,9 +135,9 @@ class AutomatedBreakout(object):
             self.ball_pop, self.right_hidden_pop,
             p.FromListConnector(Ball_to_right_hidden_connections))
 
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Decision Population
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         self.decision_input_pop = p.Population(
             2, p.IF_cond_exp(), label="decision_input_pop")
@@ -168,9 +167,9 @@ class AutomatedBreakout(object):
             self.decision_input_pop, self.breakout_pop, p.OneToOneConnector(),
             p.StaticSynapse(weight=1.0))
 
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Reward Population
-        # --------------------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         # Create population to receive reward signal from
         # Breakout (n0: reward, n1: punishment)
