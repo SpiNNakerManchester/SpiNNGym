@@ -23,7 +23,7 @@ from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import (
+from spynnaker.pyNN.models.common import (
     PopulationApplicationVertex, RecordingType)
 from spynnaker.pyNN.data import SpynnakerDataView
 
