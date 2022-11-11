@@ -17,7 +17,7 @@ import numpy
 
 def get_scores(breakout_pop):
     b_vertex = breakout_pop._vertex
-    scores = b_vertex.get_data('score')
+    scores = b_vertex.get_recorded_data('score')
 
     return scores.tolist()
 

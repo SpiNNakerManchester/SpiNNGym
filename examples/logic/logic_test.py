@@ -53,7 +53,7 @@ input_pop.record('spikes')
 output_pop1.record('spikes')
 output_pop2.record('spikes')
 
-i2a = p.Projection(input_pop, logic_pop, p.AllToAllConnector())
+p.external_devices.activate_live_output_to(input_pop, logic_pop)
 
 # test_rec = p.Projection(logic_pop, logic_pop, p.AllToAllConnector(),
 #                     p.StaticSynapse(weight=0.1, delay=0.5))
@@ -66,7 +66,7 @@ runtime = 10000
 p.run(runtime)
 
 b_vertex = logic_pop._vertex  # pylint: disable=protected-access
-scores = b_vertex.get_data('score')
+scores = b_vertex.get_recorded_data('score')
 scores = scores.tolist()
 print(scores)
 

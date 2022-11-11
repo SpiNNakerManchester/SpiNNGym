@@ -48,9 +48,8 @@ class NeuromodulatedBreakout(object):
 
         # self.key_input = p.Population(
         #     2, p.external_devices.SpikeInjector(), label="key_input")
-        # p.Projection(
-        #     self.key_input, self.breakout_pop, p.AllToAllConnector(),
-        #     p.StaticSynapse(weight=0.1))
+        # p.external_devices.activate_live_output_to(
+        #     self.key_input, self.breakout_pop)
 
         # --------------------------------------------------------------------
         # Reward & Punishment Population
@@ -285,6 +284,5 @@ class NeuromodulatedBreakout(object):
             p.StaticSynapse(weight=hidden_to_decision_weight))
 
         # Connect input decision population to the game
-        p.Projection(
-            self.decision_input_pop, self.breakout_pop, p.OneToOneConnector(),
-            p.StaticSynapse(weight=1.))
+        p.external_devices.activate_live_output_to(
+            self.decision_input_pop, self.breakout_pop)

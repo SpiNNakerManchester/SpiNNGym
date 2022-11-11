@@ -64,6 +64,7 @@ Figure(
 plt.show()
 
 scores = get_scores(breakout_pop=breakout.breakout_pop)
+
 print("Scores: {}".format(scores))
 
 # End simulation

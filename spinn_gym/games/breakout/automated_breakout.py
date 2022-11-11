@@ -49,16 +49,14 @@ class AutomatedBreakout(object):
         # paddle (and enable paddle visualisation)
         random_spike_input = p.Population(
             2, p.SpikeSourcePoisson(rate=7), label="input_connect")
-        p.Projection(
-            random_spike_input, self.breakout_pop, p.AllToAllConnector(),
-            p.StaticSynapse(weight=1.))
+        p.external_devices.activate_live_output_to(
+            random_spike_input, self.breakout_pop)
 
         # Connect key spike injector to breakout population
         # self.key_input = p.Population(
         #     2, p.external_devices.SpikeInjector(), label="key_input")
-        # p.Projection(
-        #    self.key_input, self.breakout_pop, p.AllToAllConnector(),
-        #    p.StaticSynapse(weight=0.1))
+        # p.external_devices.activate_live_output_to(
+        #     self.key_input, self.breakout_pop)
 
         # ---------------------------------------------------------------------
         # ON/OFF Connections
@@ -163,9 +161,8 @@ class AutomatedBreakout(object):
             receptor_type="inhibitory")
 
         # Connect input Decision population to the game
-        p.Projection(
-            self.decision_input_pop, self.breakout_pop, p.OneToOneConnector(),
-            p.StaticSynapse(weight=1.0))
+        p.external_devices.activate_live_output_to(
+            self.decision_input_pop, self.breakout_pop)
 
         # ---------------------------------------------------------------------
         # Reward Population
