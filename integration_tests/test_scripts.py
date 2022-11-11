@@ -41,6 +41,12 @@ class TestScripts(ScriptChecker):
     def test_examples_breakout_breakout_simple_connection(self):
         self.check_script("examples/breakout/breakout_simple_connection.py")
 
+    def test_examples_breakout_breakout_automated(self):
+        self.check_script("examples/breakout/automated_bkout_play.py")
+
+    def test_examples_breakout_breakout_neuromodulated(self):
+        self.check_script("examples/breakout/neuromodulated_bkout_play.py")
+
     def test_examples_inverted_pendulum_inverted_pendulum_test(self):
         self.check_script("examples/inverted_pendulum/inverted_pendulum_test.py")
 
