@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -44,13 +45,11 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         # sdram needed for this vertex
         "_sdram_required"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label, app_vertex, n_neurons,
                  region_bytes, simulation_duration_ms, random_seed):
         """
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
         :type constraints: iterable(AbstractConstraint) or None
         :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
@@ -75,12 +74,11 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         vertex_slice = Slice(0, n_neurons - 1)
 
         # Superclasses
-        MachineVertex.__init__(
-            self, label, constraints, app_vertex, vertex_slice)
+        MachineVertex.__init__(self, label, app_vertex, vertex_slice)
 
         # Define size of recording region
-        self._recording_size = int((simulation_duration_ms/10000.) * 4)
-        # TODO Should this not round UP!
+        self._recording_size = int(math.ceil(
+            simulation_duration_ms/10000.) * 4)
 
         self._sdram_required = ConstantSDRAM(
             region_bytes + self._recording_size)

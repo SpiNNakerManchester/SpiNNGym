@@ -43,12 +43,12 @@ input_pop.record('spikes')
 output_pop1.record('spikes')
 output_pop2.record('spikes')
 
-i2a = p.Projection(input_pop, arms_pop, p.AllToAllConnector())
+p.external_devices.activate_live_output_to(input_pop, arms_pop)
 
 # neuron ID 0 = reward
 # neuron ID 1 = no reward
-test_rec = p.Projection(arms_pop, arms_pop, p.AllToAllConnector(),
-                        p.StaticSynapse(weight=0.1, delay=0.5))
+p.external_devices.activate_live_output_to(arms_pop, arms_pop)
+
 i2o1 = p.Projection(arms_pop, output_pop1, p.AllToAllConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 i2o2 = p.Projection(arms_pop, output_pop2, p.OneToOneConnector(),
@@ -59,7 +59,7 @@ runtime = 10000
 p.run(runtime)
 
 b_vertex = arms_pop._vertex  # pylint: disable=protected-access
-scores = b_vertex.get_data('score')
+scores = b_vertex.get_recorded_data('score')
 scores = scores.tolist()
 print(scores)
 

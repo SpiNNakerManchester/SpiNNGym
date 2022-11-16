@@ -59,7 +59,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
                  "_pole_length", "_reward_based", "_tau_force",
                  "_time_increment"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
                  encoding, time_increment, pole_length, pole_angle,
                  reward_based, force_increments, max_firing_rate,
@@ -68,8 +68,6 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
         :type constraints: iterable(AbstractConstraint) or None
         :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
@@ -103,7 +101,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(PendulumMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.PENDULUM_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
 

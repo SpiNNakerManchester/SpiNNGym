@@ -45,7 +45,7 @@ class Logic(SpinnGymApplicationVertex):
 
     def __init__(
             self, truth_table, input_sequence, rate_on=20.0, rate_off=5.0,
-            score_delay=200.0, stochastic=1, constraints=None, label="Logic",
+            score_delay=200.0, stochastic=1, label="Logic",
             simulation_duration_ms=ONE_DAY_IN_MS, random_seed=None):
         if random_seed is None:
             random_seed = list(self.RANDOM_SEED)
@@ -58,12 +58,11 @@ class Logic(SpinnGymApplicationVertex):
                 print("ERROR: ", e)
                 # TODO is it safe to continue ??????
         machine_vertex = LogicMachineVertex(
-            label, constraints, self, n_neurons, simulation_duration_ms,
+            label, self, n_neurons, simulation_duration_ms,
             random_seed, truth_table, input_sequence, rate_on, rate_off,
             score_delay, stochastic)
         # Superclasses
-        super(Logic, self).__init__(
-            machine_vertex, label, constraints, n_neurons)
+        super(Logic, self).__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

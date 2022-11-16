@@ -58,7 +58,7 @@ class RecallMachineVertex(SpinnGymMachineVertex):
                  "_rate_off", "_rate_on", "_reward", "_stochastic",
                  "_time_period"]
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label,  app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
                  rate_on, rate_off, pop_size, prob_command,
                  prob_in_change, time_period, stochastic, reward):
@@ -66,10 +66,6 @@ class RecallMachineVertex(SpinnGymMachineVertex):
 
         :param label: The optional name of the vertex
         :type label: str or None
-        :param iterable(AbstractConstraint) constraints:
-            The optional initial constraints of the vertex
-        :type constraints: iterable(AbstractConstraint) or None
-        :type constraints: iterable(AbstractConstraint)  or None
         :param app_vertex:
             The application vertex that caused this machine vertex to be
             created. If None, there is no such application vertex.
@@ -99,7 +95,7 @@ class RecallMachineVertex(SpinnGymMachineVertex):
 
         # Superclasses
         super(RecallMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)
         # Pass in variables

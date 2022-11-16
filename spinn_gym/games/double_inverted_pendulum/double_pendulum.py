@@ -35,14 +35,13 @@ class DoublePendulum(SpinnGymApplicationVertex):
     __slots__ = []
 
     def __init__(
-            self, constraints=None, encoding=0, time_increment=20,
+            self, encoding=0, time_increment=20,
             pole_length=1.0, pole_angle=0.1, pole2_length=0, pole2_angle=0,
             reward_based=1, force_increments=100, max_firing_rate=100,
             number_of_bins=20, central=1, random_seed=None, bin_overlap=2,
             tau_force=0, label="pole", simulation_duration_ms=ONE_WEEK_IN_MS):
         """
 
-        :param constraints:
         :param encoding:  0 rate, 1 receptive bins, 2 spike time, 3 rank
         :param time_increment:
         :param pole_length:
@@ -69,14 +68,13 @@ class DoublePendulum(SpinnGymApplicationVertex):
         n_neurons = 6 * number_of_bins
 
         machine_vertex = DoublePendulumMachineVertex(
-            label, constraints, self, n_neurons, simulation_duration_ms,
+            label, self, n_neurons, simulation_duration_ms,
             random_seed, encoding, time_increment, pole_length, pole_angle,
             pole2_length, pole2_angle, reward_based, force_increments,
             max_firing_rate, number_of_bins, central, bin_overlap, tau_force)
 
         # Superclasses
-        super(DoublePendulum, self).__init__(
-            machine_vertex, label, constraints, n_neurons)
+        super(DoublePendulum, self).__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

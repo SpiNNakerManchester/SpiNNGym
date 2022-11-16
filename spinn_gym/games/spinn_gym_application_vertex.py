@@ -23,110 +23,82 @@ from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.abstract_models import \
-    AbstractAcceptsIncomingSynapses
-from spynnaker.pyNN.models.common import AbstractNeuronRecordable
-from spynnaker.pyNN.models.common.simple_population_settable \
-    import SimplePopulationSettable
+from spynnaker.pyNN.models.common import (
+    PopulationApplicationVertex, RecordingType)
 from spynnaker.pyNN.data import SpynnakerDataView
 
 
 class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
-        AbstractAcceptsIncomingSynapses, AbstractNeuronRecordable,
-        SimplePopulationSettable):
+        PopulationApplicationVertex):
 
     __slots__ = []
 
-    def __init__(self, machine_vertex, label, constraints, n_atoms):
+    def __init__(self, machine_vertex, label, n_atoms):
         """
         Creates an ApplicationVertex which has exactly one predefined \
         MachineVertex
 
         :param machine_vertex: MachineVertex
         :param str label: The optional name of the vertex.
-        :param constraints:
-            The optional initial constraints of the vertex.
         :type constraints: iterable(AbstractConstraint) or None
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
         super(SpinnGymApplicationVertex, self).__init__(
-            machine_vertex, label, constraints, n_atoms)
+            machine_vertex, label, n_atoms)
 
-        SimplePopulationSettable.__init__(self)
-        AbstractAcceptsIncomingSynapses.__init__(self)
+    @overrides(PopulationApplicationVertex.get_units)
+    def get_units(self, name):
+        if name == "score":
+            return ""
+        return super(SpinnGymApplicationVertex, self).get_units(name)
 
-    @overrides(AbstractAcceptsIncomingSynapses.verify_splitter)
-    def verify_splitter(self, splitter):
-        # See https://github.com/SpiNNakerManchester/sPyNNaker/issues/1192
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_connections_from_machine)
-    def get_connections_from_machine(self, app_edge, synapse_info):
-
-        # TODO: make this work properly (the following call does nothing)
-
-        super(SpinnGymApplicationVertex, self).get_connections_from_machine(
-            app_edge, synapse_info)
-
-    @overrides(AbstractAcceptsIncomingSynapses.set_synapse_dynamics)
-    def set_synapse_dynamics(self, synapse_dynamics):
-        pass
-        # TODO Should this be a pass or a NotImplemented ?
-
-    @overrides(AbstractAcceptsIncomingSynapses.clear_connection_cache)
-    def clear_connection_cache(self):
-        pass
-
-    @overrides(AbstractAcceptsIncomingSynapses.get_synapse_id_by_target)
-    def get_synapse_id_by_target(self, target):
-        return 0
-
-    @overrides(SimplePopulationSettable.set_value)
-    def set_value(self, key, value):
-        SimplePopulationSettable.set_value(self, key, value)
-        # TODO there was a AbstractRewritesDataSpecification variable here?
-
-    # ------------------------------------------------------------------------
-    # Recording overrides
-    # ------------------------------------------------------------------------
-    @overrides(
-        AbstractNeuronRecordable.clear_recording)
-    def clear_recording(self, variable):
-        for machine_vertex in self.machine_vertices:
-            placement = SpynnakerDataView.get_placement_of_vertex(
-                machine_vertex)
-            buffer_manager = SpynnakerDataView.get_buffer_manager()
-            buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, 0)
-
-    @overrides(AbstractNeuronRecordable.get_recordable_variables)
+    @overrides(PopulationApplicationVertex.get_recordable_variables)
     def get_recordable_variables(self):
-        return 'score'
+        return ["score"]
 
-    @overrides(AbstractNeuronRecordable.is_recording)
-    def is_recording(self, variable):
-        return True
+    @overrides(PopulationApplicationVertex.can_record)
+    def can_record(self, name):
+        return name == "score"
 
-    @overrides(AbstractNeuronRecordable.set_recording)
-    def set_recording(self, variable, new_state=True, sampling_interval=None,
-                      indexes=None):
-        pass
-        # TODO Should this be a implemented, pass or a NotImplemented ?
+    @overrides(PopulationApplicationVertex.set_recording)
+    def set_recording(self, name, sampling_interval=None, indices=None):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
 
-    @overrides(AbstractNeuronRecordable.get_neuron_sampling_interval)
-    def get_neuron_sampling_interval(self, variable):
-        return 10000  # 10 seconds hard coded in bkout.c
+        if sampling_interval is not None:
+            raise KeyError(
+                "Sampling interval is not supported (fixed at 10000)")
 
-    @abstractproperty
-    def score_format(self):
-        """
-        The numpy format for the scores data
-        """
+        if indices is not None:
+            raise KeyError("Indices are not supported")
 
-    @overrides(AbstractNeuronRecordable.get_data)
-    def get_data(self, variable):
+        # No need to do anything, as always recording anyway!
+
+    @overrides(PopulationApplicationVertex.set_not_recording)
+    def set_not_recording(self, name, indices=None):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+
+        if indices is not None:
+            raise KeyError("Indices are not supported")
+
+        # No need to do anything, as always recording anyway!
+
+    @overrides(PopulationApplicationVertex.get_recording_variables)
+    def get_recording_variables(self):
+        return ["score"]
+
+    @overrides(PopulationApplicationVertex.is_recording_variable)
+    def is_recording_variable(self, name):
+        return name == "score"
+
+    @overrides(PopulationApplicationVertex.get_recorded_data)
+    def get_recorded_data(self, name):
+        if name != "score":
+            raise KeyError(f"{name} was not recorded")
+
         vertex = self.machine_vertices.pop()
         placement = SpynnakerDataView.get_placement_of_vertex(vertex)
         buffer_manager = SpynnakerDataView.get_buffer_manager()
@@ -143,22 +115,58 @@ class SpinnGymApplicationVertex(
         # return formatted_data
         return output_data
 
-    def _clear_recording_region(self, recording_region_id):
-        """ Clear a recorded data region from the buffer manager.
+    @overrides(PopulationApplicationVertex.get_recording_sampling_interval)
+    def get_recording_sampling_interval(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+        # recording is done at 10000ms intervals
+        return 10000
 
-        :param recording_region_id: the recorded region ID for clearing
-        :rtype: None
-        """
+    @overrides(PopulationApplicationVertex.get_recording_indices)
+    def get_recording_indices(self, name):
+        # Only the score is recorded
+        return [0]
+
+    @overrides(PopulationApplicationVertex.get_recording_type)
+    def get_recording_type(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
+        return RecordingType.MATRIX
+
+    @overrides(PopulationApplicationVertex.clear_recording_data)
+    def clear_recording_data(self, name):
+        if name != "score":
+            raise KeyError(f"Cannot record {name}")
         for machine_vertex in self.machine_vertices:
             placement = SpynnakerDataView.get_placement_of_vertex(
                 machine_vertex)
             buffer_manager = SpynnakerDataView.get_buffer_manager()
             buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, recording_region_id)
+                placement.x, placement.y, placement.p, 0)
 
-    def reset_ring_buffer_shifts(self):
-        pass
-        # TODO Should this be a pass or a NotImplemented ?
+    def describe(self):
+        """ Get a human-readable description of the cell or synapse type.
+
+        The output may be customised by specifying a different template
+        together with an associated template engine
+        (see :py:mod:`pyNN.descriptions`).
+
+        If template is None, then a dictionary containing the template context
+        will be returned.
+
+        :rtype: dict(str, ...)
+        """
+
+        context = {
+            "name": self.__class__.__name__
+        }
+        return context
+
+    @abstractproperty
+    def score_format(self):
+        """
+        The numpy format for the scores data
+        """
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)

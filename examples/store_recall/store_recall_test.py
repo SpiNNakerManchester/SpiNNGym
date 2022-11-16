@@ -56,7 +56,7 @@ readout_pop = p.Population(recall_model.n_atoms, p.IF_cond_exp())
 input_pop.record('spikes')
 readout_pop.record('spikes')
 
-i2a = p.Projection(input_pop, recall_pop, p.AllToAllConnector())
+p.external_devices.activate_live_output_to(input_pop, recall_pop)
 i2o2 = p.Projection(recall_pop, readout_pop, p.OneToOneConnector(),
                     p.StaticSynapse(weight=0.1, delay=0.5))
 
@@ -65,7 +65,7 @@ runtime = 30 * 1000
 p.run(runtime)
 
 b_vertex = recall_pop._vertex  # pylint: disable=protected-access
-scores = b_vertex.get_data('score')
+scores = b_vertex.get_recorded_data('score')
 scores = scores.tolist()
 print(scores)
 
