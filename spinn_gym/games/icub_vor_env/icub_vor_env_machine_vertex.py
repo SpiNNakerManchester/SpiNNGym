@@ -66,14 +66,14 @@ class ICubVorEnvMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    def __init__(self, label, constraints, app_vertex, n_neurons,
+    def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
                  head_pos, head_vel, perfect_eye_pos,
                  perfect_eye_vel, error_window_size, output_size, gain,
                  pos_to_vel, wta_decision, low_error_rate, high_error_rate):
 
         super(ICubVorEnvMachineVertex, self).__init__(
-            label, constraints, app_vertex, n_neurons,
+            label, app_vertex, n_neurons,
             self.ICUB_VOR_ENV_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
             simulation_duration_ms, random_seed)
 

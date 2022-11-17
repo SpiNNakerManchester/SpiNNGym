@@ -56,7 +56,7 @@ class ICubVorEnv(SpinnGymApplicationVertex):
     def __init__(self, head_pos, head_vel, perfect_eye_pos, perfect_eye_vel,
                  error_window_size=10, output_size=200, gain=20,
                  pos_to_vel=POS_TO_VEL, wta_decision=False, low_error_rate=2,
-                 high_error_rate=20, constraints=None, label="ICubVorEnv",
+                 high_error_rate=20, label="ICubVorEnv",
                  incoming_spike_buffer_size=None,
                  simulation_duration_ms=MAX_SIM_DURATION, random_seed=None):
         """
@@ -110,50 +110,57 @@ class ICubVorEnv(SpinnGymApplicationVertex):
 
         # Superclasses
         machine_vertex = ICubVorEnvMachineVertex(
-                label, constraints, self, n_neurons, simulation_duration_ms,
+                label, self, n_neurons, simulation_duration_ms,
                 random_seed, head_pos, head_vel, perfect_eye_pos,
                 perfect_eye_vel, error_window_size, output_size, gain,
                 pos_to_vel, wta_decision, low_error_rate, high_error_rate)
 
         super(ICubVorEnv, self).__init__(
-            machine_vertex, label, constraints, n_neurons)
+            machine_vertex, label, n_neurons)
 
     # ------------------------------------------------------------------------
     # Recording overrides
     # ------------------------------------------------------------------------
-    @overrides(SpinnGymApplicationVertex.clear_recording)
-    def clear_recording(self, variable):
-        for n in range(len(self.RECORDABLE_VARIABLES)):
-            self._clear_recording_region(n)
+    @overrides(SpinnGymApplicationVertex.clear_recording_data)
+    def clear_recording_data(self, name):
+        if name not in self.RECORDABLE_VARIABLES:
+            raise KeyError(f"Cannot clear recording for {name}")
+        for machine_vertex in self.machine_vertices:
+            placement = SpynnakerDataView.get_placement_of_vertex(
+                machine_vertex)
+            buffer_manager = SpynnakerDataView.get_buffer_manager()
+            buffer_manager.clear_recorded_data(
+                placement.x, placement.y, placement.p,
+                self.RECORDABLE_VARIABLES.index(name))
 
     @overrides(SpinnGymApplicationVertex.get_recordable_variables)
     def get_recordable_variables(self):
         return self.RECORDABLE_VARIABLES
 
-    @overrides(SpinnGymApplicationVertex.get_data)
-    def get_data(self, variable):
+    @overrides(SpinnGymApplicationVertex.get_recorded_data)
+    def get_recorded_data(self, name):
         if self._m_vertex is None:
             self._m_vertex = self.machine_vertices.pop()
         print('get_data from machine vertex ', self._m_vertex,
-              ' for variable ', variable)
+              ' for variable ', name)
         placement = SpynnakerDataView.get_placement_of_vertex(self._m_vertex)
         buffer_manager = SpynnakerDataView.get_buffer_manager()
 
         # Read the data recorded
         data_values, _ = buffer_manager.get_data_by_placement(
-            placement, self._region_ids[variable])
+            placement, self._region_ids[name])
         data = data_values
 
         numpy_format = list()
         output_format = list()
-        if self._region_dtypes[variable] is DataType.S1615:
-            numpy_format.append((variable, numpy.int32))
-            output_format.append((variable, numpy.float32))
+        if self._region_dtypes[name] is DataType.S1615:
+            numpy_format.append((name, numpy.int32))
+            output_format.append((name, numpy.float32))
         else:
-            numpy_format.append((variable, numpy.int32))
+            numpy_format.append((name, numpy.int32))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)
-        if self._region_dtypes[variable] is DataType.S1615:
+        if self._region_dtypes[name] is DataType.S1615:
             convert = numpy.zeros_like(
                 output_data, dtype=numpy.float32).view(output_format)
             for i in range(output_data.size):

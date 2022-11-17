@@ -24,31 +24,31 @@ import os
 # Examples of get functions for variables
 def get_error(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    error = b_vertex.get_data('error')
+    error = b_vertex.get_recorded_data('error')
     return error.tolist()
 
 
 def get_l_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    left_count = b_vertex.get_data('l_count')
+    left_count = b_vertex.get_recorded_data('l_count')
     return left_count.tolist()
 
 
 def get_r_count(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    right_count = b_vertex.get_data('r_count')
+    right_count = b_vertex.get_recorded_data('r_count')
     return right_count.tolist()
 
 
 def get_eye_pos(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_positions = b_vertex.get_data('eye_pos')
+    eye_positions = b_vertex.get_recorded_data('eye_pos')
     return eye_positions.tolist()
 
 
 def get_eye_vel(icub_vor_env_pop):
     b_vertex = icub_vor_env_pop._vertex
-    eye_velocities = b_vertex.get_data('eye_vel')
+    eye_velocities = b_vertex.get_recorded_data('eye_vel')
     return eye_velocities.tolist()
 
 
@@ -102,7 +102,8 @@ input_pop.record('spikes')
 output_pop.record('spikes')
 
 # Input -> ICubVorEnv projection
-i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
+# i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
+p.external_devices.activate_live_output_to(input_pop, icub_vor_env_pop)
 
 # ICubVorEnv -> output, setup live output to the SSP vertex
 p.external_devices.activate_live_output_to(

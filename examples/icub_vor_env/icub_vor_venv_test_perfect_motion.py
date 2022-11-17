@@ -87,7 +87,8 @@ input_pop.record('spikes')
 output_pop.record('spikes')
 
 # Input -> ICubVorEnv projection
-i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
+# i2a = p.Projection(input_pop, icub_vor_env_pop, p.AllToAllConnector())
+p.external_devices.activate_live_output_to(input_pop, icub_vor_env_pop)
 
 # ICubVorEnv -> output, setup live output to the SSP vertex
 p.external_devices.activate_live_output_to(
