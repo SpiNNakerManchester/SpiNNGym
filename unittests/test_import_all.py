@@ -38,5 +38,4 @@ class ImportAllModule(unittest.TestCase):
                 "spinn_front_end_common", remove_pyc_files=True)
             # Test the files
             package_loader.load_module("spynnaker", remove_pyc_files=True)
-            package_loader.load_module("spynnaker8", remove_pyc_files=True)
             package_loader.load_module("spinn_gym", remove_pyc_files=True)
