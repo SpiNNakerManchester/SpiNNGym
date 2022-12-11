@@ -57,7 +57,7 @@
 #define MAX_BALL_SPEED 2
 
 // Ball outof play time (frames)
-#define OUT_OF_PLAY 100
+#define OUT_OF_PLAY 20
 
 // Frame delay (ms)
 #define FRAME_DELAY 20
@@ -137,7 +137,7 @@ int v = -MAX_BALL_SPEED;// * FACT;
 int x_bat = 32;
 
 // bat length in pixels
-int bat_len = 24;
+int bat_len = 32;
 
 int BRICK_WIDTH = 10;
 int BRICK_HEIGHT = 5;
@@ -197,7 +197,7 @@ void add_event(int i, int j, colour_t col, bool bricked)
     const uint32_t colour_bit = (col == COLOUR_BACKGROUND) ? 0 : 1;
 
     const uint32_t spike_key = key | (
-    		SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);
+        SPECIAL_EVENT_MAX + (i << (y_bits + 2)) + (j << 2) + (bricked<<1) + colour_bit);
 //    const uint32_t spike_key = key | (
 //    		SPECIAL_EVENT_MAX + (i << (y_bits + colour_bit)) + (j << colour_bit) + colour_bit);
 
@@ -245,7 +245,7 @@ static inline bool is_a_brick(int the_x, int the_y) // x = width, y = height
         bool val = bricks[pos_y][pos_x];
         if (val) {
             add_event(pos_x * BRICK_WIDTH, (pos_y * BRICK_HEIGHT) + BRICK_LAYER_OFFSET,
-            		COLOUR_BACKGROUND, true);
+                COLOUR_BACKGROUND, true);
         }
 //        io_printf(IO_BUF, "3 in brick layer x:%d y:%d px:%d py:%d\n",
 //        		the_x, the_y, pos_x, pos_y);
@@ -341,9 +341,9 @@ float rand021(void)
 
 static void update_frame (uint32_t time)
 {
-	if (PRINT_GAME_EVOLUTION) {
-		io_printf(IO_BUF, "time = %u, t20xf = %u\n", time, time % (20 * x_factor));
-	}
+  if (PRINT_GAME_EVOLUTION) {
+    io_printf(IO_BUF, "time = %u, t20xf = %u\n", time, time % (20 * x_factor));
+  }
 
     // Draw bat
     // Cache old bat position
@@ -401,10 +401,10 @@ static void update_frame (uint32_t time)
     if (out_of_play == 0) {
          if (time % (20 * x_factor) == 0) {
             // clear pixel to background
-        	if (PRINT_GAME_EVOLUTION) {
-        		io_printf(IO_BUF, "setting ball to background x=%d, y=%d, u=%d, v=%d\n",
-        				x, y, u, v);
-        	}
+          if (PRINT_GAME_EVOLUTION) {
+            io_printf(IO_BUF, "setting ball to background x=%d, y=%d, u=%d, v=%d\n",
+                x, y, u, v);
+          }
 
             if (get_pixel_col(x, y) != COLOUR_BAT) {
                 set_pixel_col(x, y, COLOUR_BACKGROUND, false);
@@ -446,7 +446,7 @@ static void update_frame (uint32_t time)
 //            		brick_direction[0], brick_direction[1], brick_direction[2],
 //					brick_direction[3], u, v, encoded_result);
             if (brick_direction[0] || brick_direction[1] || brick_direction[2] ||
-            		brick_direction[3]) {
+                brick_direction[3]) {
                 set_pixel_col(x, y, COLOUR_BACKGROUND, false);
 
                 if (brick_direction[0]) {
@@ -489,7 +489,7 @@ static void update_frame (uint32_t time)
 //                io_printf(IO_BUF, "2 b1:%d, b2:%d, b3:%d, b4:%d\n", brick_direction[0],
 //                		brick_direction[1], brick_direction[2], brick_direction[3]);
                 if (brick_direction[0] || brick_direction[1] || brick_direction[2] ||
-                		brick_direction[3]) {
+                    brick_direction[3]) {
                     x = x + (u / 2);
                     y = y + (v / 2);
                     if (brick_direction[0]) {
@@ -516,44 +516,44 @@ static void update_frame (uint32_t time)
             }
 
             if (get_pixel_col(x, y) == COLOUR_BAT || get_pixel_col(
-            		x + (u / 2), y + (v / 2)) == COLOUR_BAT || get_pixel_col(
-            				x, y + (v / 2)) == COLOUR_BAT) {
-            	if (PRINT_GAME_EVOLUTION) {
-            		io_printf(IO_BUF, "got in hitting bat x=%d, y=%d, u=%d, v=%d\n",
-            				x, y, u, v);
-            	}
+                x + (u / 2), y + (v / 2)) == COLOUR_BAT || get_pixel_col(
+                    x, y + (v / 2)) == COLOUR_BAT) {
+              if (PRINT_GAME_EVOLUTION) {
+                io_printf(IO_BUF, "got in hitting bat x=%d, y=%d, u=%d, v=%d\n",
+                    x, y, u, v);
+              }
                 if (x < (x_bat + bat_len/4)) {
-                	if (PRINT_GAME_EVOLUTION){
-                		io_printf(IO_BUF, "BAT 1");
-                	}
+                  if (PRINT_GAME_EVOLUTION){
+                    io_printf(IO_BUF, "BAT 1");
+                  }
                     u = -MAX_BALL_SPEED;
                     v = -v;
                 }
                 else if (x < (x_bat + (bat_len/2))) {
-                	if (PRINT_GAME_EVOLUTION) {
-                		io_printf(IO_BUF, "BAT 2");
-                	}
+                  if (PRINT_GAME_EVOLUTION) {
+                    io_printf(IO_BUF, "BAT 2");
+                  }
                     u = -(MAX_BALL_SPEED / 2);
                     v = -v;
                 }
                 else if (x < (x_bat + ((3 * bat_len) / 4))) {
-                	if (PRINT_GAME_EVOLUTION) {
-                		io_printf(IO_BUF, "BAT 3");
-                	}
+                  if (PRINT_GAME_EVOLUTION) {
+                    io_printf(IO_BUF, "BAT 3");
+                  }
                     u = (MAX_BALL_SPEED / 2);
                     v = -v;
                 }
                 else if (x < (x_bat + bat_len)) {
-                	if (PRINT_GAME_EVOLUTION) {
-                		io_printf(IO_BUF, "BAT 4");
-                	}
+                  if (PRINT_GAME_EVOLUTION) {
+                    io_printf(IO_BUF, "BAT 4");
+                  }
                     u = MAX_BALL_SPEED;
                     v = -v;
                 }
                 else {
-                	if (PRINT_GAME_EVOLUTION) {
-                		io_printf(IO_BUF, "Broke bat 0x%x\n", frame_buff[x][y]);
-                	}
+                  if (PRINT_GAME_EVOLUTION) {
+                    io_printf(IO_BUF, "Broke bat 0x%x\n", frame_buff[x][y]);
+                  }
                 }
 
                 // Increase score
@@ -564,10 +564,10 @@ static void update_frame (uint32_t time)
 
             // lost ball
             if (y + v > GAME_HEIGHT) {
-            	if (PRINT_GAME_EVOLUTION) {
-            		io_printf(IO_BUF, "got in lost ball x=%d, y=%d, u=%d, v=%d\n",
-            				x, y, u, v);
-            	}
+              if (PRINT_GAME_EVOLUTION) {
+                io_printf(IO_BUF, "got in lost ball x=%d, y=%d, u=%d, v=%d\n",
+                    x, y, u, v);
+              }
                 v = -MAX_BALL_SPEED;
                 // todo make this random in some respect or non abusable
                 x = x_bat + (bat_len / 2);
@@ -586,18 +586,18 @@ static void update_frame (uint32_t time)
                 out_of_play = OUT_OF_PLAY;
                 // Decrease score
                 number_of_lives--;
-                if (!number_of_lives && bricking){
-                    for (int i=0; i<SCORE_DOWN_EVENTS_PER_DEATH; i++) {
-                        add_score_down_event();
-                    }
-                    number_of_lives = NUMBER_OF_LIVES;
-                }
-                else {
+//                if (!number_of_lives && bricking){
+//                    for (int i=0; i<SCORE_DOWN_EVENTS_PER_DEATH; i++) {
+//                        add_score_down_event();
+//                    }
+//                    number_of_lives = NUMBER_OF_LIVES;
+//                }
+//                else {
                     add_score_down_event();
-                }
+//                }
                 if (PRINT_GAME_EVOLUTION) {
-                	io_printf(IO_BUF, "after reset x=%d, y=%d, u=%d, v=%d\n",
-                			x, y, u, v);
+                  io_printf(IO_BUF, "after reset x=%d, y=%d, u=%d, v=%d\n",
+                      x, y, u, v);
                 }
             }
             // draw ball
@@ -630,8 +630,8 @@ static bool initialize(uint32_t *timer_period)
 
     // Get the timing details and set up thse simulation interface
     if (!simulation_initialise(data_specification_get_region(REGION_SYSTEM, ds_regions),
-    		APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
-			&infinite_run, &_time, SDP, DMA)) {
+        APPLICATION_NAME_HASH, timer_period, &simulation_ticks,
+      &infinite_run, &_time, SDP, DMA)) {
         return false;
     }
 
@@ -672,7 +672,7 @@ static bool initialize(uint32_t *timer_period)
     GAME_HEIGHT = GAME_HEIGHT / y_factor;
 
     io_printf(IO_BUF, "game w = %d, game h = %d, x=%d, y=%d, u=%d, v=%d, xf=%d, yf=%d\n",
-			GAME_WIDTH, GAME_HEIGHT, x, y, u, v, x_factor, y_factor);
+      GAME_WIDTH, GAME_HEIGHT, x, y, u, v, x_factor, y_factor);
 
     x_bat = x_bat / x_factor;
 
@@ -705,9 +705,9 @@ static bool initialize(uint32_t *timer_period)
     y_bits = ceil(log2(GAME_HEIGHT));
 
     io_printf(IO_BUF, "x:%d, y:%d, b_width:%d, brick_height:%d, b_lay_off:%d, b_lay_hei:%d\n"
-    		"x_bat:%d, bat_len:%d, u:%d, v:%d, y_bits:%d\n",
-			x, y, BRICK_WIDTH, BRICK_HEIGHT, BRICK_LAYER_OFFSET, BRICK_LAYER_HEIGHT,
-			x_bat, bat_len, u, v, y_bits);
+        "x_bat:%d, bat_len:%d, u:%d, v:%d, y_bits:%d\n",
+      x, y, BRICK_WIDTH, BRICK_HEIGHT, BRICK_LAYER_OFFSET, BRICK_LAYER_HEIGHT,
+      x_bat, bat_len, u, v, y_bits);
 
     // Setup recording
     uint32_t recording_flags = 0;
@@ -794,7 +794,7 @@ void timer_callback(uint unused, uint dummy)
                     if (bricks[i][j]) {
                         // io_printf(IO_BUF, "adding brick event at i:%d j:%d\n", i, j);
                         add_event(j * BRICK_WIDTH, (i * BRICK_HEIGHT) + BRICK_LAYER_OFFSET,
-                        		COLOUR_BRICK_ON, true);
+                            COLOUR_BRICK_ON, true);
                     }
                 }
             }
@@ -814,7 +814,7 @@ void timer_callback(uint unused, uint dummy)
             if (score_change_count>=1000) {
                 bool record_check = recording_record(0, &current_score, 4);
                 io_printf(IO_BUF, "record outcome %d when recording %d\n",
-                		record_check, current_score);
+                    record_check, current_score);
                 score_change_count=0;
             }
         }

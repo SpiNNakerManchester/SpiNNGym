@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -76,8 +77,8 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         MachineVertex.__init__(self, label, app_vertex, vertex_slice)
 
         # Define size of recording region
-        self._recording_size = int((simulation_duration_ms/10000.) * 4)
-        # TODO Should this not round UP!
+        self._recording_size = int(math.ceil(
+            simulation_duration_ms/10000.) * 4)
 
         self._sdram_required = ConstantSDRAM(
             region_bytes + self._recording_size)
