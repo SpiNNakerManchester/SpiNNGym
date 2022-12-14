@@ -133,17 +133,6 @@ class SpinnGymApplicationVertex(
             raise KeyError(f"Cannot record {name}")
         return RecordingType.MATRIX
 
-    @overrides(PopulationApplicationVertex.clear_recording_data)
-    def clear_recording_data(self, name):
-        if name != "score":
-            raise KeyError(f"Cannot record {name}")
-        for machine_vertex in self.machine_vertices:
-            placement = SpynnakerDataView.get_placement_of_vertex(
-                machine_vertex)
-            buffer_manager = SpynnakerDataView.get_buffer_manager()
-            buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p, 0)
-
     def describe(self):
         """ Get a human-readable description of the cell or synapse type.
 
