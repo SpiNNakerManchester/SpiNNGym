@@ -43,6 +43,8 @@ def start_visualiser(vis, display_handle):
 
 
 def stop_visualiser(label, conn, vis, display_handle):
+    # pylint: disable=unused-argument
+    # used as a callback function so fixed api
     vis.close()
     vis.update()
     display_handle.update(plt.gcf())
@@ -50,10 +52,14 @@ def stop_visualiser(label, conn, vis, display_handle):
 
 
 def handle_vis_spikes(label, time, neuron_ids, vis):
+    # pylint: disable=redefined-outer-name, unused-argument
+    # used as a callback function so fixed api
     vis.handle_breakout_spikes(time, neuron_ids)
 
 
 def handle_live_spikes(label, time, neuron_ids, vis):
+    # pylint: disable=redefined-outer-name
+    # used as a callback function so fixed api
     vis.handle_live_spikes(label, time, neuron_ids)
 
 

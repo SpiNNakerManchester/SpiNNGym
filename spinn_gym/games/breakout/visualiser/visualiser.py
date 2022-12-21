@@ -196,8 +196,7 @@ class Visualiser(object):
             plt.show()
             plt.draw()
             print("Visualiser displayed")
-        except Exception:
-            # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             pass
 
     def handle_close(self, evt):
@@ -235,10 +234,10 @@ class Visualiser(object):
 
         # Create mask to select vision (rather than event) packets
         # Extract coordinates
-        'const uint32_t spike_key = ' \
-            'key | (SPECIAL_EVENT_MAX + ' \
-            '(i << (game_bits + 2)) + (j << 2) + ' \
-            '(bricked<<1) + colour_bit);'
+        # 'const uint32_t spike_key = ' \
+        #    'key | (SPECIAL_EVENT_MAX + ' \
+        #    '(i << (game_bits + 2)) + (j << 2) + ' \
+        #    '(bricked<<1) + colour_bit);'
 
         vision_payload = payload_value[
                              vision_event_mask] - SpecialEvent.max
