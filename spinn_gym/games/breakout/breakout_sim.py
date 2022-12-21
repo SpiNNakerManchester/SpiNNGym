@@ -16,13 +16,13 @@ import numpy
 
 
 def get_scores(breakout_pop):
-    b_vertex = breakout_pop._vertex
+    b_vertex = breakout_pop._vertex  # pylint: disable=protected-access
     scores = b_vertex.get_recorded_data('score')
 
     return scores.tolist()
 
 
-def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
+def row_col_to_input_breakout(row, col, is_on_input, row_bits,
                               colour_bits=2, row_start=0):
     row_bits = numpy.uint32(row_bits)
     idx = numpy.uint32(0)
@@ -54,13 +54,12 @@ def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
             sj = j // subsamp_factor_y
 
             # ON channels
-            subsampidx = sj * sx_res + si
             connection_list_on.append((coord_map_func(j, i, 1, row_bits),
-                                       subsampidx, weight, 1.))
+                                       weight, 1.))
 
             # OFF channels only on segment borders
             connection_list_off.append((coord_map_func(j, i, 0, row_bits),
-                                        subsampidx, weight, 1.))
+                                        weight, 1.))
 
     return connection_list_on, connection_list_off
 
