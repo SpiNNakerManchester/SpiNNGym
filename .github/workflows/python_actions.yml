@@ -70,8 +70,9 @@ jobs:
       uses: ./support/actions/pylint
       with: 
         package: examples spinn_gym
+        exitcheck: 39
 
-    #- name: Validate XML
+      #- name: Validate XML
     #  if: matrix.python-version == 3.8
     #  uses: ./support/actions/validate-xml
     #  with:
