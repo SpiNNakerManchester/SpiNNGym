@@ -40,18 +40,14 @@ def row_col_to_input_breakout(row, col, is_on_input, row_bits,
     return idx
 
 
-def subsample_connection(x_res, y_res, subsamp_factor_x, subsamp_factor_y,
-                         weight, coord_map_func):
+def subsample_connection(x_res, y_res, weight, coord_map_func):
     # subY_BITS=int(np.ceil(np.log2(y_res/subsamp_factor)))
     connection_list_on = []
     connection_list_off = []
 
-    sx_res = int(x_res) // int(subsamp_factor_x)
     row_bits = int(numpy.ceil(numpy.log2(y_res)))
     for j in range(int(y_res)):
         for i in range(int(x_res)):
-            si = i // subsamp_factor_x
-            sj = j // subsamp_factor_y
 
             # ON channels
             connection_list_on.append((coord_map_func(j, i, 1, row_bits),

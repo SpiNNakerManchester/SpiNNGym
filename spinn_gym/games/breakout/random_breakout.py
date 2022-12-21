@@ -55,7 +55,7 @@ class RandomBreakout(object):
 
         weight = 0.1
         [Connections_on, _] = subsample_connection(
-            X_RES / X_SCALE, Y_RES / Y_SCALE, 1, 1, weight,
+            X_RES / X_SCALE, Y_RES / Y_SCALE, weight,
             row_col_to_input_breakout)
 
         # Create population of neurons to receive input from Breakout

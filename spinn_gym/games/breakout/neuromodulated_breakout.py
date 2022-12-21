@@ -76,7 +76,7 @@ class NeuromodulatedBreakout(object):
         # ---------------------------------------------------------------------
 
         [Connections_on, _] = subsample_connection(
-            X_RES_FINAL, Y_RES_FINAL, 1, 1, weight, row_col_to_input_breakout)
+            X_RES_FINAL, Y_RES_FINAL, weight, row_col_to_input_breakout)
 
         [Ball_on_connections, Paddle_on_connections] = separate_connections(
             X_RES_FINAL * Y_RES_FINAL - X_RES_FINAL, Connections_on)
