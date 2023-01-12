@@ -16,7 +16,7 @@ import numpy
 
 
 def get_scores(breakout_pop):
-    b_vertex = breakout_pop._vertex
+    b_vertex = breakout_pop._vertex  # pylint: disable=protected-access
     scores = b_vertex.get_recorded_data('score')
 
     return scores.tolist()
@@ -24,6 +24,7 @@ def get_scores(breakout_pop):
 
 def row_col_to_input_breakout(row, col, is_on_input, row_bits, event_bits=1,
                               colour_bits=2, row_start=0):
+    # pylint: disable=unused-argument
     row_bits = numpy.uint32(row_bits)
     idx = numpy.uint32(0)
 
