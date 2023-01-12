@@ -57,7 +57,6 @@ class ICubVorEnv(SpinnGymApplicationVertex):
                  error_window_size=10, output_size=200, gain=20,
                  pos_to_vel=POS_TO_VEL, wta_decision=False, low_error_rate=2,
                  high_error_rate=20, label="ICubVorEnv",
-                 incoming_spike_buffer_size=None,
                  simulation_duration_ms=MAX_SIM_DURATION, random_seed=None):
         """
         :param head_pos: array of head positions
@@ -73,7 +72,6 @@ class ICubVorEnv(SpinnGymApplicationVertex):
             difference in number of spikes between L and R
         :param constraints: usual sPyNNaker constraints
         :param label: name of the population
-        :param incoming_spike_buffer_size:
         :param simulation_duration_ms: maximum simulation duration for this \
             application vertex
         """
