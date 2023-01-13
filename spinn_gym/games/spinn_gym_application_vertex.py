@@ -53,47 +53,6 @@ class SpinnGymApplicationVertex(
             return ""
         return super(SpinnGymApplicationVertex, self).get_units(name)
 
-    @overrides(PopulationApplicationVertex.get_recordable_variables)
-    def get_recordable_variables(self):
-        return ["score"]
-
-    @overrides(PopulationApplicationVertex.can_record)
-    def can_record(self, name):
-        return name == "score"
-
-    @overrides(PopulationApplicationVertex.set_recording)
-    def set_recording(self, name, sampling_interval=None, indices=None):
-        if name != "score":
-            raise KeyError(f"Cannot record {name}")
-
-        if sampling_interval is not None:
-            raise KeyError(
-                "Sampling interval is not supported (fixed at 10000)")
-
-        if indices is not None:
-            raise KeyError("Indices are not supported")
-
-        # No need to do anything, as always recording anyway!
-
-    @overrides(PopulationApplicationVertex.set_not_recording)
-    def set_not_recording(self, name, indices=None):
-        if name != "score":
-            raise KeyError(f"Cannot record {name}")
-
-        if indices is not None:
-            raise KeyError("Indices are not supported")
-
-        # No need to do anything, as always recording anyway!
-
-    @overrides(PopulationApplicationVertex.get_recording_variables)
-    def get_recording_variables(self):
-        return ["score"]
-
-    @overrides(PopulationApplicationVertex.is_recording_variable)
-    def is_recording_variable(self, name):
-        return name == "score"
-
-    @overrides(PopulationApplicationVertex.get_recorded_data)
     def get_recorded_data(self, name):
         if name != "score":
             raise KeyError(f"{name} was not recorded")
