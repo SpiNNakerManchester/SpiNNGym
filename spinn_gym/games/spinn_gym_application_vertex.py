@@ -73,13 +73,6 @@ class SpinnGymApplicationVertex(
         # return formatted_data
         return output_data
 
-    @overrides(PopulationApplicationVertex.get_recording_sampling_interval)
-    def get_recording_sampling_interval(self, name):
-        if name != "score":
-            raise KeyError(f"Cannot record {name}")
-        # recording is done at 10000ms intervals
-        return 10000
-
     def describe(self):
         """ Get a human-readable description of the cell or synapse type.
 
