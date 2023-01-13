@@ -23,8 +23,7 @@ from pacman.model.graphs.application.abstract import (
     AbstractOneAppOneMachineVertex)
 
 # sPyNNaker imports
-from spynnaker.pyNN.models.common import (
-    PopulationApplicationVertex, RecordingType)
+from spynnaker.pyNN.models.common import PopulationApplicationVertex
 from spynnaker.pyNN.data import SpynnakerDataView
 
 
@@ -121,17 +120,6 @@ class SpinnGymApplicationVertex(
             raise KeyError(f"Cannot record {name}")
         # recording is done at 10000ms intervals
         return 10000
-
-    @overrides(PopulationApplicationVertex.get_recording_indices)
-    def get_recording_indices(self, name):
-        # Only the score is recorded
-        return [0]
-
-    @overrides(PopulationApplicationVertex.get_recording_type)
-    def get_recording_type(self, name):
-        if name != "score":
-            raise KeyError(f"Cannot record {name}")
-        return RecordingType.MATRIX
 
     def describe(self):
         """ Get a human-readable description of the cell or synapse type.
