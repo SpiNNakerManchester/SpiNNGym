@@ -119,21 +119,21 @@ class ICubVorEnv(SpinnGymApplicationVertex):
     # ------------------------------------------------------------------------
     # Recording overrides
     # ------------------------------------------------------------------------
-    @overrides(SpinnGymApplicationVertex.clear_recording_data)
-    def clear_recording_data(self, name):
-        if name not in self.RECORDABLE_VARIABLES:
-            raise KeyError(f"Cannot clear recording for {name}")
-        for machine_vertex in self.machine_vertices:
-            placement = SpynnakerDataView.get_placement_of_vertex(
-                machine_vertex)
-            buffer_manager = SpynnakerDataView.get_buffer_manager()
-            buffer_manager.clear_recorded_data(
-                placement.x, placement.y, placement.p,
-                self.RECORDABLE_VARIABLES.index(name))
-
-    @overrides(SpinnGymApplicationVertex.get_recordable_variables)
-    def get_recordable_variables(self):
-        return self.RECORDABLE_VARIABLES
+    # @overrides(SpinnGymApplicationVertex.clear_recording_data)
+    # def clear_recording_data(self, name):
+    #     if name not in self.RECORDABLE_VARIABLES:
+    #         raise KeyError(f"Cannot clear recording for {name}")
+    #     for machine_vertex in self.machine_vertices:
+    #         placement = SpynnakerDataView.get_placement_of_vertex(
+    #             machine_vertex)
+    #         buffer_manager = SpynnakerDataView.get_buffer_manager()
+    #         buffer_manager.clear_recorded_data(
+    #             placement.x, placement.y, placement.p,
+    #             self.RECORDABLE_VARIABLES.index(name))
+    #
+    # @overrides(SpinnGymApplicationVertex.get_recordable_variables)
+    # def get_recordable_variables(self):
+    #     return self.RECORDABLE_VARIABLES
 
     @overrides(SpinnGymApplicationVertex.get_recorded_data)
     def get_recorded_data(self, name):
