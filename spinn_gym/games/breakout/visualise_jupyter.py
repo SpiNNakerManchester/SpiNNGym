@@ -16,7 +16,7 @@ import functools
 import threading
 import matplotlib.pyplot as plt
 import numpy as np
-import time
+from time import sleep
 
 import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
@@ -39,7 +39,7 @@ def start_visualiser(vis, display_handle):
     while vis.running:
         if vis.update():
             display_handle.update(plt.gcf())
-        time.sleep(refresh_time)
+        sleep(refresh_time)
 
 
 def stop_visualiser(label, conn, vis, display_handle):
@@ -51,7 +51,7 @@ def stop_visualiser(label, conn, vis, display_handle):
 
 
 def handle_vis_spikes(label, time, neuron_ids, vis):
-    # pylint: disable=unused-argument, redefined-outer-name
+    # pylint: disable=unused-argument
     vis.handle_breakout_spikes(time, neuron_ids)
 
 
