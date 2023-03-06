@@ -55,8 +55,8 @@ def handle_vis_spikes(label, time, neuron_ids, vis):
     vis.handle_breakout_spikes(time, neuron_ids)
 
 
-def handle_live_spikes(_label, _time, _neuron_ids, _vis):
-    _vis.handle_live_spikes(_label, _time, _neuron_ids)
+def handle_live_spikes(label, time, neuron_ids, vis):
+    vis.handle_live_spikes(label, time, neuron_ids)
 
 
 def jupyter_visualiser(
