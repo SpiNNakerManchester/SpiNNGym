@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 DIRS = breakout inverted_pendulum double_inverted_pendulum multi_arm_bandit logic store_recall
 #DIRS = breakout double_inverted_pendulum multi_arm_bandit logic store_recall
