@@ -81,3 +81,8 @@ jobs:
     - name: Run rat copyright enforcement
       if: matrix.python-version == 3.8
       uses: ./support/actions/check-copyrights
+
+    - name: Validate CITATION.cff
+      if: matrix.python-version == 3.8
+      uses: dieghernan/cff-validator@main
+
