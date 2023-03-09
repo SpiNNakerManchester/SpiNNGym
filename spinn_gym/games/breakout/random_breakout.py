@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import pyNN.spiNNaker as p
+import spynnaker8 as p
 from spinn_gym import Breakout
 from .breakout_sim import (
     subsample_connection, row_col_to_input_breakout)
