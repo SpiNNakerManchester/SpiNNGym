@@ -276,9 +276,6 @@ class Visualiser(object):
             self.score += num_score_up_events
             self.score -= num_score_down_events
 
-            # Update displayed score count
-            self.score_text.set_text("%u" % self.score)
-
         if self.video_data is not None:
             if self.score > 0:
                 # print("pos score %d"%self.score)
@@ -292,6 +289,9 @@ class Visualiser(object):
         self.message_received = True
 
     def update(self):
+        # Update displayed score count
+        self.score_text.set_text("%u" % self.score)
+
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
             self.key_input_connection.send_spike("key_input", self.input_state)

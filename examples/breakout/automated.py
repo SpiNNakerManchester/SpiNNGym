@@ -29,6 +29,7 @@ def do_run():
     print("\nLet\'s play breakout!")
     p.external_devices.run_forever()
     print("Simulation Complete")
+    p.end()
 
 
 thread = Thread(target=do_run)
