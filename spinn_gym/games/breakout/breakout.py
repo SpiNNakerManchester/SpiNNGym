@@ -36,7 +36,7 @@ class Breakout(SpinnGymApplicationVertex):
                    numpy.random.randint(10000),
                    numpy.random.randint(10000)]
 
-    __slots__ = []
+    __slots__ = ["__source_vertex"]
 
     def __init__(self, x_factor=16, y_factor=16, width=160, height=128,
                  colour_bits=2, label="Breakout",
@@ -56,8 +56,19 @@ class Breakout(SpinnGymApplicationVertex):
 
         # Superclasses
         super(Breakout, self).__init__(machne_vertex,  label, n_neurons)
+        self.__source_vertex = None
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
     def score_format(self):
         return numpy.int32
+
+    @property
+    def source_vertex(self):
+        return self.__source_vertex
+
+    @source_vertex.setter
+    def source_vertex(self, vertex):
+        """ Set the vertex that is the source of input
+        """
+        self.__source_vertex = vertex

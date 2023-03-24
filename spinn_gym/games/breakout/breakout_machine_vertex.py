@@ -24,6 +24,7 @@ from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.\
     abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
+from spinn_front_end_common.utilities.constants import BYTES_PER_WORD
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 from spinn_front_end_common.interface.buffer_management \
@@ -34,6 +35,7 @@ from spinn_front_end_common.utilities import constants as \
 
 from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.utilities import constants
+from spynnaker.pyNN.models.common import PopulationApplicationVertex
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -43,7 +45,7 @@ from spinn_gym.games import SpinnGymMachineVertex
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
 class BreakoutMachineVertex(SpinnGymMachineVertex):
-    BREAKOUT_REGION_BYTES = 4
+    BREAKOUT_REGION_BYTES = 2 * BYTES_PER_WORD
     PARAM_REGION_BYTES = 40
 
     _BREAKOUT_REGIONS = Enum(
@@ -136,6 +138,14 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         routing_info = SpynnakerDataView.get_routing_infos()
         spec.write_value(routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID))
+        if self.app_vertex.source_vertex is None:
+            raise ValueError(
+                "The breakout vertex doesn't have a source vertex!")
+        n_colour_bits = 0
+        if isinstance(self.app_vertex.source_vertex,
+                      PopulationApplicationVertex):
+            n_colour_bits = self.app_vertex.source_vertex.n_colour_bits
+        spec.write_value(n_colour_bits)
 
         # Write recording region for score
         spec.comment("\nWriting breakout recording region:\n")
