@@ -169,6 +169,7 @@ uint32_t move_count_r = 0;
 uint32_t move_count_l = 0;
 uint32_t score_change_count=0;
 int32_t current_score = 0;
+uint32_t n_colour_bits = 0;
 
 //ratio used in randomising initial x coordinate
 static uint32_t x_ratio = UINT32_MAX / GAME_WIDTH_MAX;
@@ -642,6 +643,7 @@ static bool initialize(uint32_t *timer_period)
     address_t breakout_region = data_specification_get_region(REGION_BREAKOUT, ds_regions);
 
     key = breakout_region[0];
+    n_colour_bits = breakout_region[1];
     io_printf(IO_BUF, "\tKey=%08x\n", key);
 
     //get recording region
@@ -825,6 +827,8 @@ void mc_packet_received_callback(uint key, uint payload)
 {
     // If no payload has been set, make sure the loop will run
     if (payload == 0) { payload = 1; }
+
+    key = key >> n_colour_bits;
 
     for (uint count = payload; count > 0; count--) {
         // Right

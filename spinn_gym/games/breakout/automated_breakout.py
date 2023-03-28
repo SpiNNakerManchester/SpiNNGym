@@ -163,6 +163,8 @@ class AutomatedBreakout(object):
         # Connect input Decision population to the game
         p.external_devices.activate_live_output_to(
             self.decision_input_pop, self.breakout_pop)
+        self.breakout_pop._vertex.source_vertex = \
+            self.decision_input_pop._vertex
 
         # ---------------------------------------------------------------------
         # Reward Population
