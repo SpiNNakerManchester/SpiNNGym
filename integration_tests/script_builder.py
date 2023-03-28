@@ -25,7 +25,7 @@ class ScriptBuilder(RootScriptBuilder):
         # create_test_scripts supports test that are too long or exceptions
         self.create_test_scripts(["examples"],
                                  # This is meant to run "forever"
-                                 too_long=["automated.py"])
+                                 exceptions={"automated.py": "Runs forever"})
 
 
 if __name__ == '__main__':
