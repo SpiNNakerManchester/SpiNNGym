@@ -53,6 +53,8 @@ class RandomBreakout(object):
             2, p.SpikeSourcePoisson(rate=2), label="input_connect")
         p.external_devices.activate_live_output_to(
             self.spike_input, self.breakout_pop)
+        self.breakout_pop._vertex.source_vertex = \
+            self.spike_input._vertex
 
         weight = 0.1
         [Connections_on, _] = subsample_connection(

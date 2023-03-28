@@ -286,3 +286,5 @@ class NeuromodulatedBreakout(object):
         # Connect input decision population to the game
         p.external_devices.activate_live_output_to(
             self.decision_input_pop, self.breakout_pop)
+        self.breakout_pop._vertex.source_vertex = \
+            self.decision_input_pop._vertex
