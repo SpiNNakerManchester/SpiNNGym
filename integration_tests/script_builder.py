@@ -23,7 +23,9 @@ class ScriptBuilder(RootScriptBuilder):
 
     def build_intro_labs_scripts(self):
         # create_test_scripts supports test that are too long or exceptions
-        self.create_test_scripts(["examples"])
+        self.create_test_scripts(["examples"],
+                                 # This is meant to run "forever"
+                                 too_long=["automated.py"])
 
 
 if __name__ == '__main__':
