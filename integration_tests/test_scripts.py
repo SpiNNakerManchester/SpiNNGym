@@ -1,4 +1,4 @@
-# Copyright (c) 2019 The University of Manchester
+# Copyright (c) 2019-2021 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,10 +11,9 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from spinnaker_testbase import ScriptChecker
-from unittest import SkipTest  # pylint: disable=unused-import
 
 
 class TestScripts(ScriptChecker):
@@ -29,23 +28,26 @@ class TestScripts(ScriptChecker):
     """
 # flake8: noqa
 
-    def test_examples_store_recall_store_recall_test(self):
-        self.check_script("examples/store_recall/store_recall_test.py")
-
-    def test_examples_double_inverted_pendulum_double_inverted_pendulum_test(self):
-        self.check_script("examples/double_inverted_pendulum/double_inverted_pendulum_test.py")
-
-    def test_examples_logic_logic_test(self):
-        self.check_script("examples/logic/logic_test.py")
+    def test_examples_breakout_automated_bkout_play(self):
+        self.check_script("examples/breakout/automated_bkout_play.py")
 
     def test_examples_breakout_breakout_simple_connection(self):
         self.check_script("examples/breakout/breakout_simple_connection.py")
 
-    def test_examples_breakout_breakout_automated(self):
-        self.check_script("examples/breakout/automated_bkout_play.py")
+    # Not testing file due to: Runs forever
+    # examples/breakout/automated.py
 
-    def test_examples_breakout_breakout_neuromodulated(self):
+    def test_examples_breakout_neuromodulated_bkout_play(self):
         self.check_script("examples/breakout/neuromodulated_bkout_play.py")
+
+    def test_examples_logic_logic_test(self):
+        self.check_script("examples/logic/logic_test.py")
+
+    def test_examples_double_inverted_pendulum_double_inverted_pendulum_test(self):
+        self.check_script("examples/double_inverted_pendulum/double_inverted_pendulum_test.py")
+
+    def test_examples_store_recall_store_recall_test(self):
+        self.check_script("examples/store_recall/store_recall_test.py")
 
     def test_examples_inverted_pendulum_inverted_pendulum_test(self):
         self.check_script("examples/inverted_pendulum/inverted_pendulum_test.py")
