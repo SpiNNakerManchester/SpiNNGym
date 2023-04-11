@@ -29,7 +29,7 @@ if __name__ == '__main__':
         if os.path.isdir(build_dir):
             distutils.dir_util.remove_tree(build_dir)
         egg_dir = os.path.join(
-            this_dir, "setup.py")
+            this_dir, "SpiNNGym.egg-info")
         if os.path.isdir(egg_dir):
             distutils.dir_util.remove_tree(egg_dir)
     setup()
