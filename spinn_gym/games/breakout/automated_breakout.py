@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pyNN.spiNNaker as p
 from spinn_gym import Breakout
 from .breakout_sim import (
@@ -163,6 +163,8 @@ class AutomatedBreakout(object):
         # Connect input Decision population to the game
         p.external_devices.activate_live_output_to(
             self.decision_input_pop, self.breakout_pop)
+        self.breakout_pop._vertex.source_vertex = \
+            self.decision_input_pop._vertex
 
         # ---------------------------------------------------------------------
         # Reward Population

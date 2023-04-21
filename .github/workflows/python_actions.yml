@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 name: Python Actions
 on: [push]
@@ -36,17 +36,21 @@ jobs:
         path: support
     - name: Install pip, etc
       uses: ./support/actions/python-tools
+
     - name: Install Spinnaker Dependencies
-      uses: ./support/actions/checkout-spinn-deps
+      uses: ./support/actions/install-spinn-deps
       with:
         repositories: >
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN DataSpecification spalloc
           SpiNNFrontEndCommon sPyNNaker TestBase
         install: true
+
     - name: Install matplotlib
       uses: ./support/actions/install-matplotlib
+
     - name: Setup
-      uses: ./support/actions/run-setup
+      uses: ./support/actions/run-install
+
     - name: Setup PyNN
       uses: ./support/actions/pynn-setup
 
@@ -81,3 +85,8 @@ jobs:
     - name: Run rat copyright enforcement
       if: matrix.python-version == 3.8
       uses: ./support/actions/check-copyrights
+
+    - name: Validate CITATION.cff
+      if: matrix.python-version == 3.8
+      uses: dieghernan/cff-validator@main
+

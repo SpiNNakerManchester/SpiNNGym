@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import spynnaker8 as p
 from spinn_gym import Breakout
 from .breakout_sim import (
@@ -52,6 +52,8 @@ class RandomBreakout(object):
             2, p.SpikeSourcePoisson(rate=2), label="input_connect")
         p.external_devices.activate_live_output_to(
             self.spike_input, self.breakout_pop)
+        self.breakout_pop._vertex.source_vertex = \
+            self.spike_input._vertex
 
         weight = 0.1
         [Connections_on, _] = subsample_connection(

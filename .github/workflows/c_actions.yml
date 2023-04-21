@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 name: C Actions
 on: [push]
@@ -36,14 +36,18 @@ jobs:
         repository: SpiNNakerManchester/SupportScripts
         path: support
     - name: Checkout Spinnaker Dependencies
-      uses: ./support/actions/checkout-spinn-deps
+      uses: ./support/actions/install-spinn-deps
       with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: >
-          spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker SpiNNUtils
-    - name: Install SpiNNUtils
-      run: python setup.py install
-      working-directory: SpiNNUtils
+          spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker
+
+    - name: "Prepare: Install SpiNNUtils"
+      uses: ./support/actions/install-spinn-deps
+      with:
+        # Note: SpiNNUtils needed for spinn_utilities.make_tools
+        repositories: SpiNNUtils
+        install: true
 
     - name: Lint C code using Vera++
       # Note: run this before building to avoid linting modified_src directories

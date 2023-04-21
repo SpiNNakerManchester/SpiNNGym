@@ -11,7 +11,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from spinnaker_testbase import RootScriptBuilder
 
@@ -23,7 +23,9 @@ class ScriptBuilder(RootScriptBuilder):
 
     def build_intro_labs_scripts(self):
         # create_test_scripts supports test that are too long or exceptions
-        self.create_test_scripts(["examples"])
+        self.create_test_scripts(["examples"],
+                                 # This is meant to run "forever"
+                                 exceptions={"automated.py": "Runs forever"})
 
 
 if __name__ == '__main__':

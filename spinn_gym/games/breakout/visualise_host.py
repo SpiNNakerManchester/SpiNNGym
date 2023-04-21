@@ -13,19 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import functools
-import threading
-import matplotlib.pyplot as plt
 import numpy as np
 from time import sleep
 
 import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
-
-try:
-    from IPython import display
-except ModuleNotFoundError:
-    print("WARNING: Not in an IPython Environment;"
-          " this visualisation code won't work!")
 
 
 def start_vis_thread(database, pop_label, vis):
@@ -34,19 +26,19 @@ def start_vis_thread(database, pop_label, vis):
     vis.set_remote_end(board_address, tag)
 
 
-def start_visualiser(vis, display_handle):
+def start_visualiser(vis):
     refresh_time = 0.01
-    while vis.running:
+    while vis.running and vis.fig.get_visible():
         if vis.update():
-            display_handle.update(plt.gcf())
+            vis.fig.canvas.draw()
+            vis.fig.canvas.flush_events()
         sleep(refresh_time)
 
 
-def stop_visualiser(label, conn, vis, display_handle):
+def stop_visualiser(label, conn, vis):
     # pylint: disable=unused-argument
     vis.close()
     vis.update()
-    display_handle.update(plt.gcf())
     print("Visualiser closed")
 
 
@@ -59,7 +51,7 @@ def handle_live_spikes(label, time, neuron_ids, vis):
     vis.handle_live_spikes(label, time, neuron_ids)
 
 
-def jupyter_visualiser(
+def host_visualiser(
         breakout, x_res, x_scale, y_res, y_scale, live_spikes_pops=None):
     live_pop_labels = []
     if live_spikes_pops:
@@ -85,21 +77,16 @@ def jupyter_visualiser(
     vis = Visualiser(
         x_factor=2, y_factor=2, x_bits=xb, y_bits=yb,
         live_pops=live_spikes_pops)
-    display.clear_output(wait=True)
     vis.update()
-    display_handle = display.display(plt.gcf(), display_id=True)
 
     vis_connection.add_receive_callback(
         breakout.breakout_pop.label,
         functools.partial(handle_vis_spikes, vis=vis))
     vis_connection.add_pause_stop_callback(
         breakout.breakout_pop.label,
-        functools.partial(stop_visualiser, vis=vis,
-                          display_handle=display_handle))
+        functools.partial(stop_visualiser, vis=vis))
     for label in live_pop_labels:
         vis_connection.add_receive_callback(
             label, functools.partial(handle_live_spikes, vis=vis))
 
-    vis_thread = threading.Thread(target=start_visualiser,
-                                  args=[vis, display_handle])
-    vis_thread.start()
+    return vis
