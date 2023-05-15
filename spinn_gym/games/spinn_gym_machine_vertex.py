@@ -15,6 +15,7 @@
 
 import math
 from spinn_utilities.overrides import overrides
+from spinnman.model.enums import ExecutableType
 
 # PACMAN imports
 from pacman.model.graphs.common import Slice
@@ -25,7 +26,6 @@ from pacman.model.resources import ConstantSDRAM
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.interface.buffer_management.buffer_models.\
     abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
-from spinn_front_end_common.utilities.utility_objs import ExecutableType
 from spinn_front_end_common.abstract_models.\
     abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
