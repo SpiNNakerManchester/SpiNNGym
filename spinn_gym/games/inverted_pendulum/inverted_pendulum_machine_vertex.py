@@ -17,8 +17,6 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
-from data_specification.enums.data_type import DataType
-
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
