@@ -20,7 +20,7 @@ import spinn_gym as gym
 # import matplotlib.pyplot as plt
 import numpy as np
 # import os
-from spinn_gym.games.icub_vor_env.icub_utilities import (
+from icub_utilities import (
     generate_head_position_and_velocity, retrieve_and_package_results,
     remap_odd_even, remap_second_half_descending, ICUB_VOR_VENV_POP_SIZE,
     plot_results)
