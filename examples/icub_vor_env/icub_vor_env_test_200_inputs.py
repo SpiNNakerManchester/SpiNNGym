@@ -17,7 +17,7 @@ import pyNN.spiNNaker as p
 import spinn_gym as gym
 
 import numpy as np
-import icub_utilities as icub_util
+from icub_utils import icub_utilities as icub_util
 
 # Parameter definition
 runtime = 5000
