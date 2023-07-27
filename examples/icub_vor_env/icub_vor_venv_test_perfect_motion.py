@@ -17,7 +17,10 @@ import pyNN.spiNNaker as p
 import spinn_gym as gym
 
 import numpy as np
-import icub_utilities as icub_util
+from icub_utilities import (
+    generate_head_position_and_velocity, ICUB_VOR_VENV_POP_SIZE,
+    retrieve_and_package_results, remap_odd_even,
+    remap_second_half_descending, plot_results)
 
 # Parameter definition
 runtime = 3000
@@ -26,7 +29,7 @@ input_size = 200  # neurons
 output_size = 200  # neurons
 gain = 20.0
 
-head_pos, head_vel = icub_util.generate_head_position_and_velocity(1)
+head_pos, head_vel = generate_head_position_and_velocity(1)
 
 # perfect eye positions and velocities are exactly out of phase with head
 perfect_eye_pos = np.concatenate((head_pos[500:], head_pos[:500]))
@@ -74,7 +77,7 @@ icub_vor_env_model = gym.ICubVorEnv(
     head_pos, head_vel, perfect_eye_vel, perfect_eye_pos, error_window_size,
     output_size)
 icub_vor_env_pop = p.Population(
-    icub_util.ICUB_VOR_VENV_POP_SIZE, icub_vor_env_model)
+    ICUB_VOR_VENV_POP_SIZE, icub_vor_env_model)
 
 # Set recording for input and output pop (env pop records by default)
 input_pop.record('spikes')
@@ -92,7 +95,7 @@ p.external_devices.activate_live_output_to(
 p.run(runtime)
 
 # Get the data from the ICubVorEnv pop
-results = icub_util.retrieve_and_package_results(icub_vor_env_pop)
+results = retrieve_and_package_results(icub_vor_env_pop)
 
 # get the spike data from input and output
 spikes_in_spin = input_pop.spinnaker_get_data('spikes')
@@ -101,8 +104,8 @@ spikes_out_spin = output_pop.spinnaker_get_data('spikes')
 # end simulation
 p.end()
 
-remapped_vn_spikes = icub_util.remap_odd_even(spikes_in_spin, input_size)
-remapped_cf_spikes = icub_util.remap_second_half_descending(
+remapped_vn_spikes = remap_odd_even(spikes_in_spin, input_size)
+remapped_cf_spikes = remap_second_half_descending(
     spikes_out_spin, output_size)
 
 simulation_parameters = {
@@ -118,8 +121,8 @@ simulation_parameters = {
 }
 
 # plot the data from the ICubVorEnv pop
-icub_util.plot_results(results_dict=results,
-                       simulation_parameters=simulation_parameters,
-                       name="spinngym_icub_vor_test_perfect")
+plot_results(results_dict=results,
+             simulation_parameters=simulation_parameters,
+             name="spinngym_icub_vor_test_perfect")
 
 print("Done")
