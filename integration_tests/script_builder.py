@@ -21,13 +21,15 @@ class ScriptBuilder(RootScriptBuilder):
     This file will recreate the test_scripts.py file
     """
 
-    def build_intro_labs_scripts(self):
+    def build_spinn_gym_scripts(self):
         # create_test_scripts supports test that are too long or exceptions
         self.create_test_scripts(["examples"],
                                  # This is meant to run "forever"
-                                 exceptions={"automated.py": "Runs forever"})
+                                 exceptions={
+                                     "automated.py": "Runs forever",
+                                     "icub_utilities.py": "Not a script"})
 
 
 if __name__ == '__main__':
     builder = ScriptBuilder()
-    builder.build_intro_labs_scripts()
+    builder.build_spinn_gym_scripts()
