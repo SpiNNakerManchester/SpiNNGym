@@ -34,30 +34,35 @@ POS_TO_VEL = 2 * np.pi * 0.001
 
 # Examples of get functions for variables
 def get_error(icub_vor_env_pop):
+    # pylint: disable=protected-access
     b_vertex = icub_vor_env_pop._vertex
     error = b_vertex.get_recorded_data('error')
     return error.tolist()
 
 
 def get_l_count(icub_vor_env_pop):
+    # pylint: disable=protected-access
     b_vertex = icub_vor_env_pop._vertex
     left_count = b_vertex.get_recorded_data('l_count')
     return left_count.tolist()
 
 
 def get_r_count(icub_vor_env_pop):
+    # pylint: disable=protected-access
     b_vertex = icub_vor_env_pop._vertex
     right_count = b_vertex.get_recorded_data('r_count')
     return right_count.tolist()
 
 
 def get_eye_pos(icub_vor_env_pop):
+    # pylint: disable=protected-access
     b_vertex = icub_vor_env_pop._vertex
     eye_positions = b_vertex.get_recorded_data('eye_pos')
     return eye_positions.tolist()
 
 
 def get_eye_vel(icub_vor_env_pop):
+    # pylint: disable=protected-access
     b_vertex = icub_vor_env_pop._vertex
     eye_velocities = b_vertex.get_recorded_data('eye_vel')
     return eye_velocities.tolist()
@@ -230,7 +235,7 @@ def write_value(msg, value):
     print("{:60}:{:19}".format(msg, str(value)))
 
 
-def save_figure(plt, name, extensions=(".png",), **kwargs):
+def save_figure(plt_fig, name, extensions=(".png",), **kwargs):
     for ext in extensions:
         write_short_msg("Plotting", name + ext)
-        plt.savefig(name + ext, **kwargs)
+        plt_fig.savefig(name + ext, **kwargs)
