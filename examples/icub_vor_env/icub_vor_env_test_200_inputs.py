@@ -17,7 +17,7 @@ import pyNN.spiNNaker as p
 import spinn_gym as gym
 
 import numpy as np
-import icub_utilities as icub_util
+import spinn_gym.games.icub_vor_env.icub_utilities as icub_util
 
 
 # Parameter definition
