@@ -59,9 +59,9 @@ class Visualiser_subsamp(object):
         self.y_res = y_res
 
         # setup output spikes connection callbacks
-        self.spike_output_connection.add_receive_callback(
+        self.spike_output_connection.add_receive_time_callback(
             on_pop_name, self.receive_spikes)
-        self.spike_output_connection.add_receive_callback(
+        self.spike_output_connection.add_receive_time_callback(
             off_pop_name, self.receive_spikes)
         # setup neuron_ids list
         self.neuron_ids_on = []

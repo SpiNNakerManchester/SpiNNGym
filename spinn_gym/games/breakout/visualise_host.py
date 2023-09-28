@@ -79,14 +79,14 @@ def host_visualiser(
         live_pops=live_spikes_pops)
     vis.update()
 
-    vis_connection.add_receive_callback(
+    vis_connection.add_receive_time_callback(
         breakout.breakout_pop.label,
         functools.partial(handle_vis_spikes, vis=vis))
     vis_connection.add_pause_stop_callback(
         breakout.breakout_pop.label,
         functools.partial(stop_visualiser, vis=vis))
     for label in live_pop_labels:
-        vis_connection.add_receive_callback(
+        vis_connection.add_receive_time_callback(
             label, functools.partial(handle_live_spikes, vis=vis))
 
     return vis

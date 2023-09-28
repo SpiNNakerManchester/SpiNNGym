@@ -89,7 +89,7 @@ def jupyter_visualiser(
     vis.update()
     display_handle = display.display(plt.gcf(), display_id=True)
 
-    vis_connection.add_receive_callback(
+    vis_connection.add_receive_time_callback(
         breakout.breakout_pop.label,
         functools.partial(handle_vis_spikes, vis=vis))
     vis_connection.add_pause_stop_callback(
@@ -97,7 +97,7 @@ def jupyter_visualiser(
         functools.partial(stop_visualiser, vis=vis,
                           display_handle=display_handle))
     for label in live_pop_labels:
-        vis_connection.add_receive_callback(
+        vis_connection.add_receive_time_callback(
             label, functools.partial(handle_live_spikes, vis=vis))
 
     vis_thread = threading.Thread(target=start_visualiser,
