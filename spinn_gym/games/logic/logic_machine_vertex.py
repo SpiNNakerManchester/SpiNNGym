@@ -18,6 +18,8 @@ import numpy
 
 from spinn_utilities.overrides import overrides
 
+from pacman.model.placements import Placement
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -27,7 +29,8 @@ from spinn_front_end_common.interface.buffer_management \
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.interface.ds import DataType
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator, DataType)
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
@@ -108,7 +111,8 @@ class LogicMachineVertex(SpinnGymMachineVertex):
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
-    def generate_data_specification(self, spec, placement):
+    def generate_data_specification(
+            self, spec: DataSpecificationGenerator, placement: Placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -182,5 +186,5 @@ class LogicMachineVertex(SpinnGymMachineVertex):
             placement, self._LOGIC_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
+    def get_binary_file_name(self) -> str:
         return "logic.aplx"

@@ -48,7 +48,7 @@ class SpinnGymApplicationVertex(
             machine_vertex, label, n_atoms)
 
     @overrides(PopulationApplicationVertex.get_units)
-    def get_units(self, name):
+    def get_units(self, name: str) -> str:
         if name == "score":
             return ""
         return super(SpinnGymApplicationVertex, self).get_units(name)
@@ -92,7 +92,7 @@ class SpinnGymApplicationVertex(
         return context
 
     @abstractproperty
-    def score_format(self):
+    def score_format(self) -> type:
         """
         The numpy format for the scores data
         """

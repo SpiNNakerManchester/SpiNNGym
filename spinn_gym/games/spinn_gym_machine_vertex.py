@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import math
+from typing import List
 from spinn_utilities.overrides import overrides
 from spinnman.model.enums import ExecutableType
 
@@ -87,13 +88,13 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
 
     @property
     @overrides(MachineVertex.sdram_required)
-    def sdram_required(self):
+    def sdram_required(self) -> ConstantSDRAM:
         return self._sdram_required
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
-    def get_recorded_region_ids(self):
+    def get_recorded_region_ids(self) -> List[int]:
         return [0]
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
+    def get_binary_start_type(self) -> str:
         return ExecutableType.USES_SIMULATION_INTERFACE

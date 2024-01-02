@@ -17,6 +17,8 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
+from pacman.model.placements import Placement
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.\
@@ -27,7 +29,8 @@ from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
-from spinn_front_end_common.interface.ds import DataType
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator, DataType)
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
@@ -100,7 +103,8 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
-    def generate_data_specification(self, spec, placement):
+    def generate_data_specification(
+            self, spec: DataSpecificationGenerator, placement: Placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -168,10 +172,10 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.end_specification()
 
     @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
-    def get_recording_region_base_address(self, placement):
+    def get_recording_region_base_address(self, placement: Placement) -> int:
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._BREAKOUT_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
+    def get_binary_file_name(self) -> str:
         return "breakout.aplx"

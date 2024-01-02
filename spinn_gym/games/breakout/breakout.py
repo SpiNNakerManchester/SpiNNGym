@@ -60,7 +60,7 @@ class Breakout(SpinnGymApplicationVertex):
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
-    def score_format(self):
+    def score_format(self) -> type:
         return numpy.int32
 
     @property
