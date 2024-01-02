@@ -34,6 +34,7 @@ from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 
 
+# pylint: disable=abstract-method
 class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                             AbstractReceiveBuffersToHost,
                             AbstractHasAssociatedBinary):
