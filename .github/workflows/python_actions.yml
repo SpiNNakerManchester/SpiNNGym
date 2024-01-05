@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11"]
+        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
     steps:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -64,7 +64,7 @@ jobs:
       uses: ./support/actions/pytest
       with:
         tests: unittests
-        coverage: ${{ matrix.python-version == 3.8 }}
+        coverage: ${{ matrix.python-version == 3.12 }}
         cover-packages: ${{ env.CODE_PATHS }}
         coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
@@ -83,10 +83,10 @@ jobs:
     #    base-path: examples spinn_gym
 
     - name: Run rat copyright enforcement
-      if: matrix.python-version == 3.8
+      if: matrix.python-version == 3.12
       uses: ./support/actions/check-copyrights
 
     - name: Validate CITATION.cff
-      if: matrix.python-version == 3.8
+      if: matrix.python-version == 3.12
       uses: dieghernan/cff-validator@main
 
