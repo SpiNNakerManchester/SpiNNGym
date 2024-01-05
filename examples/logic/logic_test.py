@@ -68,7 +68,7 @@ p.run(runtime)
 b_vertex = logic_pop._vertex  # pylint: disable=protected-access
 scores = b_vertex.get_recorded_data('score')
 scores = scores.tolist()
-print(scores)
+print('scores:', scores)
 
 spikes_in = input_pop.get_data('spikes').segments[0].spiketrains
 spikes_out1 = output_pop1.get_data('spikes').segments[0].spiketrains

@@ -1,4 +1,4 @@
-# Copyright (c) 2019 The University of Manchester
+# Copyright (c) 2019-2021 The University of Manchester
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -11,14 +11,4 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-DIRS = breakout inverted_pendulum double_inverted_pendulum multi_arm_bandit logic store_recall icub_vor_env
-#DIRS = breakout double_inverted_pendulum multi_arm_bandit logic store_recall
-
-all: $(DIRS)
-	@for d in $(DIRS); do $(MAKE) -C $$d || exit $$?; done
-
-clean: $(DIRS)
-	@for d in $(DIRS); do $(MAKE) -C $$d GNU=$(GNU) clean || exit $$?; done
-    
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.

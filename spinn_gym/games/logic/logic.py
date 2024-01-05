@@ -46,7 +46,7 @@ class Logic(SpinnGymApplicationVertex):
     def __init__(
             self, truth_table, input_sequence, rate_on=20.0, rate_off=5.0,
             score_delay=200.0, stochastic=1, label="Logic",
-            simulation_duration_ms=ONE_DAY_IN_MS,  random_seed=None):
+            simulation_duration_ms=ONE_DAY_IN_MS, random_seed=None):
         if random_seed is None:
             random_seed = list(self.RANDOM_SEED)
 
