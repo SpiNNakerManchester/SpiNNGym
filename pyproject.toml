@@ -18,5 +18,5 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta:"
 
 [[tool.mypy.overrides]]
-module = ["pyNN.*", "quantities", "neo", "scipy", "scipy.*", "lazyarray"]
+module = ["pyNN.*", "quantities", "neo", "scipy", "scipy.*", "lazyarray", "IPython"]
 ignore_missing_imports = true
