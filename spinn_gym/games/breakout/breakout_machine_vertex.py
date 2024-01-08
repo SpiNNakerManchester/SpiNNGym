@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from enum import Enum
+from typing import cast, TYPE_CHECKING
 
 from spinn_utilities.overrides import overrides
 
@@ -42,6 +43,8 @@ from spynnaker.pyNN.models.common import PopulationApplicationVertex
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
 
+if TYPE_CHECKING:
+    from .breakout import Breakout
 
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
@@ -60,7 +63,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
     __slots__ = ("_x_factor", "_y_factor", "_colour_bits", "_bricking")
 
     def __init__(
-            self, label, app_vertex, n_neurons,
+            self, label, app_vertex: 'Breakout', n_neurons,
             simulation_duration_ms, random_seed,
             x_factor, y_factor, colour_bits, bricking):
         """
@@ -99,6 +102,12 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         self._colour_bits = colour_bits
         self._bricking = bricking
 
+    @property
+    @overrides(SpinnGymMachineVertex.app_vertex)
+    def app_vertex(self) -> 'Breakout':
+        # type checked by init
+        return cast('Breakout', self._app_vertex)
+
     # ------------------------------------------------------------------------
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
@@ -131,6 +140,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.SYSTEM.value)
+        assert isinstance(vertex, AbstractHasAssociatedBinary)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             vertex.get_binary_file_name()))
 

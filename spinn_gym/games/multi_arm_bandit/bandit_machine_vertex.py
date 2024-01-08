@@ -160,10 +160,10 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._BANDIT_REGIONS.BANDIT.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        data = routing_info.get_first_key_from_pre_vertex(
+        first_key = routing_info.get_first_key_from_pre_vertex(
             vertex, constants.SPIKE_PARTITION_ID)
-        assert data is not None
-        spec.write_value(data)
+        assert first_key is not None
+        spec.write_value(first_key)
 
         # Write recording region for score
         spec.comment("\nWriting bandit recording region:\n")
