@@ -15,7 +15,7 @@
 
 import numpy
 
-from spinn_utilities.abstract_base import abstractproperty
+from spinn_utilities.abstract_base import abstractmethod
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -91,7 +91,8 @@ class SpinnGymApplicationVertex(
         }
         return context
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def score_format(self) -> type:
         """
         The numpy format for the scores data
