@@ -90,3 +90,5 @@ jobs:
       if: matrix.python-version == 3.12
       uses: dieghernan/cff-validator@main
 
+    - name: Lint with mypy
+      run: mypy $BASE_PKG
