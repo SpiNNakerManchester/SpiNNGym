@@ -56,10 +56,10 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    __slots__ = ["_bin_overlap", "_central", "_encoding", "_force_increments",
+    __slots__ = ("_bin_overlap", "_central", "_encoding", "_force_increments",
                  "_max_firing_rate", "_number_of_bins", "_pole_angle",
                  "_pole_length", "_reward_based", "_tau_force",
-                 "_time_increment"]
+                 "_time_increment")
 
     def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,

@@ -56,9 +56,9 @@ class RecallMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    __slots__ = ["_prob_command", "_prob_in_change", "_pop_size",
+    __slots__ = ("_prob_command", "_prob_in_change", "_pop_size",
                  "_rate_off", "_rate_on", "_reward", "_stochastic",
-                 "_time_period"]
+                 "_time_period")
 
     def __init__(self, label,  app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,

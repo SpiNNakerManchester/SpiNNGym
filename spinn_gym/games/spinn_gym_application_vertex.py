@@ -31,7 +31,7 @@ class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
         PopulationApplicationVertex):
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(self, machine_vertex, label, n_atoms):
         """

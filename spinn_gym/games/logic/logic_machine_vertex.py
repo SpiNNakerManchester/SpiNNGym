@@ -57,8 +57,8 @@ class LogicMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    __slots__ = ["_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
-                 "_score_delay", "_stochastic", "_truth_table"]
+    __slots__ = ("_input_sequence", "_no_inputs", "_rate_on", "_rate_off",
+                 "_score_delay", "_stochastic", "_truth_table")
 
     def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,

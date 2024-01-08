@@ -57,8 +57,8 @@ class BanditMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('ARMS', 3)])
 
-    __slots__ = ["_arms", "_constant_input", "_no_arms", "_rate_off",
-                 "_rate_on", "_reward_based", "_reward_delay", "_stochastic"]
+    __slots__ = ("_arms", "_constant_input", "_no_arms", "_rate_off",
+                 "_rate_on", "_reward_based", "_reward_delay", "_stochastic")
 
     def __init__(self, label, app_vertex, n_neurons, simulation_duration_ms,
                  random_seed, arms, reward_delay, reward_based, rate_on,

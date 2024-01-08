@@ -39,13 +39,13 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                             AbstractReceiveBuffersToHost,
                             AbstractHasAssociatedBinary):
 
-    __slots__ = [
+    __slots__ = (
         # list of 4 numbers to be the random seeds for the c code
         "_random_seed",
         # size of recording region
         "_recording_size",
         # sdram needed for this vertex
-        "_sdram_required"]
+        "_sdram_required")
 
     def __init__(self, label, app_vertex, n_neurons,
                  region_bytes, simulation_duration_ms, random_seed):
@@ -97,5 +97,5 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         return [0]
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self) -> str:
+    def get_binary_start_type(self) -> ExecutableType:
         return ExecutableType.USES_SIMULATION_INTERFACE

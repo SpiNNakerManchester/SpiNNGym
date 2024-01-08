@@ -36,7 +36,7 @@ class Recall(SpinnGymApplicationVertex):
                    numpy.random.randint(10000),
                    numpy.random.randint(10000)]
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(
             self, rate_on=50.0, rate_off=0.0, pop_size=1, prob_command=1.0/6.0,

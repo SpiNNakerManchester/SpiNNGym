@@ -46,11 +46,11 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     PENDULUM_REGION_BYTES = 4
     DATA_REGION_BYTES = 17 * 4
 
-    __slots__ = [
+    __slots__ = (
         "_bin_overlap", "_central", "_encoding", "_force_increments",
         "_max_firing_rate", "_number_of_bins", "_pole_angle", "_pole2_angle",
         "_pole_length", "_pole2_length", "_reward_based", "_tau_force",
-        "_time_increment"]
+        "_time_increment")
 
     _DOUBLE_PENDULUM_REGIONS = Enum(
         value="_DOUBLE_PENDULUM_REGIONS",

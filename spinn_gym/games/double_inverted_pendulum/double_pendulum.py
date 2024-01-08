@@ -32,7 +32,7 @@ class DoublePendulum(SpinnGymApplicationVertex):
     ONE_WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7  # 1 week
     RANDOM_SEED = [0, 1, 2, 3]
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(
             self, encoding=0, time_increment=20,

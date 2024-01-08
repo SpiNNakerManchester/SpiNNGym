@@ -36,7 +36,7 @@ class Bandit(SpinnGymApplicationVertex):
                    numpy.random.randint(10000)]
     ARMS = [0.1, 0.9]
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(self, arms=None, reward_delay=200.0, reward_based=1,
                  rate_on=20.0, rate_off=5.0, stochastic=1,
