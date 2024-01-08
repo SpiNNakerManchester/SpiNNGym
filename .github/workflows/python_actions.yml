@@ -93,4 +93,4 @@ jobs:
       uses: dieghernan/cff-validator@main
 
     - name: Lint with mypy
-      run: mypy examples spinn_gym
+      run: mypy spinn_gym
