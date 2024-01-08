@@ -46,6 +46,7 @@ from spinn_gym.games import SpinnGymMachineVertex
 if TYPE_CHECKING:
     from .breakout import Breakout
 
+
 # ----------------------------------------------------------------------------
 # BreakoutMachineVertex
 # ----------------------------------------------------------------------------
