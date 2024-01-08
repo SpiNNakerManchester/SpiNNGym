@@ -156,6 +156,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.SYSTEM.value)
+        assert isinstance(vertex, AbstractHasAssociatedBinary)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             vertex.get_binary_file_name()))
 
@@ -164,8 +165,10 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.PENDULUM.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
+        data = routing_info.get_first_key_from_pre_vertex(
+            vertex, constants.SPIKE_PARTITION_ID)
+        assert data is not None
+        spec.write_value(data)
 
         # Write recording region for score
         spec.comment("\nWriting pendulum recording region:\n")

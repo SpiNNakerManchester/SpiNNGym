@@ -96,6 +96,7 @@ class SpinnGymApplicationVertex(
         """
         The numpy format for the scores data
         """
+        raise NotImplementedError
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)
