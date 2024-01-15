@@ -41,7 +41,7 @@ class Logic(SpinnGymApplicationVertex):
                    numpy.random.randint(10000),
                    numpy.random.randint(10000)]
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(
             self, truth_table, input_sequence, rate_on=20.0, rate_off=5.0,
@@ -66,5 +66,5 @@ class Logic(SpinnGymApplicationVertex):
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
-    def score_format(self):
+    def score_format(self) -> type:
         return numpy.int32

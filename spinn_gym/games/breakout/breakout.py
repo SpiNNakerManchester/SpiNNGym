@@ -36,7 +36,7 @@ class Breakout(SpinnGymApplicationVertex):
                    numpy.random.randint(10000),
                    numpy.random.randint(10000)]
 
-    __slots__ = ["__source_vertex"]
+    __slots__ = ("__source_vertex")
 
     def __init__(self, x_factor=16, y_factor=16, width=160, height=128,
                  colour_bits=2, label="Breakout",
@@ -60,7 +60,7 @@ class Breakout(SpinnGymApplicationVertex):
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
-    def score_format(self):
+    def score_format(self) -> type:
         return numpy.int32
 
     @property

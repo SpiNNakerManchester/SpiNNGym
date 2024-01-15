@@ -15,7 +15,7 @@
 
 import numpy
 
-from spinn_utilities.abstract_base import abstractproperty
+from spinn_utilities.abstract_base import abstractmethod
 from spinn_utilities.overrides import overrides
 
 # PACMAN imports
@@ -31,7 +31,7 @@ class SpinnGymApplicationVertex(
         AbstractOneAppOneMachineVertex,
         PopulationApplicationVertex):
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(self, machine_vertex, label, n_atoms):
         """
@@ -48,7 +48,7 @@ class SpinnGymApplicationVertex(
             machine_vertex, label, n_atoms)
 
     @overrides(PopulationApplicationVertex.get_units)
-    def get_units(self, name):
+    def get_units(self, name: str) -> str:
         if name == "score":
             return ""
         return super(SpinnGymApplicationVertex, self).get_units(name)
@@ -91,11 +91,13 @@ class SpinnGymApplicationVertex(
         }
         return context
 
-    @abstractproperty
-    def score_format(self):
+    @property
+    @abstractmethod
+    def score_format(self) -> type:
         """
         The numpy format for the scores data
         """
+        raise NotImplementedError
 
     def __str__(self):
         return "{} with {} atoms".format(self._label, self.n_atoms)

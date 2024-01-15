@@ -17,13 +17,16 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
+from pacman.model.placements import Placement
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 from spinn_front_end_common.interface.buffer_management \
     import recording_utilities
-from spinn_front_end_common.interface.ds import DataType
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator, DataType)
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
@@ -43,11 +46,11 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     PENDULUM_REGION_BYTES = 4
     DATA_REGION_BYTES = 17 * 4
 
-    __slots__ = [
+    __slots__ = (
         "_bin_overlap", "_central", "_encoding", "_force_increments",
         "_max_firing_rate", "_number_of_bins", "_pole_angle", "_pole2_angle",
         "_pole_length", "_pole2_length", "_reward_based", "_tau_force",
-        "_time_increment"]
+        "_time_increment")
 
     _DOUBLE_PENDULUM_REGIONS = Enum(
         value="_DOUBLE_PENDULUM_REGIONS",
@@ -127,7 +130,8 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(SpinnGymMachineVertex.generate_data_specification)
-    def generate_data_specification(self, spec, placement):
+    def generate_data_specification(
+            self, spec: DataSpecificationGenerator, placement: Placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -154,6 +158,7 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             self._DOUBLE_PENDULUM_REGIONS.SYSTEM.value)
+        assert isinstance(vertex, AbstractHasAssociatedBinary)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             vertex.get_binary_file_name()))
 
@@ -162,8 +167,10 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._DOUBLE_PENDULUM_REGIONS.PENDULUM.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
+        data = routing_info.get_first_key_from_pre_vertex(
+            vertex, constants.SPIKE_PARTITION_ID)
+        assert data is not None
+        spec.write_value(data)
 
         # Write recording region for score
         spec.comment("\nWriting double pendulum recording region:\n")
@@ -198,10 +205,10 @@ class DoublePendulumMachineVertex(SpinnGymMachineVertex):
         spec.end_specification()
 
     @overrides(SpinnGymMachineVertex.get_recording_region_base_address)
-    def get_recording_region_base_address(self, placement):
+    def get_recording_region_base_address(self, placement: Placement) -> int:
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._DOUBLE_PENDULUM_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
+    def get_binary_file_name(self) -> str:
         return "double_inverted_pendulum.aplx"
