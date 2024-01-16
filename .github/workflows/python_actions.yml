@@ -72,9 +72,12 @@ jobs:
 
     - name: Lint with flake8
       run: flake8 examples spinn_gym
+
+      # Instance of 'Block' has no 'segments' member (no-member)
     - name: Lint with pylint
       uses: ./support/actions/pylint
-      with: 
+      with:
+        disable: no-member
         package: examples spinn_gym
         exitcheck: 39
 
