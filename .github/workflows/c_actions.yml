@@ -24,7 +24,7 @@ jobs:
       run: sudo apt-get install doxygen gcc-arm-none-eabi --fix-missing
     - name: Configure Python 3.12
       # Note: Python is needed for spinn_utilities.make_tools when building
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.12
 
