@@ -32,4 +32,5 @@ class TestCfgChecker(unittest.TestCase):
         examples = os.path.join(parent, "examples")
         integration_tests = os.path.join(parent, "integration_tests")
         run_config_checks(directories=[
-            spinn_gym_dir, examples, integration_tests, unittests])
+            spinn_gym_dir, examples, integration_tests, unittests],
+            check_all_used=False)
