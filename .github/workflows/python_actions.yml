@@ -29,7 +29,7 @@ jobs:
       coverage-package: spinn_gym
       flake8-packages: examples spinn_gym integration_tests
       pylint-packages: examples spinn_gym integration_tests
-      #pylint-disable: R, wrong-spelling-in-docstring, invalid-name
+      pylint-disable: R, wrong-spelling-in-docstring, invalid-name
       mypy-packages: examples spinn_gym integration_tests
       run_sphinx: false
       cfg_file: spynnaker
