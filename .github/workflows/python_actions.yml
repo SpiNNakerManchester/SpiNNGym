@@ -17,83 +17,19 @@ name: Python Actions
 on: [push]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8, 3.9, "3.10", "3.11", "3.12"]
-    steps:
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Checkout SupportScripts
-      uses: actions/checkout@v4
-      with:
-        repository: SpiNNakerManchester/SupportScripts
-        path: support
-    - name: Install pip, etc
-      uses: ./support/actions/python-tools
-    - name: Install mypy
-      run: pip install mypy
-
-    - name: Install Spinnaker Dependencies
-      uses: ./support/actions/install-spinn-deps
-      with:
-        repositories: >
+  call:
+    uses: SpiNNakerManchester/SupportScripts/.github/workflows/python_checks.yml@main
+    with:
+      dependencies: >
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN spalloc
           SpiNNFrontEndCommon sPyNNaker TestBase
-        install: true
-
-    - name: Install matplotlib
-      uses: ./support/actions/install-matplotlib
-
-    - name: Setup
-      uses: ./support/actions/run-install
-
-    - name: Setup PyNN
-      uses: ./support/actions/pynn-setup
-
-    # Add this when tests are built
-    - name: Create a spynnaker.cfg
-      uses: ./support/actions/configure-spynnaker
-      with:
-        board-address: spinn-4.cs.man.ac.uk
-
-    - name: Test with pytest
-      uses: ./support/actions/pytest
-      with:
-        tests: unittests
-        coverage: ${{ matrix.python-version == 3.12 }}
-        cover-packages: ${{ env.CODE_PATHS }}
-        coveralls-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
-
-    - name: Lint with flake8
-      run: flake8 examples spinn_gym
-
-      # Instance of 'Block' has no 'segments' member (no-member)
-    - name: Lint with pylint
-      uses: ./support/actions/pylint
-      with:
-        disable: no-member
-        package: examples spinn_gym
-        exitcheck: 39
-
-    #- name: Validate XML
-    #  if: matrix.python-version == 3.8
-    #  uses: ./support/actions/validate-xml
-    #  with:
-    #    base-path: examples spinn_gym
-
-    - name: Run rat copyright enforcement
-      if: matrix.python-version == 3.12
-      uses: ./support/actions/check-copyrights
-
-    - name: Validate CITATION.cff
-      if: matrix.python-version == 3.12
-      uses: dieghernan/cff-validator@main
-
-    - name: Lint with mypy
-      run: mypy spinn_gym
+      install_module: true
+      pip_installs: pytest
+      test_directories: unittests
+      coverage-package: spinn_gym
+      flake8-packages: examples spinn_gym integration_tests
+      pylint-packages: examples spinn_gym integration_tests
+      #pylint-disable: R, wrong-spelling-in-docstring, invalid-name
+      mypy-packages: examples spinn_gym integration_tests
+      run_sphinx: false
+      cfg_file: spynnaker
