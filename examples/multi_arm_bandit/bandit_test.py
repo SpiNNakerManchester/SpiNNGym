@@ -13,12 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import pyNN.spiNNaker as p
-import spinn_gym as gym
 
 from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
+import pyNN.spiNNaker as p
+
+import spinn_gym as gym
+
 
 
 p.setup(timestep=1.0)

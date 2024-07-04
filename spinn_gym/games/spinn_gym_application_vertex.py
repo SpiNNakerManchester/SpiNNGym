@@ -100,7 +100,7 @@ class SpinnGymApplicationVertex(
         raise NotImplementedError
 
     def __str__(self):
-        return "{} with {} atoms".format(self._label, self.n_atoms)
+        return f"{self._label} with {self.n_atoms} atoms"
 
     def __repr__(self):
         return self.__str__()

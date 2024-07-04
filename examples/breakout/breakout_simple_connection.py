@@ -58,14 +58,14 @@ Figure(
           xlim=(0, runtime)
           ),
     title="Simple Breakout Example",
-    annotations="Simulated with {}".format(p.name())
+    annotations=f"Simulated with {p.name()}"
 )
 
 plt.show()
 
 scores = get_scores(breakout_pop=breakout.breakout_pop)
 
-print("Scores: {}".format(scores))
+print(f"Scores: {scores}")
 
 # End simulation
 p.end()

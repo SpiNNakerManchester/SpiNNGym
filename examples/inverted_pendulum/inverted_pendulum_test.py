@@ -129,7 +129,7 @@ else:
     i = 0
     print("cart  \t\t|\t\t  angle")
     while i < len(scores[0]):
-        print("{:8}\t{:8}".format(scores[0][i], scores[0][i+1]))
+        print(f"{scores[0][i]:8}\t{scores[0][i+1]:8}")
         i += 2
 
 spikes_n = null_pop.get_data('spikes').segments[0].spiketrains
@@ -140,7 +140,7 @@ g_o = output_pop.get_data('gsyn_exc').segments[0].filter(name='gsyn_exc')[0]
 spikes_o2 = output_pop2.get_data('spikes').segments[0].spiketrains
 v_o2 = output_pop2.get_data('v').segments[0].filter(name='v')[0]
 g_o2 = output_pop2.get_data('gsyn_exc').segments[0].filter(name='gsyn_exc')[0]
-plt.figure("spikes out {}".format(label))
+plt.figure(f"spikes out {label}")
 Figure(
     Panel(spikes_n, xlabel="Time (ms)", ylabel="nID", xticks=True),
     Panel(v_n, ylabel="Membrane potential (mV)", yticks=True),

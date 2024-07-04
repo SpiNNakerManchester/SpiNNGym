@@ -13,12 +13,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import pyNN.spiNNaker as p
-import spinn_gym as gym
-
-from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
 import numpy as np
+import pyNN.spiNNaker as p
+from pyNN.utility.plotting import Figure, Panel
+
+import spinn_gym as gym
 
 
 rate_on = 10
@@ -72,8 +72,7 @@ print(scores)
 i = 0
 print("score 0 \t\t|\t score 1 \t|\t\t  trials")
 while i < len(scores):
-    print("{:8}\t\t{:8}\t\t{:8}".format(
-        scores[i][0], scores[i+1][0], scores[i+2][0]))
+    print(f"{scores[i][0]:8}\t\t{scores[i + 1][0]:8}\t\t{scores[i + 2][0]:8}")
     i += 3
 
 accuracy = float(scores[len(scores)-2][0]+scores[len(scores)-3][0]) / float(

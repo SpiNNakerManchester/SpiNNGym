@@ -29,14 +29,14 @@ def connect_to_arms(pre_pop, from_list, arms, r_type, plastic, stdp_model):
         # print "out:", conn[1]
         # if conn[1] == 2:
         #     print '\nit is possible\n'
-    for j in range(len(arms)):
+    for j, arm in enumerate(arms):
         if len(arm_conn_list[j]) != 0:
             if plastic:
-                p.Projection(pre_pop, arms[j],
+                p.Projection(pre_pop, arm,
                              p.FromListConnector(arm_conn_list[j]),
                              receptor_type=r_type, synapse_type=stdp_model)
             else:
-                p.Projection(pre_pop, arms[j],
+                p.Projection(pre_pop, arm,
                              p.FromListConnector(arm_conn_list[j]),
                              receptor_type=r_type)
 
@@ -152,8 +152,7 @@ else:
     i = 0
     print("cart  |  angle")
     while i < len(scores[0]):
-        print("{}\t{}\t{}".format(
-            scores[0][i], scores[0][i+1], scores[0][i+2]))
+        print(f"{scores[0][i]}\t{scores[0][i+1]}\t{scores[0][i+2]}")
         i += 3
 
 # spikes = []
@@ -186,7 +185,7 @@ g_o = output_pop.get_data('gsyn_exc').segments[0].filter(name='gsyn_exc')[0]
 spikes_o2 = output_pop2.get_data('spikes').segments[0].spiketrains
 v_o2 = output_pop2.get_data('v').segments[0].filter(name='v')[0]
 g_o2 = output_pop2.get_data('gsyn_exc').segments[0].filter(name='gsyn_exc')[0]
-plt.figure("spikes out {}".format(label))
+plt.figure(f"spikes out {label}")
 Figure(
     Panel(spikes_n, xlabel="Time (ms)", ylabel="nID", xticks=True),
     Panel(v_n, ylabel="Membrane potential (mV)", yticks=True),
