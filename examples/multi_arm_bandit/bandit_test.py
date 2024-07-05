@@ -22,7 +22,6 @@ import pyNN.spiNNaker as p
 import spinn_gym as gym
 
 
-
 p.setup(timestep=1.0)
 
 probabilities = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
