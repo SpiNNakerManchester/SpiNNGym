@@ -15,12 +15,12 @@
 
 # non-SpiNNaker imports
 import matplotlib.pyplot as plt
+import pyNN.spiNNaker as p
 from pyNN.utility.plotting import Figure, Panel
 
 # SpiNNaker imports
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.random_breakout import RandomBreakout
-import pyNN.spiNNaker as p
 
 breakout = RandomBreakout()
 

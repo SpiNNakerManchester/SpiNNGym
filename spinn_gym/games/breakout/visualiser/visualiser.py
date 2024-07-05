@@ -14,11 +14,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from collections import deque
-import cv2
 import datetime
 import enum
 import os
 
+import cv2
 import numpy as np
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
@@ -62,6 +62,8 @@ class Visualiser(object):
     def __init__(self, key_input_connection=None,
                  scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60,
                  live_pops=None, live_duration=5000, video_out=False):
+        # cv2 is impossible to pylint
+        # pylint: disable=no-member
         self._connection_ready = False
         self.running = True
         self.do_update = False

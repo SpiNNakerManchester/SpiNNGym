@@ -192,7 +192,7 @@ def get_hidden_to_decision_connections(pop_size, weight):
 
 def clean_connection(data):
     clean_conn = []
-    for i, connection in enumerate(data.connections):
+    for connection in data.connections:
         for c in connection:
             new_c = (int(c[0]), int(c[1]), float(c[2]), float(c[3]))
             clean_conn.append(new_c)
