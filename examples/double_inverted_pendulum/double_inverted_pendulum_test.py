@@ -86,8 +86,8 @@ null_pop.record(['spikes', 'v', 'gsyn_exc'])
 #     p.Projection(pendulum, null_pops[i],
 #                  p.FromListConnector([[i, 0, weight, 1]]))
 
-arm_collection = []
-input_spikes = []
+# arm_collection = []
+# input_spikes = []
 rates = [0, 0]
 # rates = [0, 20]
 # rates = [0, 10]
