@@ -298,6 +298,7 @@ class Visualiser(object):
 
         # try:
         if self.message_received and self.video_data is not None:
+            # pylint: disable=no-member
             self.video_writer.write(
                 cv2.resize(self.video_data, self.video_shape,
                            interpolation=cv2.INTER_NEAREST))
