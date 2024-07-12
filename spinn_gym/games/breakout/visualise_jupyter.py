@@ -14,9 +14,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import functools
 import threading
+from time import sleep
+
 import matplotlib.pyplot as plt
 import numpy as np
-from time import sleep
 
 import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser

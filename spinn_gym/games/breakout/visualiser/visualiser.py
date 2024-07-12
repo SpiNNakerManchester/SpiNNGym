@@ -12,17 +12,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-import enum
-import numpy as np
-
-import matplotlib.colors as col
-import matplotlib.pyplot as plt
-import datetime
-
-import cv2
-import os
 
 from collections import deque
+import datetime
+import enum
+import os
+
+import cv2
+import numpy as np
+import matplotlib.colors as col
+import matplotlib.pyplot as plt
 
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 BRIGHT_RED = (0.9, 0.0, 0.0)
@@ -63,6 +62,8 @@ class Visualiser(object):
     def __init__(self, key_input_connection=None,
                  scale=4, x_factor=8, y_factor=8, x_bits=8, y_bits=8, fps=60,
                  live_pops=None, live_duration=5000, video_out=False):
+        # cv2 is impossible to pylint
+        # pylint: disable=no-member
         self._connection_ready = False
         self.running = True
         self.do_update = False
@@ -103,18 +104,18 @@ class Visualiser(object):
         self.scale = scale
 
         print("\n\nVisualiser Initialised With Parameters:")
-        print("\tx_factor {}".format(self.x_factor))
-        print("\ty_factor {}".format(self.y_factor))
-        print("\tx_res {}".format(self.x_res))
-        print("\ty_res {}".format(self.y_res))
-        print("\tx_bits {}".format(x_bits))
-        print("\ty_bits {}".format(y_bits))
-        print("\tx_mask {}".format(self.x_mask))
-        print("\ty_mask {}".format(self.y_mask))
-        print("\tv_mask {}".format(self.value_mask))
-        print("\tbat width {}".format(self.bat_width))
-        print("\tBrick Width {}".format(self.BRICK_WIDTH))
-        print("\tBrick Height {}".format(self.BRICK_HEIGHT))
+        print(f"\tx_factor {self.x_factor}")
+        print(f"\ty_factor {self.y_factor}")
+        print(f"\tx_res {self.x_res}")
+        print(f"\ty_res {self.y_res}")
+        print(f"\tx_bits {x_bits}")
+        print(f"\ty_bits {y_bits}")
+        print(f"\tx_mask {self.x_mask}")
+        print(f"\ty_mask {self.y_mask}")
+        print(f"\tv_mask {self.value_mask}")
+        print(f"\tbat width {self.bat_width}")
+        print(f"\tBrick Width {self.BRICK_WIDTH}")
+        print(f"\tBrick Height {self.BRICK_HEIGHT}")
 
         # Make awesome CRT palette
         cmap = col.ListedColormap(["black", BRIGHT_GREEN, BRIGHT_RED,
@@ -176,9 +177,8 @@ class Visualiser(object):
                 self.x_res * self.scale, self.y_res * self.scale)
             self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
-            filename = os.path.join(os.getcwd(), "breakout_output_%s.m4v" %
-                                    datetime.datetime.now().strftime(
-                                        "%Y-%m-%d___%H-%M-%S"))
+            time = datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S")
+            filename = os.path.join(os.getcwd(), f"breakout_output_{time}.m4v")
             self.video_writer = cv2.VideoWriter(
                 filename, fourcc, self.fps, self.video_shape, isColor=True)
             self.video_writer.open(
@@ -290,7 +290,7 @@ class Visualiser(object):
 
     def update(self):
         # Update displayed score count
-        self.score_text.set_text("%u" % self.score)
+        self.score_text.set_textprint(f"{self.score:.0f}")
 
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
@@ -298,6 +298,7 @@ class Visualiser(object):
 
         # try:
         if self.message_received and self.video_data is not None:
+            # pylint: disable=no-member
             self.video_writer.write(
                 cv2.resize(self.video_data, self.video_shape,
                            interpolation=cv2.INTER_NEAREST))

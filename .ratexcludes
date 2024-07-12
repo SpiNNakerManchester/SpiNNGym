@@ -8,4 +8,5 @@
 **/SpiNNFrontEndCommon/**
 **/sPyNNaker/**
 **/sPyNNaker8/**
+**/TestBase/**
 **/.pylintrc

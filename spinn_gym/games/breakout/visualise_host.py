@@ -13,9 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import functools
-import numpy as np
 from time import sleep
-
+import numpy as np
 import pyNN.spiNNaker as p
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
