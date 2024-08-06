@@ -290,7 +290,7 @@ class Visualiser(object):
 
     def update(self):
         # Update displayed score count
-        self.score_text.set_textprint(f"{self.score:.0f}")
+        self.score_text.set_text(f"{self.score:.0f}")
 
         # If state isn't idle, send spike to key input
         if self.input_state != InputState.idle and self.key_input_connection:
