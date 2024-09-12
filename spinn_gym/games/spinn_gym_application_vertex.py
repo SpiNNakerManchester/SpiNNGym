@@ -62,7 +62,7 @@ class SpinnGymApplicationVertex(
         buffer_manager = SpynnakerDataView.get_buffer_manager()
 
         # Read the data recorded
-        data_values, _ = buffer_manager.get_data_by_placement(placement, 0)
+        data_values, _ = buffer_manager.get_recording(placement, 0)
         data = data_values
 
         numpy_format = list()
