@@ -15,12 +15,12 @@
 
 # non-SpiNNaker imports
 import matplotlib.pyplot as plt
+import pyNN.spiNNaker as p
 from pyNN.utility.plotting import Figure, Panel
 
 # SpiNNaker imports
 from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.random_breakout import RandomBreakout
-import pyNN.spiNNaker as p
 
 breakout = RandomBreakout()
 
@@ -58,14 +58,14 @@ Figure(
           xlim=(0, runtime)
           ),
     title="Simple Breakout Example",
-    annotations="Simulated with {}".format(p.name())
+    annotations=f"Simulated with {p.name()}"
 )
 
 plt.show()
 
 scores = get_scores(breakout_pop=breakout.breakout_pop)
 
-print("Scores: {}".format(scores))
+print(f"Scores: {scores}")
 
 # End simulation
 p.end()

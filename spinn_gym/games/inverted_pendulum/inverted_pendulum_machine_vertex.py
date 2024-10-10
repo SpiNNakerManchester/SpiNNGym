@@ -17,6 +17,8 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
+from pacman.model.placements import Placement
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -26,14 +28,14 @@ from spinn_front_end_common.interface.buffer_management \
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.interface.ds import DataType
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator, DataType)
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
 from spynnaker.pyNN.data import SpynnakerDataView
-from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -53,10 +55,10 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    __slots__ = ["_bin_overlap", "_central", "_encoding", "_force_increments",
+    __slots__ = ("_bin_overlap", "_central", "_encoding", "_force_increments",
                  "_max_firing_rate", "_number_of_bins", "_pole_angle",
                  "_pole_length", "_reward_based", "_tau_force",
-                 "_time_increment"]
+                 "_time_increment")
 
     def __init__(self, label, app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
@@ -125,7 +127,8 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
-    def generate_data_specification(self, spec, placement):
+    def generate_data_specification(
+            self, spec: DataSpecificationGenerator, placement: Placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -152,6 +155,7 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.SYSTEM.value)
+        assert isinstance(vertex, AbstractHasAssociatedBinary)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             vertex.get_binary_file_name()))
 
@@ -193,10 +197,10 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
         # End-of-Spec:
         spec.end_specification()
 
-    def get_recording_region_base_address(self, placement):
+    def get_recording_region_base_address(self, placement: Placement):
         return helpful_functions.locate_memory_region_for_placement(
             placement, self._PENDULUM_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
+    def get_binary_file_name(self) -> str:
         return "inverted_pendulum.aplx"

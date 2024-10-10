@@ -14,6 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import math
+from typing import List
 from spinn_utilities.overrides import overrides
 from spinnman.model.enums import ExecutableType
 
@@ -33,17 +34,18 @@ from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
     import AbstractHasAssociatedBinary
 
 
+# pylint: disable=abstract-method
 class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
                             AbstractReceiveBuffersToHost,
                             AbstractHasAssociatedBinary):
 
-    __slots__ = [
+    __slots__ = (
         # list of 4 numbers to be the random seeds for the c code
         "_random_seed",
         # size of recording region
         "_recording_size",
         # sdram needed for this vertex
-        "_sdram_required"]
+        "_sdram_required")
 
     def __init__(self, label, app_vertex, n_neurons,
                  region_bytes, simulation_duration_ms, random_seed):
@@ -87,13 +89,13 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
 
     @property
     @overrides(MachineVertex.sdram_required)
-    def sdram_required(self):
+    def sdram_required(self) -> ConstantSDRAM:
         return self._sdram_required
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
-    def get_recorded_region_ids(self):
+    def get_recorded_region_ids(self) -> List[int]:
         return [0]
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
-    def get_binary_start_type(self):
+    def get_binary_start_type(self) -> ExecutableType:
         return ExecutableType.USES_SIMULATION_INTERFACE

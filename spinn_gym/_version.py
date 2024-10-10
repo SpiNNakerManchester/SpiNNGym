@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "1!7.1.1"
+__version__ = "1!7.3.1"
 __version_month__ = "TBD"
 __version_year__ = "TBD"
 __version_day__ = "TBD"
-__version_name__ = "Post_HBP"
+__version_name__ = "To Do"

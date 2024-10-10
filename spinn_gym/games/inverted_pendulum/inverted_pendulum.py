@@ -33,7 +33,7 @@ class Pendulum(SpinnGymApplicationVertex):
     ONE_WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7  # 1 week
     RANDOM_SEED = [0, 1, 2, 3]
 
-    __slots__ = []
+    __slots__ = ()
 
     def __init__(self, encoding=0, time_increment=20,
                  pole_length=1.0, pole_angle=0.1, reward_based=1,
@@ -80,5 +80,5 @@ class Pendulum(SpinnGymApplicationVertex):
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
-    def score_format(self):
+    def score_format(self) -> type:
         return numpy.float32

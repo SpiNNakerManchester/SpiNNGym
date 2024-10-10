@@ -17,6 +17,8 @@ from enum import Enum
 
 from spinn_utilities.overrides import overrides
 
+from pacman.model.placements import Placement
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
 from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
@@ -26,14 +28,14 @@ from spinn_front_end_common.interface.buffer_management \
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification \
     import AbstractGeneratesDataSpecification
-from spinn_front_end_common.interface.ds import DataType
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator, DataType)
 from spinn_front_end_common.interface.simulation import simulation_utilities
 from spinn_front_end_common.utilities import constants as \
     front_end_common_constants
 
 # sPyNNaker imports
 from spynnaker.pyNN.data import SpynnakerDataView
-from spynnaker.pyNN.utilities import constants
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -53,9 +55,9 @@ class RecallMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('DATA', 3)])
 
-    __slots__ = ["_prob_command", "_prob_in_change", "_pop_size",
+    __slots__ = ("_prob_command", "_prob_in_change", "_pop_size",
                  "_rate_off", "_rate_on", "_reward", "_stochastic",
-                 "_time_period"]
+                 "_time_period")
 
     def __init__(self, label,  app_vertex, n_neurons,
                  simulation_duration_ms, random_seed,
@@ -114,7 +116,8 @@ class RecallMachineVertex(SpinnGymMachineVertex):
     # AbstractGeneratesDataSpecification overrides
     # ------------------------------------------------------------------------
     @overrides(AbstractGeneratesDataSpecification.generate_data_specification)
-    def generate_data_specification(self, spec, placement):
+    def generate_data_specification(
+            self, spec: DataSpecificationGenerator, placement: Placement):
         # pylint: disable=arguments-differ
         vertex = placement.vertex
 
@@ -141,6 +144,7 @@ class RecallMachineVertex(SpinnGymMachineVertex):
         spec.comment("\nWriting setup region:\n")
         spec.switch_write_focus(
             self._RECALL_REGIONS.SYSTEM.value)
+        assert isinstance(vertex, AbstractHasAssociatedBinary)
         spec.write_array(simulation_utilities.get_simulation_header_array(
             vertex.get_binary_file_name()))
 
@@ -184,5 +188,5 @@ class RecallMachineVertex(SpinnGymMachineVertex):
             placement, self._RECALL_REGIONS.RECORDING.value)
 
     @overrides(AbstractHasAssociatedBinary.get_binary_file_name)
-    def get_binary_file_name(self):
+    def get_binary_file_name(self) -> str:
         return "store_recall.aplx"
