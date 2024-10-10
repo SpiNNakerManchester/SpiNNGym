@@ -38,6 +38,7 @@ from spinn_front_end_common.utilities import constants as \
 
 from spynnaker.pyNN.data import SpynnakerDataView
 from spynnaker.pyNN.models.common import PopulationApplicationVertex
+from spynnaker.pyNN.utilities.constants import SPIKE_PARTITION_ID
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -149,8 +150,8 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_single_first_key_from_pre_vertex(
-            vertex))
+        spec.write_value(routing_info.get_safe_first_key_from_pre_vertex(
+            vertex, SPIKE_PARTITION_ID))
         if self.app_vertex.source_vertex is None:
             raise ValueError(
                 "The breakout vertex doesn't have a source vertex!")

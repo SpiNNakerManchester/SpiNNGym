@@ -36,6 +36,7 @@ from spinn_front_end_common.utilities import constants as \
 
 # sPyNNaker imports
 from spynnaker.pyNN.data import SpynnakerDataView
+from spynnaker.pyNN.utilities.constants import SPIKE_PARTITION_ID
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -164,8 +165,8 @@ class PendulumMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._PENDULUM_REGIONS.PENDULUM.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_single_first_key_from_pre_vertex(
-            vertex))
+        spec.write_value(routing_info.get_safe_first_key_from_pre_vertex(
+            vertex, SPIKE_PARTITION_ID))
 
         # Write recording region for score
         spec.comment("\nWriting pendulum recording region:\n")
