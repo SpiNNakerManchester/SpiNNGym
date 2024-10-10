@@ -149,8 +149,8 @@ class RecallMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._RECALL_REGIONS.RECALL.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID))
+        spec.write_value(routing_info.get_single_first_key_from_pre_vertex(
+            vertex))
 
         # Write recording region for score
         spec.comment("\nWriting recall recording region:\n")
