@@ -36,7 +36,7 @@ from spinn_front_end_common.utilities import constants as \
 
 # sPyNNaker imports
 from spynnaker.pyNN.data import SpynnakerDataView
-from spynnaker.pyNN.utilities import constants
+from spynnaker.pyNN.utilities.constants import SPIKE_PARTITION_ID
 
 # spinn_gym imports
 from spinn_gym.games import SpinnGymMachineVertex
@@ -154,10 +154,8 @@ class RecallMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             self._RECALL_REGIONS.RECALL.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        data = routing_info.get_first_key_from_pre_vertex(
-            vertex, constants.SPIKE_PARTITION_ID)
-        assert data is not None
-        spec.write_value(data)
+        spec.write_value(routing_info.get_key_from(
+            vertex, SPIKE_PARTITION_ID))
 
         # Write recording region for score
         spec.comment("\nWriting recall recording region:\n")
