@@ -51,7 +51,7 @@ jobs:
 
     - name: Lint C code using Vera++
       # Note: run this before building to avoid linting modified_src directories
-      uses: ./support/actions/vera
+      uses: SpiNNakerManchester/SupportScripts/actions/vera@main
       with:
         base-dir: c_code
 
