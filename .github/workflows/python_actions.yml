@@ -23,7 +23,7 @@ jobs:
       dependencies: >
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN spalloc
           SpiNNFrontEndCommon sPyNNaker TestBase
-      install_module: true
+      install-module: true
       pip_installs: pytest
       test_directories: unittests
       coverage-package: spinn_gym
