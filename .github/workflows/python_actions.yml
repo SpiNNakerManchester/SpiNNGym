@@ -24,7 +24,7 @@ jobs:
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN spalloc
           SpiNNFrontEndCommon sPyNNaker TestBase
       install-module: true
-      pip_installs: pytest
+      pip-installs: pytest
       test_directories: unittests
       coverage-package: spinn_gym
       flake8-packages: examples spinn_gym integration_tests
