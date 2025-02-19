@@ -31,6 +31,6 @@ jobs:
       pylint-packages: examples spinn_gym integration_tests
       pylint-disable: R, invalid-name, missing-class-docstring, missing-function-docstring, wrong-spelling-in-comment, wrong-spelling-in-docstring
       mypy-packages: examples spinn_gym integration_tests
-      run_sphinx: false
+      run-sphinx: false
       cfg-file: spynnaker
       rat-config-file: rat_gpl3.xml
