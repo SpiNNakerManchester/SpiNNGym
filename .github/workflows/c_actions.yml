@@ -36,14 +36,14 @@ jobs:
         repository: SpiNNakerManchester/SupportScripts
         path: support
     - name: Checkout Spinnaker Dependencies
-      uses: ./support/actions/install-spinn-deps
+      uses: SpiNNakerManchester/SupportScripts/actions/install-spinn-deps@main
       with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: >
           spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker
 
     - name: "Prepare: Install SpiNNUtils"
-      uses: ./support/actions/install-spinn-deps
+      uses: SpiNNakerManchester/SupportScripts/actions/install-spinn-deps@main
       with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: SpiNNUtils
