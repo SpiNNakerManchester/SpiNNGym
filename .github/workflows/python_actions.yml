@@ -25,7 +25,7 @@ jobs:
           SpiNNFrontEndCommon sPyNNaker TestBase
       install-module: true
       pip-installs: pytest
-      test_directories: unittests
+      test-directories: unittests
       coverage-package: spinn_gym
       flake8-packages: examples spinn_gym integration_tests
       pylint-packages: examples spinn_gym integration_tests
