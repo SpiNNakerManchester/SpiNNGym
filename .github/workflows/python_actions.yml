@@ -23,14 +23,14 @@ jobs:
       dependencies: >
           SpiNNUtils SpiNNMachine SpiNNMan PACMAN spalloc
           SpiNNFrontEndCommon sPyNNaker TestBase
-      install_module: true
-      pip_installs: pytest
-      test_directories: unittests
+      install-module: true
+      pip-installs: pytest
+      test-directories: unittests
       coverage-package: spinn_gym
       flake8-packages: examples spinn_gym integration_tests
       pylint-packages: examples spinn_gym integration_tests
       pylint-disable: R, invalid-name, missing-class-docstring, missing-function-docstring, wrong-spelling-in-comment, wrong-spelling-in-docstring
       mypy-packages: examples spinn_gym integration_tests
-      run_sphinx: false
-      cfg_file: spynnaker
-      rat_config_file: rat_gpl3.xml
+      run-sphinx: false
+      cfg-file: spynnaker
+      rat-config-file: rat_gpl3.xml

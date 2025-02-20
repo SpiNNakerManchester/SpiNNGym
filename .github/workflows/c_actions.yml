@@ -36,14 +36,14 @@ jobs:
         repository: SpiNNakerManchester/SupportScripts
         path: support
     - name: Checkout Spinnaker Dependencies
-      uses: ./support/actions/install-spinn-deps
+      uses: SpiNNakerManchester/SupportScripts/actions/install-spinn-deps@main
       with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: >
           spinnaker_tools spinn_common SpiNNFrontEndCommon sPyNNaker
 
     - name: "Prepare: Install SpiNNUtils"
-      uses: ./support/actions/install-spinn-deps
+      uses: SpiNNakerManchester/SupportScripts/actions/install-spinn-deps@main
       with:
         # Note: SpiNNUtils needed for spinn_utilities.make_tools
         repositories: SpiNNUtils
@@ -51,7 +51,7 @@ jobs:
 
     - name: Lint C code using Vera++
       # Note: run this before building to avoid linting modified_src directories
-      uses: ./support/actions/vera
+      uses: SpiNNakerManchester/SupportScripts/actions/vera@main
       with:
         base-dir: c_code
 
