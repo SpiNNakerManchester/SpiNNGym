@@ -13,8 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__version__ = "1!7.3.1"
-__version_month__ = "TBD"
-__version_year__ = "TBD"
-__version_day__ = "TBD"
-__version_name__ = "To Do"
+__version__ = "1!7.4.1"
+__version_month__ = "October"
+__version_year__ = "2025"
+__version_day__ = "16"
+__version_name__ = "Quietly Confident 1"
