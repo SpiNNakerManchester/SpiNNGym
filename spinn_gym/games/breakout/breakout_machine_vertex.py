@@ -150,7 +150,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
         spec.switch_write_focus(
             BreakoutMachineVertex._BREAKOUT_REGIONS.BREAKOUT.value)
         routing_info = SpynnakerDataView.get_routing_infos()
-        spec.write_value(routing_info.get_key_from(
+        spec.write_value(routing_info.get_machine_key(
             vertex, SPIKE_PARTITION_ID))
         if self.app_vertex.source_vertex is None:
             raise ValueError(
