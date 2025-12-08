@@ -32,7 +32,6 @@
 #include "random.h"
 #include <stdfix.h>
 #include <math.h>
-#include <common/maths-util.h>
 
 #include <recording.h>
 

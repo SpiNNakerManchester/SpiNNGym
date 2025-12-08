@@ -13,20 +13,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-ifndef NEURAL_MODELLING_DIRS
-    $(error NEURAL_MODELLING_DIRS is not set.  Please define 
-    NEURAL_MODELLING_DIRS (possibly by running "source setup" in the 
-    neural_modelling folder within the sPyNNaker source folder))
-endif
+FEC_INSTALL_DIR := $(strip $(if $(FEC_INSTALL_DIR), $(FEC_INSTALL_DIR), $(if $(SPINN_DIRS), $(SPINN_DIRS)/fec_install, $(error FEC_INSTALL_DIR or SPINN_DIRS is not set.  Please define FEC_INSTALL_DIR or SPINN_DIRS))))
 
 APP := store_recall
-BUILD_DIR = $(abspath $(CURRENT_DIR)/../../build/$(APP))/
 SOURCES = store_recall.c
-MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-CURRENT_DIR := $(dir $(MAKEFILE_PATH))
-EXTRA_SRC_DIR := $(abspath $(CURRENT_DIR))/src
-SOURCE_DIRS += $(EXTRA_SRC_DIR)
 APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../spinn_gym/model_binaries/)/
-CFLAGS += -I$(NEURAL_MODELLING_DIRS)/src
 
-include $(SPINN_DIRS)/make/local.mk
+include $(FEC_INSTALL_DIR)/make/fec.mk

@@ -55,15 +55,17 @@ jobs:
       with:
         base-dir: c_code
 
-    - name: Set SPINN_DIRS and NEURAL_MODELLING
+    - name: Set environment variables
       run: |
-        echo "SPINN_DIRS=$PWD/spinnaker_tools" >> $GITHUB_ENV
-        echo "NEURAL_MODELLING_DIRS=$PWD/sPyNNaker/neural_modelling" >> $GITHUB_ENV
+        echo "SPINN_INSTALL_DIR=${GITHUB_WORKSPACE}/spinnaker_tools_install" >> $GITHUB_ENV
+        echo "SPINN_COMMON_INSTALL_DIR=${GITHUB_WORKSPACE}/spinn_common_install" >> $GITHUB_ENV
+        echo "FEC_INSTALL_DIR=${GITHUB_WORKSPACE}/fec_install" >> $GITHUB_ENV
+
     - name: Build SpiNNaker C dependencies
       run: |
-        make -C $SPINN_DIRS
+        make -C spinnaker_tools install
         make -C spinn_common install
-        make -C SpiNNFrontEndCommon/c_common install
+        make -C SpiNNFrontEndCommon/c_common
 
     - name: Build C code
       run: make

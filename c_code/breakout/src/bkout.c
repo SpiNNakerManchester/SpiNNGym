@@ -24,7 +24,7 @@
 // Standard includes
 #include <stdbool.h>
 #include <stdint.h>
-#include <math.h>
+#include <bit_field.h>
 
 // Spin 1 API includes
 #include <spin1_api.h>
@@ -704,7 +704,7 @@ static bool initialize(uint32_t *timer_period)
     BRICK_LAYER_OFFSET = BRICK_LAYER_OFFSET / y_factor;
     BRICK_LAYER_HEIGHT = BRICKS_PER_COLUMN * BRICK_HEIGHT;//BRICK_LAYER_HEIGHT / y_factor;
 
-    y_bits = ceil(log2(GAME_HEIGHT));
+    y_bits = get_bit_field_size(GAME_HEIGHT);
 
     io_printf(IO_BUF, "x:%d, y:%d, b_width:%d, brick_height:%d, b_lay_off:%d, b_lay_hei:%d\n"
         "x_bat:%d, bat_len:%d, u:%d, v:%d, y_bits:%d\n",
