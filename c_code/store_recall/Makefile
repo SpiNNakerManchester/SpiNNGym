@@ -19,6 +19,6 @@ APP := store_recall
 SOURCES = store_recall.c
 APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../spinn_gym/model_binaries/)/
 # key for the database in this APP_OUTPUT_DIR
-DATABASE_KEY = Y
+DATABASE_KEY = G
 
 include $(FEC_INSTALL_DIR)/make/fec.mk
