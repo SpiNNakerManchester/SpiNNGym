@@ -13,11 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-ifndef FEC_INSTALL_DIR:
-    CUR_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/)
-    # assume parallel clone
-    FEC_INSTALL_DIR := $(abspath $(CUR_DIR)/../../../SpiNNFrontEndCommon/c_common/front_end_common_lib)
-endif
+CUR_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/)
+FEC_INSTALL_DIR := $(strip $(if $(FEC_INSTALL_DIR), $(FEC_INSTALL_DIR), $(abspath $(CUR_DIR)/../../../SpiNNFrontEndCommon/c_common/front_end_common_lib)))
 
 APP := store_recall
 SOURCES = store_recall.c
