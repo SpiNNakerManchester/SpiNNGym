@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-CUR_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST)))/)
+CUR_DIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 FEC_INSTALL_DIR := $(strip $(if $(FEC_INSTALL_DIR), $(FEC_INSTALL_DIR), $(abspath $(CUR_DIR)/../../../SpiNNFrontEndCommon/c_common/front_end_common_lib)))
 
 APP := store_recall
@@ -23,3 +23,6 @@ APP_OUTPUT_DIR := $(abspath $(CURRENT_DIR)../../spinn_gym/model_binaries/)/
 DATABASE_KEY = G
 
 include $(FEC_INSTALL_DIR)/make/fec.mk
+
+clean:
+	$(RM) -r $(CUR_DIR)/build
