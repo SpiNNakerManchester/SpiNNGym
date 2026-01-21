@@ -1,3 +1,2 @@
-# Ignore aplx and dict files as sPyNNaker does
 *.aplx
-*.dict
+logs*.sqlite3
