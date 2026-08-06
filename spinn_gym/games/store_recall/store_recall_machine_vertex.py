@@ -19,13 +19,12 @@ from spinn_utilities.overrides import overrides
 
 from pacman.model.placements import Placement
 
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary import (
-    AbstractHasAssociatedBinary,
-)
+from spinn_front_end_common.abstract_models. \
+    abstract_has_associated_binary import AbstractHasAssociatedBinary
 from spinn_front_end_common.abstract_models \
     .abstract_generates_data_specification import (
-    AbstractGeneratesDataSpecification,
-)
+        AbstractGeneratesDataSpecification,
+    )
 from spinn_front_end_common.interface.buffer_management import (
     recording_utilities,
 )
