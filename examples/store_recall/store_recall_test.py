@@ -20,7 +20,6 @@ from pyNN.utility.plotting import Figure, Panel
 
 import spinn_gym as gym
 
-
 rate_on = 10
 rate_off = 0
 pop_size = 1

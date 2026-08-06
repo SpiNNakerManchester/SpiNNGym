@@ -14,8 +14,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import functools
 from time import sleep
+
 import numpy as np
 import pyNN.spiNNaker as p
+
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 

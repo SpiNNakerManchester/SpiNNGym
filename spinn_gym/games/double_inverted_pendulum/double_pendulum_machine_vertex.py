@@ -19,17 +19,23 @@ from spinn_utilities.overrides import overrides
 
 from pacman.model.placements import Placement
 
+from spinn_front_end_common.abstract_models.abstract_has_associated_binary import (
+    AbstractHasAssociatedBinary,
+)
+from spinn_front_end_common.interface.buffer_management import (
+    recording_utilities,
+)
+from spinn_front_end_common.interface.ds import (
+    DataSpecificationGenerator,
+    DataType,
+)
+from spinn_front_end_common.interface.simulation import simulation_utilities
+from spinn_front_end_common.utilities import (
+    constants as front_end_common_constants,
+)
+
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.utilities import helpful_functions
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
-from spinn_front_end_common.interface.buffer_management \
-    import recording_utilities
-from spinn_front_end_common.interface.ds import (
-    DataSpecificationGenerator, DataType)
-from spinn_front_end_common.interface.simulation import simulation_utilities
-from spinn_front_end_common.utilities import constants as \
-    front_end_common_constants
 
 # sPyNNaker imports
 from spynnaker.pyNN.data import SpynnakerDataView

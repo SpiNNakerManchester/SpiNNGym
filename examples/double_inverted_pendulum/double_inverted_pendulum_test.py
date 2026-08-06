@@ -13,10 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import pyNN.spiNNaker as p
-import numpy as np
-from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
+import numpy as np
+import pyNN.spiNNaker as p
+from pyNN.utility.plotting import Figure, Panel
+
 import spinn_gym as gym
 
 

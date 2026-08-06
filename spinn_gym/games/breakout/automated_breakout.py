@@ -13,11 +13,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pyNN.spiNNaker as p
+
 from spinn_gym import Breakout
+
 from .breakout_sim import (
-    subsample_connection, row_col_to_input_breakout, separate_connections,
-    compress_to_x_axis, generate_ball_to_hidden_pop_connections,
-    generate_decision_connections)
+    compress_to_x_axis,
+    generate_ball_to_hidden_pop_connections,
+    generate_decision_connections,
+    row_col_to_input_breakout,
+    separate_connections,
+    subsample_connection,
+)
 
 X_RES = 160
 Y_RES = 128

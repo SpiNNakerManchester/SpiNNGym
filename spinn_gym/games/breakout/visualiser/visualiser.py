@@ -13,15 +13,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from collections import deque
 import datetime
 import enum
 import os
+from collections import deque
 
 import cv2
-import numpy as np
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
+import numpy as np
 
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 BRIGHT_RED = (0.9, 0.0, 0.0)

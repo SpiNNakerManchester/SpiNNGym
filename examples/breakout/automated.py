@@ -14,12 +14,20 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from threading import Thread
+
 import pyNN.spiNNaker as p
 
-from spinn_gym.games.breakout.visualise_host import (
-    host_visualiser, start_visualiser)
 from spinn_gym.games.breakout.automated_breakout import (
-    AutomatedBreakout, X_RES, X_SCALE, Y_RES, Y_SCALE)
+    X_RES,
+    X_SCALE,
+    Y_RES,
+    Y_SCALE,
+    AutomatedBreakout,
+)
+from spinn_gym.games.breakout.visualise_host import (
+    host_visualiser,
+    start_visualiser,
+)
 
 # ---------------------------------------------------------------------
 # Initialise Simulation and Parameters

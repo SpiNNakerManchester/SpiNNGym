@@ -21,8 +21,9 @@ from spinn_utilities.overrides import overrides
 from spinn_gym.games import SpinnGymApplicationVertex
 
 # Bandit imports
-from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import \
-    BanditMachineVertex
+from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import (
+    BanditMachineVertex,
+)
 
 
 # ----------------------------------------------------------------------------

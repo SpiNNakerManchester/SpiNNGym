@@ -14,12 +14,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import matplotlib.pyplot as plt
+import pyNN.spiNNaker as p
 from pyNN.utility.plotting import Figure, Panel
 
-import pyNN.spiNNaker as p
-from spinn_gym.games.breakout.breakout_sim import get_scores
 from spinn_gym.games.breakout.automated_breakout import AutomatedBreakout
-
+from spinn_gym.games.breakout.breakout_sim import get_scores
 
 # ------------------------------------------------------------------------------
 # Initialise Simulation and Parameters

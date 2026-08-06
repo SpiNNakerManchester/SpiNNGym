@@ -21,8 +21,9 @@ from spinn_utilities.overrides import overrides
 from spinn_gym.games import SpinnGymApplicationVertex
 
 # Breakout imports
-from spinn_gym.games.breakout.breakout_machine_vertex import \
-    BreakoutMachineVertex
+from spinn_gym.games.breakout.breakout_machine_vertex import (
+    BreakoutMachineVertex,
+)
 
 
 # ----------------------------------------------------------------------------

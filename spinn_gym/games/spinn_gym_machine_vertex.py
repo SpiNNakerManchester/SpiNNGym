@@ -15,23 +15,27 @@
 
 import math
 from typing import List
+
 from spinn_utilities.overrides import overrides
+
 from spinnman.model.enums import ExecutableType
 
 # PACMAN imports
 from pacman.model.graphs.common import Slice
-
 from pacman.model.graphs.machine import MachineVertex
 from pacman.model.resources import ConstantSDRAM
+
+from spinn_front_end_common.abstract_models.\
+    abstract_generates_data_specification import (
+    AbstractGeneratesDataSpecification,
+)
+from spinn_front_end_common.abstract_models.abstract_has_associated_binary import (
+    AbstractHasAssociatedBinary,
+)
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.interface.buffer_management.buffer_models.\
     abstract_receive_buffers_to_host import AbstractReceiveBuffersToHost
-from spinn_front_end_common.abstract_models.\
-    abstract_generates_data_specification \
-    import AbstractGeneratesDataSpecification
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary \
-    import AbstractHasAssociatedBinary
 
 
 # pylint: disable=abstract-method

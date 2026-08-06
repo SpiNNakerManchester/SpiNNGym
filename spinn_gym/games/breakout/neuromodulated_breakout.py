@@ -13,12 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import pyNN.spiNNaker as p
+
 from spinn_gym import Breakout
+
 from .breakout_sim import (
-    subsample_connection, row_col_to_input_breakout, separate_connections,
-    compress_to_x_axis, compress_to_y_axis, map_to_one_neuron_per_paddle,
+    compress_to_x_axis,
+    compress_to_y_axis,
     create_lateral_inhibitory_paddle_connections,
-    get_hidden_to_decision_connections)
+    get_hidden_to_decision_connections,
+    map_to_one_neuron_per_paddle,
+    row_col_to_input_breakout,
+    separate_connections,
+    subsample_connection,
+)
 
 X_RES = 160
 Y_RES = 128

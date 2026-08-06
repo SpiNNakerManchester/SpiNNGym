@@ -21,8 +21,9 @@ from spinn_utilities.overrides import overrides
 from spinn_gym.games import SpinnGymApplicationVertex
 
 # Pendulum imports
-from spinn_gym.games.double_inverted_pendulum.double_pendulum_machine_vertex \
-    import DoublePendulumMachineVertex
+from spinn_gym.games.double_inverted_pendulum.double_pendulum_machine_vertex import (
+    DoublePendulumMachineVertex,
+)
 
 
 # ----------------------------------------------------------------------------
