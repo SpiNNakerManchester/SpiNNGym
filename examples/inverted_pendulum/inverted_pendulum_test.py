@@ -14,14 +14,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # non-SpiNNaker imports
-import numpy as np
-from pyNN.utility.plotting import Figure, Panel
 import matplotlib.pyplot as plt
+import numpy as np
 
 # SpiNNaker imports
 import pyNN.spiNNaker as p
-import spinn_gym as gym
+from pyNN.utility.plotting import Figure, Panel
 
+import spinn_gym as gym
 
 runtime = 21000
 exposure_time = 200

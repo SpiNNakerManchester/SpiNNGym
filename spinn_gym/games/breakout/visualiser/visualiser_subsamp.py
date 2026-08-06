@@ -14,11 +14,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import enum
-import numpy as np
 
 import matplotlib.animation as animation
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
+import numpy as np
 
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 

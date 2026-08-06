@@ -21,8 +21,9 @@ from spinn_utilities.overrides import overrides
 from spinn_gym.games import SpinnGymApplicationVertex
 
 # Recall imports
-from spinn_gym.games.store_recall.store_recall_machine_vertex import \
-    RecallMachineVertex
+from spinn_gym.games.store_recall.store_recall_machine_vertex import (
+    RecallMachineVertex,
+)
 
 
 # ----------------------------------------------------------------------------

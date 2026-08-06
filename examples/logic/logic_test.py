@@ -20,7 +20,6 @@ from pyNN.utility.plotting import Figure, Panel
 
 import spinn_gym as gym
 
-
 p.setup(timestep=1.0)
 
 truth_table = [0, 1, 1, 0]

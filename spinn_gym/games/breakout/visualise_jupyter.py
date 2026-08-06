@@ -18,8 +18,8 @@ from time import sleep
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 import pyNN.spiNNaker as p
+
 from spinn_gym.games.breakout.visualiser.visualiser import Visualiser
 
 try:

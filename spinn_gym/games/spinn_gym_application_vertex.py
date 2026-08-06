@@ -20,11 +20,13 @@ from spinn_utilities.overrides import overrides
 
 # PACMAN imports
 from pacman.model.graphs.application.abstract import (
-    AbstractOneAppOneMachineVertex)
+    AbstractOneAppOneMachineVertex,
+)
+
+from spynnaker.pyNN.data import SpynnakerDataView
 
 # sPyNNaker imports
 from spynnaker.pyNN.models.common import PopulationApplicationVertex
-from spynnaker.pyNN.data import SpynnakerDataView
 
 
 class SpinnGymApplicationVertex(
