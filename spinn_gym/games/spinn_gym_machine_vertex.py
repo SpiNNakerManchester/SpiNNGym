@@ -27,11 +27,10 @@ from pacman.model.resources import ConstantSDRAM
 
 from spinn_front_end_common.abstract_models.\
     abstract_generates_data_specification import (
-    AbstractGeneratesDataSpecification,
-)
-from spinn_front_end_common.abstract_models.abstract_has_associated_binary import (
-    AbstractHasAssociatedBinary,
-)
+        AbstractGeneratesDataSpecification,
+    )
+from spinn_front_end_common.abstract_models. \
+    abstract_has_associated_binary import AbstractHasAssociatedBinary
 
 # SpinnFrontEndCommon imports
 from spinn_front_end_common.interface.buffer_management.buffer_models.\
