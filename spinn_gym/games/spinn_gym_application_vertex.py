@@ -67,7 +67,7 @@ class SpinnGymApplicationVertex(
         data_values, _ = buffer_manager.get_recording(placement, 0)
         data = data_values
 
-        numpy_format = list()
+        numpy_format = []
         numpy_format.append(("Score", self.score_format))
 
         output_data = numpy.array(data, dtype=numpy.uint8).view(numpy_format)

@@ -135,7 +135,7 @@ class Visualiser(object):
         if live_pops:
             self.live_spike_range = (0, live_duration)
             self.live_spike_data = {pop.label: deque() for pop in live_pops}
-            self.live_spike_plot = dict()
+            self.live_spike_plot = {}
             for pop in live_pops:
                 self.live_spike_plot[pop.label], = self.axes[pop.label].plot(
                     [], [], ".")
