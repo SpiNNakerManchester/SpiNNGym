@@ -30,5 +30,11 @@ from spinn_gym.games.store_recall.store_recall import Recall
 binary_path = os.path.join(os.path.split(__file__)[0], 'model_binaries')
 SpynnakerDataView.register_binary_search_path(binary_path)
 
-__all__ = ['Breakout', 'Bandit', 'Pendulum', 'Logic', 'Recall',
-           'DoublePendulum']
+__all__ = [
+           'Bandit',
+           'Breakout',
+           'DoublePendulum',
+           'Logic',
+           'Pendulum',
+           'Recall',
+]
