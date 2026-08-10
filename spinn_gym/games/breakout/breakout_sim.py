@@ -117,7 +117,7 @@ def create_lateral_inhibitory_paddle_connections(
 
     paddle_neurons_offset *= 2
 
-    for neuron in range(0, pop_size):
+    for neuron in range(pop_size):
         for paddle_neuron in range(
                 neuron - paddle_neurons_offset,
                 neuron + paddle_neurons_offset + 1):
@@ -157,10 +157,10 @@ def generate_ball_to_hidden_pop_connections(pop_size, ball_presence_weight):
     left_connections = []
     right_connections = []
 
-    for ball_neuron in range(0, pop_size):
+    for ball_neuron in range(pop_size):
         # Connect the ball neuron to all the neurons to the left of it in the
         # left hidden population
-        for left_hidden_neuron in range(0, ball_neuron):
+        for left_hidden_neuron in range(ball_neuron):
             right_connections.append(
                 (ball_neuron, left_hidden_neuron, ball_presence_weight, 1.))
         # Connect the ball neuron to all the neurons to the right of it in the
@@ -176,7 +176,7 @@ def generate_decision_connections(pop_size, decision_weight):
     left_conn = []
     right_conn = []
 
-    for neuron in range(0, pop_size):
+    for neuron in range(pop_size):
         left_conn.append((neuron, 0, decision_weight, 1.))
         right_conn.append((neuron, 1, decision_weight, 1.))
 
@@ -186,8 +186,8 @@ def generate_decision_connections(pop_size, decision_weight):
 def get_hidden_to_decision_connections(pop_size, weight):
     # Connect all elements from one pop to 0 for left and 1 for right
 
-    return [(idx, 0, weight, 1.0) for idx in range(0, pop_size)], \
-           [(idx, 1, weight, 1.0) for idx in range(0, pop_size)]
+    return [(idx, 0, weight, 1.0) for idx in range(pop_size)], \
+           [(idx, 1, weight, 1.0) for idx in range(pop_size)]
 
 
 def clean_connection(data):
