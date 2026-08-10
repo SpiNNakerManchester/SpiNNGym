@@ -67,7 +67,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
                ('RECORDING', 2),
                ('PARAMS', 3)])
 
-    __slots__ = ("_x_factor", "_y_factor", "_colour_bits", "_bricking")
+    __slots__ = ("_bricking", "_colour_bits", "_x_factor", "_y_factor")
 
     def __init__(
             self, label, app_vertex: 'Breakout', n_neurons,
