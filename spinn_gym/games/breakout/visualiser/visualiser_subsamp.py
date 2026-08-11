@@ -36,7 +36,7 @@ class InputState(enum.IntEnum):
 # ----------------------------------------------------------------------------
 # Visualiser
 # ----------------------------------------------------------------------------
-class Visualiser_subsamp(object):
+class Visualiser_subsamp:
     # How many bits are used to represent colour
     colour_bits = 0
 

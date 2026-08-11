@@ -14,7 +14,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import math
-from typing import List
 
 from spinn_utilities.overrides import overrides
 
@@ -95,7 +94,7 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         return self._sdram_required
 
     @overrides(AbstractReceiveBuffersToHost.get_recorded_region_ids)
-    def get_recorded_region_ids(self) -> List[int]:
+    def get_recorded_region_ids(self) -> list[int]:
         return [0]
 
     @overrides(AbstractHasAssociatedBinary.get_binary_start_type)
