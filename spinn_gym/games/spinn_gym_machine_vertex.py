@@ -82,8 +82,7 @@ class SpinnGymMachineVertex(MachineVertex, AbstractGeneratesDataSpecification,
         MachineVertex.__init__(self, label, app_vertex, vertex_slice)
 
         # Define size of recording region
-        self._recording_size = int(math.ceil(
-            simulation_duration_ms/10000.) * 4)
+        self._recording_size = math.ceil(simulation_duration_ms/10000.) * 4
 
         self._sdram_required = ConstantSDRAM(
             region_bytes + self._recording_size)
