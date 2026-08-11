@@ -33,7 +33,7 @@ X_RES_FINAL = X_RES // X_SCALE
 Y_RES_FINAL = Y_RES // Y_SCALE
 
 
-class AutomatedBreakout(object):
+class AutomatedBreakout:
 
     def __init__(self, time_scale_factor=1):
         # Setup pyNN simulation

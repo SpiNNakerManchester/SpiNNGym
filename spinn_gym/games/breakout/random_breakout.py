@@ -26,7 +26,7 @@ X_RES_FINAL = X_RES // X_SCALE
 Y_RES_FINAL = Y_RES // Y_SCALE
 
 
-class RandomBreakout(object):
+class RandomBreakout:
 
     def __init__(self):
         # Setup pyNN simulation

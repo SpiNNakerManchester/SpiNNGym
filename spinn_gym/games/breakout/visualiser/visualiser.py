@@ -55,7 +55,7 @@ class SpecialEvent(enum.IntEnum):
 # ----------------------------------------------------------------------------
 # Visualiser
 # ----------------------------------------------------------------------------
-class Visualiser(object):
+class Visualiser:
     # How many bits are used to represent colour and brick
     colour_bits = 2
 
