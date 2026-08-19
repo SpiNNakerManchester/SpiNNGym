@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Final
+
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -35,11 +37,11 @@ class Bad_Table(Exception):
 # ----------------------------------------------------------------------------
 class Logic(SpinnGymApplicationVertex):
 
-    ONE_DAY_IN_MS = 1000 * 60 * 60 * 24  # 1 day
-    RANDOM_SEED = [numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000)]
+    ONE_DAY_IN_MS: Final = 1000 * 60 * 60 * 24  # 1 day
+    RANDOM_SEED: Final = [numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000)]
 
     __slots__ = ()
 

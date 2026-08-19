@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Final
+
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -29,8 +31,9 @@ from spinn_gym.games.double_inverted_pendulum. \
 # Double Pendulum
 # ----------------------------------------------------------------------------
 class DoublePendulum(SpinnGymApplicationVertex):
-    ONE_WEEK_IN_MS = 1000 * 60 * 60 * 24 * 7  # 1 week
-    RANDOM_SEED = [0, 1, 2, 3]
+
+    ONE_WEEK_IN_MS: Final = 1000 * 60 * 60 * 24 * 7  # 1 week
+    RANDOM_SEED: Final = [0, 1, 2, 3]
 
     __slots__ = ()
 
