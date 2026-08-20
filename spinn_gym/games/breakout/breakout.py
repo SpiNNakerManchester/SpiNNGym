@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Final
+
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -31,11 +33,11 @@ from spinn_gym.games.breakout.breakout_machine_vertex import (
 # ----------------------------------------------------------------------------
 class Breakout(SpinnGymApplicationVertex):
 
-    ONE_WEEK_IN_MS = 1000*60*60*24*7
-    RANDOM_SEED = [numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000)]
+    ONE_WEEK_IN_MS: Final = 1000*60*60*24*7
+    RANDOM_SEED: Final = [numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000)]
 
     __slots__ = ["__source_vertex"]
 

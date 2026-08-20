@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Final
+
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -32,10 +34,10 @@ from spinn_gym.games.store_recall.store_recall_machine_vertex import (
 class Recall(SpinnGymApplicationVertex):
 
     ONE_DAY_IN_MS = 1000 * 60 * 60 * 24  # 1 day
-    RANDOM_SEED = [numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000)]
+    RANDOM_SEED: Final = [numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000)]
 
     __slots__ = ()
 

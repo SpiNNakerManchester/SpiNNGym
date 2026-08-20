@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Final
+
 import numpy
 
 from spinn_utilities.overrides import overrides
@@ -30,12 +32,12 @@ from spinn_gym.games.multi_arm_bandit.bandit_machine_vertex import (
 # Bandit
 # ----------------------------------------------------------------------------
 class Bandit(SpinnGymApplicationVertex):
-    ONE_DAY_IN_MS = 1000 * 60 * 60 * 24  # 1 day
-    RANDOM_SEED = [numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000),
-                   numpy.random.randint(10000)]
-    ARMS = [0.1, 0.9]
+    ONE_DAY_IN_MS: Final = 1000 * 60 * 60 * 24  # 1 day
+    RANDOM_SEED: Final = [numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000),
+                          numpy.random.randint(10000)]
+    ARMS: Final = [0.1, 0.9]
 
     __slots__ = ()
 
