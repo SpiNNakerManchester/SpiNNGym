@@ -107,7 +107,7 @@ class LogicMachineVertex(SpinnGymMachineVertex):
         """
 
         # Superclasses
-        super(LogicMachineVertex, self).__init__(
+        super().__init__(
             label, app_vertex, n_neurons,
             self.LOGIC_REGION_BYTES + self.BASE_DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)

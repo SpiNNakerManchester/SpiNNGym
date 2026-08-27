@@ -109,7 +109,7 @@ class RecallMachineVertex(SpinnGymMachineVertex):
         """
 
         # Superclasses
-        super(RecallMachineVertex, self).__init__(
+        super().__init__(
             label, app_vertex, n_neurons,
             self.RECALL_REGION_BYTES + self.DATA_REGION_BYTES,
             simulation_duration_ms,  random_seed)

@@ -58,7 +58,7 @@ class Breakout(SpinnGymApplicationVertex):
             random_seed, x_factor, y_factor, colour_bits, bricking)
 
         # Superclasses
-        super(Breakout, self).__init__(machne_vertex,  label, n_neurons)
+        super().__init__(machne_vertex,  label, n_neurons)
         self.__source_vertex = None
 
     @property

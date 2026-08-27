@@ -64,7 +64,7 @@ class Logic(SpinnGymApplicationVertex):
             random_seed, truth_table, input_sequence, rate_on, rate_off,
             score_delay, stochastic)
         # Superclasses
-        super(Logic, self).__init__(machine_vertex, label, n_neurons)
+        super().__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

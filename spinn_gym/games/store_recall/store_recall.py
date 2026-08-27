@@ -56,7 +56,7 @@ class Recall(SpinnGymApplicationVertex):
             rate_on, rate_off, pop_size, prob_command,
             prob_in_change, time_period, stochastic, reward)
         # Superclasses
-        super(Recall, self).__init__(machine_vertex, label, n_neurons)
+        super().__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
