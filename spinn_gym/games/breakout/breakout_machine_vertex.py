@@ -99,7 +99,7 @@ class BreakoutMachineVertex(SpinnGymMachineVertex):
             If a not None app_vertex is not an ApplicationVertex
         """
         # Superclasses
-        super(BreakoutMachineVertex, self).__init__(
+        super().__init__(
             label, app_vertex, n_neurons,
             self.BREAKOUT_REGION_BYTES + self.PARAM_REGION_BYTES,
             simulation_duration_ms, random_seed)

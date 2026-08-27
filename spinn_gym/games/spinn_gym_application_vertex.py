@@ -46,14 +46,14 @@ class SpinnGymApplicationVertex(
         :raise PacmanInvalidParameterException:
             If one of the constraints is not valid
         """
-        super(SpinnGymApplicationVertex, self).__init__(
+        super().__init__(
             machine_vertex, label, n_atoms)
 
     @overrides(PopulationApplicationVertex.get_units)
     def get_units(self, name: str) -> str:
         if name == "score":
             return ""
-        return super(SpinnGymApplicationVertex, self).get_units(name)
+        return super().get_units(name)
 
     def get_recorded_data(self, name):
         if name != "score":

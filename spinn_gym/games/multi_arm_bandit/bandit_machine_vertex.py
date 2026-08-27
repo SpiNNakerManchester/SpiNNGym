@@ -104,7 +104,7 @@ class BanditMachineVertex(SpinnGymMachineVertex):
         """
 
         # Superclasses
-        super(BanditMachineVertex, self).__init__(
+        super().__init__(
             label, app_vertex, n_neurons,
             self.BANDIT_REGION_BYTES + self.BASE_ARMS_REGION_BYTES,
             simulation_duration_ms,  random_seed)

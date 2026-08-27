@@ -77,8 +77,7 @@ class Pendulum(SpinnGymApplicationVertex):
             number_of_bins, central, bin_overlap, tau_force)
 
         # Superclasses
-        super(Pendulum, self).__init__(
-           machine_vertex, label, n_neurons)
+        super().__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)

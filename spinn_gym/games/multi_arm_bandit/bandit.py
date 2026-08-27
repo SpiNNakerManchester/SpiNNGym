@@ -58,7 +58,7 @@ class Bandit(SpinnGymApplicationVertex):
             rate_off, stochastic, constant_input)
 
         # Superclasses
-        super(Bandit, self).__init__(machine_vertex, label, n_neurons)
+        super().__init__(machine_vertex, label, n_neurons)
 
     @property
     @overrides(SpinnGymApplicationVertex.score_format)
