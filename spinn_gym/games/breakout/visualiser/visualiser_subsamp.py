@@ -15,10 +15,10 @@
 
 import enum
 
-import matplotlib.animation as animation
 import matplotlib.colors as col
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import animation
 
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 
