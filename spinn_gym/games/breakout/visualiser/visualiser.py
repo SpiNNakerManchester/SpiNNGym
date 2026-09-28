@@ -177,7 +177,8 @@ class Visualiser:
                 self.x_res * self.scale, self.y_res * self.scale)
             self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
-            time = datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S")
+            time = (datetime.datetime.now(datetime.UTC)
+                    .strftime("%Y-%m-%d___%H-%M-%S"))
             filename = os.path.join(os.getcwd(), f"breakout_output_{time}.m4v")
             self.video_writer = cv2.VideoWriter(
                 filename, fourcc, self.fps, self.video_shape, isColor=True)
