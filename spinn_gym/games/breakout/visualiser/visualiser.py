@@ -23,6 +23,8 @@ import matplotlib.colors as col
 import matplotlib.pyplot as plt
 import numpy as np
 
+from spinn_utilities.local_time_zone import LOCAL
+
 BRIGHT_GREEN = (0.0, 0.9, 0.0)
 BRIGHT_RED = (0.9, 0.0, 0.0)
 BRIGHT_BLUE = (0, 0.0, 0.9)
@@ -177,7 +179,8 @@ class Visualiser:
                 self.x_res * self.scale, self.y_res * self.scale)
             self.dsize = (self.y_res * self.scale, self.x_res * self.scale)
 
-            time = datetime.datetime.now().strftime("%Y-%m-%d___%H-%M-%S")
+            time = datetime.datetime.now(tz=LOCAL).strftime(
+                "%Y-%m-%d___%H-%M-%S")
             filename = os.path.join(os.getcwd(), f"breakout_output_{time}.m4v")
             self.video_writer = cv2.VideoWriter(
                 filename, fourcc, self.fps, self.video_shape, isColor=True)
